@@ -1,3 +1,1 @@
-import '../../patchy_anticheat/import.js';
-import '../../factions/import.js';
-import '../../server_menu/import.js';
+import '../../example_package/import.js';
