@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "update": "node src/update.js",
+    "reuuid": "node src/reUUID.js"
+  },
+  "dependencies": {
+    "@types/mojang-gametest": "^0.1.2",
+    "@types/mojang-minecraft": "^0.1.4"
+  },
+  "type": "module"
+}

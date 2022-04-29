@@ -1,0 +1,74 @@
+{
+	"format_version": 2,
+	"header": {
+		"name": "pack.name",
+		"description": "pack.description",
+		"uuid": "ad8efe6e-a0e5-4548-8062-80f7432e0f0e",
+		"version": [
+			10,
+			9,
+			9
+		],
+		"min_engine_version": [
+			1,
+			13,
+			0
+		]
+	},
+	"modules": [
+		{
+			"type": "data",
+			"uuid": "0a0fc6e8-72b8-4b74-8afb-5fc5f4b51817",
+			"version": [
+				1,
+				0,
+				0
+			]
+		},
+		{
+			"type": "javascript",
+			"uuid": "4845ed48-3bdc-4ff6-8346-70b99f736b9b",
+			"entry": "scripts/patchy_api/main.js",
+			"version": [
+				1,
+				0,
+				0
+			]
+		}
+	],
+	"dependencies": [
+		{
+			"version": [
+				1,
+				0,
+				0
+			],
+			"uuid": "f550c91c-7bed-406a-a4f3-1cb6a13a2f94"
+		},
+		{
+			"description": "mojang-minecraft module, required to use the mojang-minecraft module",
+			"uuid": "b26a4d4c-afdf-4690-88f8-931846312678",
+			"version": [
+				0,
+				1,
+				0
+			]
+		},
+		{
+			"description": "mojang-minecraft-UI module, required to use the mojang-minecraft-UI module",
+			"uuid": "2BD50A27-AB5F-4F40-A596-3641627C635E",
+			"version": [
+				0,
+				1,
+				0
+			]
+		}
+	],
+	"metadata": {
+		"generated_with": {
+			"bridge": [
+				"1.8.4"
+			]
+		}
+	}
+}
