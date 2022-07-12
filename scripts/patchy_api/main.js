@@ -1,4 +1,7 @@
-import { world, BlockLocation, EntityQueryOptions, EntityQueryScoreOptions, EntityEventOptions } from "mojang-minecraft";
+// world.getDimension('overworld').runCommand('script debugger connect localhost 19144');
+import { world, Player, BlockLocation, EntityQueryOptions, EntityQueryScoreOptions, Trigger, EntityEventOptions, DynamicPropertiesDefinition, MinecraftEntityTypes, BeforeItemDefinitionTriggeredEvent } from "mojang-minecraft";
+
+import { ModalFormData } from 'mojang-minecraft-ui';
 // world.getDimension('overworld').runCommand('script debugger connect localhost 19144')
 import "./libraries/utilities.js";
 import global from './libraries/classes/global.js';
@@ -10,17 +13,22 @@ import databases from "./libraries/classes/database.js";
 import errorBuider from "./libraries/classes/error.js";
 import { native, overworld, server } from "./libraries/utilities.js";
 import eventBuilder from "./libraries/classes/events.js";
+import './module_import.js';
 import './plugins/api_imports.js';
-import './plugins/module_import.js';
+import propertyBuilder from './libraries/classes/property.js';
+// for (const key in Player.prototype) {
+//     console.warn(key);
+// }
+// console.warn(native.stringify(World.prototype, '<function>', false));
 global.tickTime = {};
+global.tickTime.tick = {};
 let oldDate;
 global.loaded = false;
 global.deltaTimeArray = [];
 //Array(256).fill('').map((item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 })).filter(coord => Boolean(overworld.getEntitiesAtBlockLocation(new BlockLocation(coord.x, -65, coord.z))));
 
-global.playerMap = new Map();
-let joiningPlayers = [];
-global.joiningPlayers = joiningPlayers;
+global.playerMap = {};
+global.joiningPlayers = [];
 
 const { random, floor } = Math;
 // let loaded = false;
@@ -37,7 +45,6 @@ import { content } from './libraries/utilities.js';
 //`const {${[...document.querySelectorAll("strong")].map(node => node.innerHTML).join(', ')}} = event;`
 
 
-
 let object = {
     help: 7,
     ImCool: 9,
@@ -52,10 +59,15 @@ let object = {
         }
     }
 };
+
+
+
 // world.events.beforeDataDrivenEntityTriggerEvent.subscribe(event => {
 //     const cancel = [];
-//     eventBuilder.beforeDataDriven.forEach((key, callback) => {
-//         cancel.push(callback(event,getScoreObjectsFromOnlinePlayers(players)));
+//     eventBuilder.beforeDataDriven.forEach((key, {callback, suppressed}) => {
+//         if (!suppressed) {
+// cancel.push(callback(event));
+// }
 //     });
 //     if (cancel.some(bool => bool)) { event.cancel = true; }
 // });
@@ -64,9 +76,20 @@ let speedRatio = 1;
 let ignoreSpeedRatio = true;
 world.events.tick.subscribe(event => {
     time.start('tick');
-    if (!ignoreSpeedRatio && event.currentTick % speedRatio) {
-        return;
-    }
+    // content.warn('hi');
+    // if (!global.loaded) {
+    //     content.warn({ hjhwwdhhdwhjwd: propertyBuilder });
+    // }
+    // const keys = [];
+    // for (const key in global.worldInitialize.propertyRegistry) {
+    //     keys.push(key);
+    // }
+    // content.warn(keys);
+    // time.start('tick');
+    // if (!ignoreSpeedRatio && event.currentTick % speedRatio) {
+    //     return;
+    // }
+    // content.warn(native.stringify(eventBuilder, '<function>', false));
     // overworld.runCommand(`event entity @e patches:kill`)
 
     // const { deltaTime, currentTick } = event;
@@ -75,14 +98,18 @@ world.events.tick.subscribe(event => {
     // }
 
     // console.warn(JSON.stringify(global))
-    joiningPlayers.forEach(player => {
+    global.joiningPlayers.forEach(player => {
+
         try {
             player.runCommand('testfor @s');
-            joiningPlayers = joiningPlayers.filter(player => !joiningPlayers.some(join => player.getName() === join.getName()));
-            console.warn('players', JSON.stringify(joiningPlayers));
-            eventBuilder.playerJoin.forEach((key, callback) => {
+            // content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
+            global.joiningPlayers = global.joiningPlayers.filter(player => !global.joiningPlayers.some(join => player.getName() === join.getName()));
+            // content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
+            eventBuilder.playerJoin.forEach((key, { callback, suppressed }) => {
                 try {
-                    callback(event);
+                    if (!suppressed) {
+                        callback(event);
+                    }
                 } catch (error) {
                     errorBuider.log(error, error.stack, { event: 'playerJoin', key: 'N/A' });
                 }
@@ -99,21 +126,30 @@ world.events.tick.subscribe(event => {
                 } catch (error) { errorBuider.log(error, error.stack, { event: 'worldLoad', key: 'N/A' }); }
             }
         } catch { /*console.warn(error, error.stack);*/ }
-
     });
     try {
+        // content.warn({ propertyBuilder });
         if (global.loaded) {
+            global.tickTime.tick = {};
+            // content.warn(native.stringify(overworld.getBlock(new BlockLocation(35, 81, 97)).getComponent('inventory')));
             const { deltaTime } = event;
+            global.databases = databases;
             deltaTimeArray.unshift(deltaTime);
             if (deltaTimeArray.length > 250) { deltaTimeArray.pop(); }
             global.tps = (1 / (deltaTimeArray.reduce((a, b) => a + b, 0) / deltaTimeArray.length));
 
-            global.players = [...world.getPlayers()].filter(player => !joiningPlayers.some(join => player.getName() === join.getName()));
-            global.nonStaffPlayers = [...world.getPlayers(Object.assign(new EntityQueryOptions(), { scoreOptions: [Object.assign(new EntityQueryScoreOptions(), { exclude: true, maxScore: 1, minScore: 1, objective: 'staff' })] }))].filter(player => !joiningPlayers.some(join => player.getName() === join.getName()));
+            global.players = [...world.getPlayers()].filter(player => !global.joiningPlayers.some(join => player.getName() === join.getName()));
+            // content.warn(native.stringify(global.players));
+            global.nonStaffPlayers = [...world.getPlayers(Object.assign(new EntityQueryOptions(), { scoreOptions: [Object.assign(new EntityQueryScoreOptions(), { exclude: true, maxScore: 1, minScore: 1, objective: 'staff' })] }))].filter(player => !global.joiningPlayers.some(join => player.getName() === join.getName()));
+            global.playerNames = global.players.map(({ name }) => name);
+
+            // content.warn(global.playerNames);
             global.scoreObject = getScoreObjectsFromOnlinePlayers(global.players);
             let dimensions = [];
+            let dead = {};
             global.players.forEach(player => {
-                const { name } = player;
+                const { name, location: { x, y, z } } = player;
+                // content.warn({ floor: { x: x.floor(), y: y.floor(), z: z.floor() }, trunc: { x: x.trunc(), y: y.trunc(), z: z.trunc() } });
                 let playerMap = global.playerMap[name];
                 if (dimensions.every(value => value !== player.dimension)) {
                     dimensions.push(player.dimension);
@@ -123,7 +159,10 @@ world.events.tick.subscribe(event => {
                 for (let i = 0; i < inventory.size; i++) {
                     const item = inventory.getItem(i);
                     items.push(item);
-                    // content.warn(native.stringify(item));
+                    // if (item) {
+                    //     content.warn(native.stringify(item));
+                    // }
+
                 }
                 if (!playerMap) {
                     playerMap = {};
@@ -132,38 +171,76 @@ world.events.tick.subscribe(event => {
                     inventory,
                     items
                 });
+                const health = player.getComponent("health");
+                if (health) {
+                    if (health <= 0) {
+                        if (!dead.hasOwnProperty(name)) {
+                            eventBuilder.playerDeath.forEach((key, { callback, suppressed }) => {
+                                try {
+                                    if (!suppressed) {
+                                        callback(player);
+                                    }
+                                } catch (error) {
+                                    errorBuider.log(error, error.stack, { event: 'playerDeath', key });
+                                }
+                            });
+                            dead[name] = true;
+                        }
+                    } else {
+                        delete dead[name];
+                    }
+                }
                 // content.warn(items.map(item => native.stringify(item)))
             });
+
             global.dimensions = dimensions;
             global.playerIds = global.scoreObject.forEach((key, value) => (value.playerId) ? ({ [value.playerId]: key }) : false, {});
             let keys = [];
-
-            eventBuilder.tick.filter(key => key.startsWith('init')).forEach((key, callback) => {
+            // content.warn(overworld.runCommand('tellraw @a { "rawtext": [ { "translate" : "Hello %%s and %%s", "with": { "rawtext" : [ { "text" : "Steve" }, { "translate" : "tile.stone.stone.name" } ] } } ] }'));
+            // scoreboardTest();
+            const total = global.tickTime.tick.total;
+            global.tickTime.tick = {};
+            global.tickTime.tick.total = total;
+            eventBuilder.tick.filter(key => key.startsWith('init')).forEach((key, { callback, suppressed }) => {
+                time.start('tickTest');
                 keys.push(key);
                 try {
-                    callback(event);
+                    if (!suppressed) {
+                        callback(event);
+                    }
                 } catch (error) {
                     errorBuider.log(error, error.stack, { event: 'tick', key });
                 }
+                global.tickTime.tick[key] = time.end('tickTest');
             });
-            eventBuilder.tick.filter(key => !key.startsWith('init') && !key.startsWith('end')).forEach((key, callback) => {
+            eventBuilder.tick.filter(key => !key.startsWith('init') && !key.startsWith('end')).forEach((key, { callback, suppressed }) => {
+                time.start('tickTest');
                 keys.push(key);
                 try {
-                    callback(event);
+                    if (!suppressed) {
+                        callback(event);
+                    }
                 } catch (error) {
                     errorBuider.log(error, error.stack, { event: 'tick', key });
                 }
+                global.tickTime.tick[key] = time.end('tickTest');
             });
-            eventBuilder.tick.filter(key => key.startsWith('end')).forEach((key, callback) => {
+            eventBuilder.tick.filter(key => key.startsWith('end')).forEach((key, { callback, suppressed }) => {
+                time.start('tickTest');
                 keys.push(key);
                 try {
-                    callback(event);
+                    if (!suppressed) {
+                        callback(event);
+                    }
                 } catch (error) {
                     errorBuider.log(error, error.stack, { event: 'tick', key });
                 }
+                global.tickTime.tick[key] = time.end('tickTest');
             });
+            global.keys = keys;
             // content.warn({ keys });
-            global.tickTime.tick = time.end('tick');
+
+            global.tickTime.tick.total = time.end('tick');
             // content.warn(global.tickTime);
         }
     } catch (error) { console.warn(error, error.stack); }
@@ -171,16 +248,18 @@ world.events.tick.subscribe(event => {
 
 world.events.beforeChat.subscribe(event => {
     try {
+        content.warn({ t: 'ticked', event: native.stringify(event) });
         time.start('beforeChat');
-
         // console.warn(event.message);
         let eventKey;
         eventBuilder.forEach((key, value) => { if (value.commands) { eventKey = key; } });
         // console.warn(eventKey);
         let cancel = [];
-        eventBuilder.beforeChat.forEach((key, callback) => {
+        eventBuilder.beforeChat.forEach((key, { callback, suppressed }) => {
             try {
-                cancel.push(callback(event));
+                if (!suppressed) {
+                    cancel.push(callback(event));
+                }
             } catch (error) {
                 errorBuider.log(error, error.stack, { event: 'beforeChat', key });
             }
@@ -212,15 +291,17 @@ world.events.beforeExplosion.subscribe(event => {
     time.start('beforeExplosion');
     let { impactedBlocks, dimension } = event;
     const cancels = [];
-    eventBuilder.beforeExplosion.forEach((key, callback) => {
+    eventBuilder.beforeExplosion.forEach((key, { callback, suppressed }) => {
         try {
-            const { cancel, impactedBlocks: callImpactedBlocks } = callback(event) ?? {};
-            if (callImpactedBlocks) {
-                impactedBlocks = impactedBlocks.filter(blockLocation => callImpactedBlocks
-                    .some(blockLocation1 => blockLocation1 === blockLocation))
-                    .map(({ x, y, z }) => new BlockLocation(x, y, z));;
+            if (!suppressed) {
+                const { cancel, impactedBlocks: callImpactedBlocks } = callback(event) ?? {};
+                if (callImpactedBlocks) {
+                    impactedBlocks = impactedBlocks.filter(blockLocation => callImpactedBlocks
+                        .some(blockLocation1 => blockLocation1 === blockLocation))
+                        .map(({ x, y, z }) => new BlockLocation(x, y, z));;
+                }
+                cancels.push(cancel);
             }
-            cancels.push(cancel);
 
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'beforeExplosion', key });
@@ -234,9 +315,11 @@ world.events.beforeExplosion.subscribe(event => {
 world.events.beforeItemDefinitionEvent.subscribe(event => {
     time.start('beforeItemDefinitionEvent');
     const cancel = [];
-    eventBuilder.beforeItemDefinitionEvent.forEach((key, callback) => {
+    eventBuilder.beforeItemDefinitionEvent.forEach((key, { callback, suppressed }) => {
         try {
-            cancel.push(callback(event));
+            if (!suppressed) {
+                cancel.push(callback(event));
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'beforeItemDefinitionEvent', key });
         }
@@ -247,9 +330,11 @@ world.events.beforeItemDefinitionEvent.subscribe(event => {
 world.events.beforeItemUse.subscribe(event => {
     time.start('beforeItemUse');
     const cancel = [];
-    eventBuilder.beforeItemUse.forEach((key, callback) => {
+    eventBuilder.beforeItemUse.forEach((key, { callback, suppressed }) => {
         try {
-            cancel.push(callback(event));
+            if (!suppressed) {
+                cancel.push(callback(event));
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'beforeItemUse', key });
         }
@@ -261,9 +346,11 @@ world.events.beforeItemUseOn.subscribe(event => {
     time.start('beforeItemUseOn');
     try {
         const cancel = [];
-        eventBuilder.beforeItemUseOn.forEach((key, callback) => {
+        eventBuilder.beforeItemUseOn.forEach((key, { callback, suppressed }) => {
             try {
-                cancel.push(callback(event));
+                if (!suppressed) {
+                    cancel.push(callback(event));
+                }
             } catch (error) {
                 errorBuider.log(error, error.stack, { event: 'beforeItemUseOn', key });
             }
@@ -278,9 +365,11 @@ world.events.beforeItemUseOn.subscribe(event => {
 world.events.beforePistonActivate.subscribe(event => {
     time.start('beforePistonActivate');
     const cancel = [];
-    eventBuilder.beforePistonActivate.forEach((key, callback) => {
+    eventBuilder.beforePistonActivate.forEach((key, { callback, suppressed }) => {
         try {
-            cancel.push(callback(event));
+            if (!suppressed) {
+                cancel.push(callback(event));
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'beforePistonActivate', key });
         }
@@ -290,9 +379,11 @@ world.events.beforePistonActivate.subscribe(event => {
 });
 world.events.blockBreak.subscribe(event => {
     time.start('blockBreak');
-    eventBuilder.blockBreak.forEach((key, callback) => {
+    eventBuilder.blockBreak.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'blockBreak', key });
         }
@@ -301,9 +392,11 @@ world.events.blockBreak.subscribe(event => {
 });
 world.events.blockExplode.subscribe(event => {
     time.start('blockExplode');
-    eventBuilder.blockExplode.forEach((key, callback) => {
+    eventBuilder.blockExplode.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'blockExplode', key });
         }
@@ -312,9 +405,11 @@ world.events.blockExplode.subscribe(event => {
 });
 world.events.blockPlace.subscribe(event => {
     time.start('blockPlace');
-    eventBuilder.blockPlace.forEach((key, callback) => {
+    eventBuilder.blockPlace.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'blockPlace', key });
         }
@@ -338,9 +433,11 @@ world.events.blockPlace.subscribe(event => {
 // });
 world.events.chat.subscribe(event => {
     time.start('chat');
-    eventBuilder.chat.forEach((key, callback) => {
+    eventBuilder.chat.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'chat', key });
         }
@@ -348,15 +445,17 @@ world.events.chat.subscribe(event => {
     global.tickTime.chat = time.end('chat');
 });
 // world.events.dataDrivenEntityTriggerEvent.subscribe(event => {
-//     eventBuilder.dataDrivenEntityTriggerEvent.forEach((key, callback) => {
+//     eventBuilder.dataDrivenEntityTriggerEvent.forEach((key, {callback, suppressed}) => {
 //         callback(event,getScoreObjectsFromOnlinePlayers(players));
 //     });
 // });
 world.events.effectAdd.subscribe(event => {
     time.start('effectAdd');
-    eventBuilder.effectAdd.forEach((key, callback) => {
+    eventBuilder.effectAdd.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'effectAdd', key });
         }
@@ -365,9 +464,11 @@ world.events.effectAdd.subscribe(event => {
 });
 world.events.entityCreate.subscribe(event => {
     time.start('entityCreate');
-    eventBuilder.entityCreate.forEach((key, callback) => {
+    eventBuilder.entityCreate.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'entityCreate', key });
         }
@@ -376,9 +477,11 @@ world.events.entityCreate.subscribe(event => {
 });
 world.events.explosion.subscribe(event => {
     time.start('explosion');
-    eventBuilder.explosion.forEach((key, callback) => {
+    eventBuilder.explosion.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'explosion', key });
         }
@@ -387,9 +490,11 @@ world.events.explosion.subscribe(event => {
 });
 world.events.itemDefinitionEvent.subscribe(event => {
     time.start('itemDefinitionEvent');
-    eventBuilder.itemDefinitionEvent.forEach((key, callback) => {
+    eventBuilder.itemDefinitionEvent.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'itemDefinitionEvent', key });
         }
@@ -398,9 +503,11 @@ world.events.itemDefinitionEvent.subscribe(event => {
 });
 world.events.itemUse.subscribe(event => {
     time.start('itemUse');
-    eventBuilder.itemUse.forEach((key, callback) => {
+    eventBuilder.itemUse.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'itemUse', key });
         }
@@ -409,9 +516,11 @@ world.events.itemUse.subscribe(event => {
 });
 world.events.itemUseOn.subscribe(event => {
     time.start('itemUseOn');
-    eventBuilder.itemUseOn.forEach((key, callback) => {
+    eventBuilder.itemUseOn.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'itemUseOn', key });
         }
@@ -420,9 +529,11 @@ world.events.itemUseOn.subscribe(event => {
 });
 world.events.pistonActivate.subscribe(event => {
     time.start('pistonActivate');
-    eventBuilder.pistonActivate.forEach((key, callback) => {
+    eventBuilder.pistonActivate.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'pistonActivate', key });
         }
@@ -430,16 +541,18 @@ world.events.pistonActivate.subscribe(event => {
     global.tickTime.pistonActivate = time.end('pistonActivate');
 });
 world.events.playerJoin.subscribe(({ player }) => {
-    joiningPlayers.unshift(player);
+    global.joiningPlayers.unshift(player);
 
 });
 world.events.playerLeave.subscribe(event => {
     time.start('playerLeave');
     delete global.playerMap[event.playerName];
 
-    eventBuilder.playerLeave.forEach((key, callback) => {
+    eventBuilder.playerLeave.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'playerLeave', key });
         }
@@ -452,7 +565,7 @@ world.events.playerLeave.subscribe(event => {
 world.events.weatherChange.subscribe(event => {
     time.start('weatherChange');
 
-    eventBuilder.weatherChange.forEach((key, callback) => {
+    eventBuilder.weatherChange.forEach((key, { callback, suppressed }) => {
         try {
             callback(event, players, getScoreObjectsFromOnlinePlayers(players));
         } catch (error) {
@@ -464,9 +577,11 @@ world.events.weatherChange.subscribe(event => {
 
 world.events.entityHit.subscribe(event => {
     time.start('playerHit');
-    eventBuilder.playerHit.forEach((key, callback) => {
+    eventBuilder.playerHit.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'playerHit', key });
         }
@@ -475,9 +590,11 @@ world.events.entityHit.subscribe(event => {
 }, Object.assign(new EntityEventOptions(), { entityTypes: ["minecraft:player"] }));
 world.events.entityHit.subscribe(event => {
     time.start('entityHit');
-    eventBuilder.entityHit.forEach((key, callback) => {
+    eventBuilder.entityHit.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'entityHit', key });
         }
@@ -486,9 +603,11 @@ world.events.entityHit.subscribe(event => {
 });
 world.events.entityHurt.subscribe(event => {
     time.start('playerHurt');
-    eventBuilder.playerHurt.forEach((key, callback) => {
+    eventBuilder.playerHurt.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'playerHurt', key });
         }
@@ -497,12 +616,23 @@ world.events.entityHurt.subscribe(event => {
 }, Object.assign(new EntityEventOptions(), { entityTypes: ["minecraft:player"] }));
 world.events.entityHurt.subscribe(event => {
     time.start('entityHurt');
-    eventBuilder.entityHurt.forEach((key, callback) => {
+    eventBuilder.entityHurt.forEach((key, { callback, suppressed }) => {
         try {
-            callback(event);
+            if (!suppressed) {
+                callback(event);
+            }
         } catch (error) {
             errorBuider.log(error, error.stack, { event: 'entityHurt', key });
         }
     });
     global.tickTime.entityHurt = time.end('entityHurt');
+});
+let loads = 0;
+world.events.worldInitialize.subscribe((event) => {
+    if (loads++) {
+        global.joiningPlayers = global.players;
+        global.loaded = false;
+    }
+    content.warn({ t: 'jdjkwjkdwj', propertyBuilder, rand: propertyBuilder.rand });
+    propertyBuilder.registerEvent(event);
 });

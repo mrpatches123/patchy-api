@@ -28,13 +28,13 @@ class ErrorLogger {
         if (save) {
             this.save(error, stack, event, key);
         }
-        server.tellraw(`Error in event: ${event} with Key: ${key}: ${error.message} - ${stack}`);
+        server.tellraw(`Error in event: ${event} with Key: ${key}: ${error.message ?? error} - ${stack}`);
     }
     logConsole(error, stack, { event = 'unkown', key = 'unkown' } = {}, save) {
         if (save) {
             this.save(error, stack, event, key);
         }
-        console.warn(`Error in event: ${event} with Key: ${key}: ${error.message} - ${stack}`);
+        console.warn(`Error in event: ${event} with Key: ${key}: ${error.message ?? error} - ${stack}`);
 
     }
 }

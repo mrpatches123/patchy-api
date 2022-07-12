@@ -1,5 +1,3 @@
-import eventBuilder from "./events.js";
-
 class Time {
   constructor() {
 
@@ -19,5 +17,6 @@ class Time {
     return (new Date()).getTime();
   }
 }
+
 const time = new Time();
 export default time;

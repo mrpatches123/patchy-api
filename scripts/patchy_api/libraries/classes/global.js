@@ -1,2 +1,2 @@
-let global = {}
+let global = {};
 export default global;

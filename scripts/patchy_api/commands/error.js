@@ -3,7 +3,7 @@ import commandBuilder from "../../patchy_api/libraries/classes/commands.js";
 import errorLogger from "../../patchy_api/libraries/classes/error.js";
 import { overworld, content } from "../../patchy_api/libraries/utilities.js";
 import config from '../config.js';
-const prefix = '!';
+const { commandPrefix: prefix } = config;
 commandBuilder.register('error', {
     description: "Used to get the Stringified value of a key in global",
     usages: [

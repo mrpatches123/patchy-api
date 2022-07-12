@@ -1,7 +1,9 @@
 import { world } from 'mojang-minecraft';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message } from 'mojang-minecraft-ui';
-import { content, native, server } from '../utilities.js';
+import { content, native, server, typeOf } from '../utilities.js';
 import eventBuilder from "./events.js";
+import global from './global.js';
+import time from './time.js';
 const forms = { action, modal, message };
 server.objectiveAdd('world');
 const { isArray } = Array;
@@ -9,6 +11,80 @@ const responses = {
     action: 'selection',
     modal: 'formValues',
     message: 'selection'
+};
+
+
+
+
+const methods = {
+    modal: {
+        title: String,
+        dropdown: {
+            label: String,
+            options: [
+                String
+            ],
+            defaultValueIndex: Number
+        },
+        slider: {
+            label: String,
+            minimumValue: Number,
+            maximumValue: Number,
+            valueStep: Number,
+            defaultValue: Number
+        },
+        textField: {
+            label: String,
+            placeholderText: String,
+            defaultValue: String
+        },
+        toggle: {
+            label: String,
+            defaultValue: Boolean
+        },
+        callback: Function
+    },
+    action: {
+        body: String,
+        title: String,
+        button: {
+            text: String,
+            iconPath: String,
+            reopen: Boolean
+        },
+        back: {
+            text: String,
+            iconPath: String
+        },
+        toggle: {
+            options: [
+                {
+                    prependText: String,
+                    text: String,
+                    apendText: String,
+                    iconPath: String,
+                }
+            ],
+            scoreboardName: String,
+            dependency: String,
+            postfix: Boolean,
+            prefix: Boolean,
+            reopen: Boolean
+        },
+        callback: Function
+    },
+    message: {
+        title: String,
+        body: String,
+        button1: {
+            text: String
+        },
+        button2: {
+            text: String
+        },
+        callback: Function
+    }
+
 };
 // dependency = d?:'player', 'world'
 // scoreboardName = if undefined memory
@@ -19,13 +95,44 @@ class FormBuilder {
     create(key, data) {
         this[key] = data;
     }
+    showAwait(player, key, ...extraArguments) {
+        const { name } = player;
+        const { playerId } = global.scoreObject[name];
+        let i = 0;
+        this.show(player, key, ...extraArguments);
+        global.playerMap[name].inUI = true;
+        eventBuilder.subscribe(`formAwait${playerId}`, {
+            tick: ({ currentTick }) => {
+
+                if (i++ > 4) {
+
+                    const { inUI } = global.playerMap[name];
+                    content.warn({ t: 'inUIwqdklwdlkdwklk', inUI });
+                    if (!inUI) {
+                        eventBuilder.unsubscribeAll(`formAwait${playerId}`);
+                    }
+                    global.playerMap[name].inUI = true;
+                }
+                if (!(i++ % 10) && global.playerMap[name].inUI) {
+                    this.show(player, key, ...extraArguments);
+                    console.warn('show');
+                }
+            }
+        });
+    }
     show(player, key, ...extraArguments) {
+        const { name } = player;
+        const { lastFormShown } = global.playerMap[name];
+        global.playerMap[name].lastFormShown = { key, extraArguments };
         // if (!extraArguments.length) { extraArguments = []; }
         content.warn({ extraArguments });
         if (!this[key]) {
             return console.error(`form: ${key}, has not been initalised or doesn't exist!`);
         }
         const type = Object.keys(this[key])[0];
+        if (typeof this[key] !== 'object' && !Array.isArray(this[key])) {
+            throw new Error(`expected a object at key: ${key}`);
+        }
         content.warn({ text: 'type', type, form: Array.isArray(this[key][type]) });
 
         const form = new forms[type]();
@@ -36,12 +143,13 @@ class FormBuilder {
         } else {
             formArray = [...this[key][type]];
         }
-
-
+        if (!(typeof formArray === 'object' && Array.isArray(formArray))) {
+            throw new Error(`expected an Array at ${type}, key: ${key}`);
+        }
         for (let i = 0; i < formArray.length; i++) {
-
+            const a = i;
             const object = formArray[i];
-            content.warn({ formArray, i, type: typeof object, array: isArray(object) });
+            content.warn({ formArray, i, type: typeof object, array: isArray(object), extraArguments });
             let objectClone;
             if (typeof object === 'function') {
                 let objectGenerated = object(player, i, ...extraArguments);
@@ -50,17 +158,21 @@ class FormBuilder {
                         formArray = [...formArray.delete(i).merge(--i, objectGenerated)];
                         content.warn({ test: formArray });
                         continue;
-                    } else {
+                    } else if (objectGenerated) {
                         objectClone = objectGenerated;
                         content.warn({ testTwo: formArray });
                     }
                 }
-
-            } else {
+            } else if (object) {
                 objectClone = { ...object };
             }
-            // 
+            if (!objectClone) { continue; }
             objectClone.forEach((method, parameters, i) => {
+                if (!methods[type][method]) {
+                    throw new Error(`key: ${method} does not exist in type: ${type}, index ${a}, form: ${key}`);
+                }
+                const methodType = methods[type][method];
+
                 console.warn(key, method, i, '1');
                 if (method === 'callback') { return; };
                 console.warn(key, method, i);
@@ -79,8 +191,25 @@ class FormBuilder {
                         parametersClone[key] = value(player, i, ...extraArguments);
                     }
                 });
+                if (typeOf(methodType) === typeOf(parameters)) {
+                    if (typeof parameters === 'object') {
+                        parametersClone.forEach((parameter, value) => {
+                            if (!methodType[parameter]) {
+                                throw new Error(`key: ${parameter} does not exist in element ${method}, type: ${type}, index ${a}, form: ${key}`);
+                            }
+                            if (typeOf(methodType[parameter]) !== typeOf(value)) {
+                                throw new Error(`Expected ${typeOf(methodType[parameter])}, but got ${typeOf(value)} in key: ${parameter}, element ${method}, type: ${type}, index ${a}, form: ${key}`);
+                            }
+                        });
+                    }
+                } else {
+                    throw new Error(`Expected ${typeOf(methodType)}, but got ${typeOf(parameters)} in value of key: ${method}, element ${method}, type: ${type}, index ${a}, form: ${key}`);
+                }
                 objectClone[method] = parametersClone;
             });
+            if (typeof objectClone !== 'object' && !Array.isArray(objectClone)) {
+                throw new Error(`expected a object at ${i}, form: ${key}`);
+            }
             formArray[i] = objectClone;
         }
         content.warn(formArray);
@@ -106,6 +235,9 @@ class FormBuilder {
                     // content.warn({ option: options });
                     const { prependText = '', text = '', apendText = '', iconPath } = options[index];
                     form.button(prependText + text + apendText, iconPath);
+                } else if (method === 'back' && form instanceof action) {
+                    const { text = '', iconPath } = parameters;
+                    form.button(text, iconPath);
                 } else {
 
                     if (typeof parameters === 'object') {
@@ -125,7 +257,16 @@ class FormBuilder {
                 // }
             });
         });
+        time.start('form');
         form.show(player).then(response => {
+
+            const { canceled, cancelationReason } = response;
+            content.warn({ t: 'response', canceled, cancelationReason, timeMS: time.end('form') });
+            if (canceled && cancelationReason === 1) {
+                global.playerMap[name].inUI = true;
+            } else {
+                global.playerMap[name].inUI = false;
+            }
             try {
 
                 // content.warn({ text: this[key][type] });
@@ -139,7 +280,6 @@ class FormBuilder {
                     // content.warn(native.stringify(object, '<function>', false));
 
                     if (object?.toggle && form instanceof action) {
-
                         const { options, scoreboardName, dependency = 'player', postfix = true, prefix = false, reopen = false } = object.toggle;
                         let index = 0;
                         // content.warn({ hwjd: 'test252', lengthOptions: options.length });
@@ -182,6 +322,9 @@ class FormBuilder {
                             }
                         }
 
+                    } else if (object?.back && form instanceof action) {
+                        const { key, extraArguments } = lastFormShown;
+                        formBuilder.show(player, key, ...extraArguments);
                     } else {
 
                         if (object?.button?.reopen) {
@@ -196,7 +339,7 @@ class FormBuilder {
                 } else {
                     // content.warn(responsibleObjects);
                     responsibleObjects.forEach((object, i) => {
-                        // content.warn({ object });
+                        content.warn({ response: native.stringify(response), type: responses[type] });
 
                         if (object.callback) {
                             object.callback(response[responses[type]][i], player, ...extraArguments);
@@ -207,7 +350,6 @@ class FormBuilder {
                 console.warn(type, key, 'callback', error, error.stack);
             }
         });
-
 
     }
 }

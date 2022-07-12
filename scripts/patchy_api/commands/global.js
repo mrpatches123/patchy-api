@@ -8,11 +8,11 @@ commandBuilder.register('global', {
     usages: [
         `${prefix}global <key>`,
     ],
-    requires: {
-        score: {
-            staff: 1
-        }
-    },
+    // requires: {
+    //     score: {
+    //         staff: 1
+    //     }
+    // },
     callback: (sender, args) => {
 
         if (!args.length) {
