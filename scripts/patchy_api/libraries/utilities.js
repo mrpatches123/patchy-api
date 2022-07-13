@@ -14,7 +14,8 @@ import {
     MinecraftEnchantmentTypes,
     EnchantmentType,
     PlayerInventoryComponentContainer,
-    BlockInventoryComponentContainer
+    BlockInventoryComponentContainer,
+    EntityQueryOptions
 } from 'mojang-minecraft';
 import errorLogger from './classes/error.js';
 const locationTypes = {
@@ -224,7 +225,7 @@ export function toProperCase(string) {
     return string.replace(/_/g, ' ').replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 }
 export const staff = {
-    tellraw: function (message, exludePlayer) {
+    tellraw(message, exludePlayer) {
         try {
             overworld.runCommand(`tellraw @a[scores={Notifications=1}${(exludePlayer) ? `,name=!${exludePlayer.name}` : ''}] {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
             return true;
@@ -235,7 +236,7 @@ export const staff = {
     }
 };
 export const server = {
-    tellraw: function (message) {
+    tellraw(message) {
         try {
             overworld.runCommand(`tellraw @a {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
             return true;
@@ -260,7 +261,7 @@ export const server = {
             return;
         }
     },
-    scoreAdd: function (objective, name, amount = 0) {
+    scoreAdd(objective, name, amount = 0) {
         try {
             return Number(overworld.runCommand(`scoreboard players add ${name} ${objective} ${amount}`).statusMessage.match(/-?\d+(?=[^-\d]$)/));
         } catch (error) {
@@ -268,7 +269,7 @@ export const server = {
             return;
         }
     },
-    scoreSet: function (objective, name, amount = 0) {
+    scoreSet(objective, name, amount = 0) {
         try {
             return Number(overworld.runCommand(`scoreboard players set ${name} ${objective} ${amount}`).statusMessage.match(/-?\d+(?=$)/));
         } catch (error) {
@@ -279,7 +280,7 @@ export const server = {
 };
 
 export const content = {
-    warn: function (message) {
+    warn(message) {
         if (typeof message === 'object') {
             content.warn(JSON.stringify(message));
             // console.warn(native.stringifyEx(message));
@@ -294,8 +295,13 @@ export const content = {
 
 
 const betaDimensionFunctions = {
-    runCommands: function () {
-        const commands = (typeof arguments[0] === 'array') ? arguments[0] : [...arguments];
+    /**
+     * @method runCommands
+     * @param  {...String || Array<String>} commands
+     * @returns {Array<CommandRepsone>}
+     */
+    runCommands(...commands) {
+        commands = (typeof commands[0] === 'array') ? arguments[0] : [...commands];
         let returnArray = [];
         for (const command of commands) {
             returnArray.push(this.runCommand(command));
@@ -306,17 +312,21 @@ const betaDimensionFunctions = {
 Object.assign(Dimension.prototype, betaDimensionFunctions);
 
 const worldFunctions = {
+    /**
+     * @method getEntities
+     * @param {EntityQueryOptions} EntityQueryOptions 
+     * @returns {Array<Entity>}
+     */
     getEntities(EntityQueryOptions) {
         return [...overworld.getEntities(EntityQueryOptions), ...nether.getEntities(EntityQueryOptions), , ...end.getEntities(EntityQueryOptions)];
     }
 };
 Object.assign(World.prototype, worldFunctions);
-
 // const prototypes = {
-//     toBinary: function () {
+//     toBinary() {
 //         return this.replace(/[\s\S]/g, (str) => str.charCodeAt().toString(2));
 //     },
-//     toText: function () {
+//     toText() {
 //         return this.replace(/\d{5}]/g, (match) => console.log(Number(match).toString()));
 //     },
 // };
@@ -325,6 +335,11 @@ Object.assign(World.prototype, worldFunctions);
 
 
 const arrayObjectFunctions = {
+    /**
+     * @method keys does Object.keys() on any Object
+     * @param {Boolean} ignoreFunctions 
+     * @returns {Array<String>}
+     */
     keys(ignoreFunctions) {
         let keysArray = [];
         for (let key in this) {
@@ -334,6 +349,11 @@ const arrayObjectFunctions = {
         }
         return keysArray;
     },
+    /**
+     * @method clear deletes all values of const, let, var Object
+     * @param {Function} callback 
+     * @returns
+     */
     clear(callback) {
         // if (this.length) {
         for (const key in this) {
@@ -346,8 +366,15 @@ const arrayObjectFunctions = {
                 delete this[key];
             }
         }
-        // }
     },
+    /**
+     * @method forEach interates over the object and can accumulate the return of each call into an object or Array depending on the initialValue
+     * @param {Function} callback(key, value, index, initialValue)
+     * @param {any} initialValue undefined, Object or Array if you want to
+     * @param {Boolean} 
+     * @param {Boolean} ignore ignores if current call is false
+     * @returns Any or Undefine
+     */
     forEach(callback, initialValue, ignorefunctions = false, ignore = false) {
         if (typeof callback == "function") {
             if (this.keys().length) {
@@ -367,6 +394,12 @@ const arrayObjectFunctions = {
 
         }
     },
+    /**
+     * @method every iterates over the object and if every call is true, it returns true
+     * @param {Function} callback 
+     * @param {Boolean} ignorefunctions ignores if value is a function
+     * @returns Boolean
+     */
     every(callback, ignorefunctions) {
         if (typeof callback == "function") {
             if (this.keys().length) {
@@ -382,6 +415,12 @@ const arrayObjectFunctions = {
             }
         }
     },
+    /**
+     * @method some iterates over the object and if one call is true, it returns true
+     * @param {Function} callback 
+     * @param {Boolean} ignorefunctions ignores if value is a function
+     * @returns Boolean
+     */
     some(callback, ignorefunctions) {
         if (typeof callback == "function") {
             if (this.keys().length) {
@@ -397,6 +436,11 @@ const arrayObjectFunctions = {
 
         }
     },
+    /**
+     * @method map maps the return of each iteration to that calls respeactive key
+     * @param {Function} callback 
+     * @returns Object
+     */
     map(callback) {
         if (typeof callback == "function") {
             if (entries(this).length) {
@@ -408,6 +452,11 @@ const arrayObjectFunctions = {
             }
         }
     },
+    /**
+     * @method filter Iterates over the Object and if a iteration returns false that key is not included in the final object
+     * @param {Function} callback 
+     * @returns Object
+     */
     filter(callback) {
         if (typeof callback == "function") {
             if (entries(this).length) {
@@ -421,6 +470,11 @@ const arrayObjectFunctions = {
             }
         }
     },
+    /**
+     * @method join Joins the values of the object into one string
+     * @param {String} string the value that is inserted between each value
+     * @returns String
+     */
     join(string = '') {
         if (entries(this).length) {
             let joinedObject = [];
@@ -430,10 +484,20 @@ const arrayObjectFunctions = {
             return joinedObject.join(string);
         }
     },
+    /**
+     * @method length Gets the length of the Object or te number of keys
+     * @param {Boolean} ignorefunctions ignores if value is a function 
+     * @returns Number
+     */
     length(ignoreFunctions) {
         return this.keys(ignoreFunctions).length;
     },
-    equals: function (object) {
+    /**
+     * @method equals Tests if main object is equal the Object Provided
+     * @param {any} object Object or any to check if equal
+     * @returns Boolean
+     */
+    equals(object) {
         //console.log(keys(this).equals(keys(object)))
         if (typeof object === "object" && !isArray(object)) {
             if (this.length() && this.length() === object.length()) {
@@ -450,7 +514,13 @@ const arrayObjectFunctions = {
         }
 
     },
-    find: function (callback, ignorefunctions = false) {
+    /**
+     * @method find returns an key value pair that if one has a true iteration 
+     * @param {Function} callback(key, value, index)
+     * @param {Boolean} ignorefunctions ignores if value is a function
+     * @returns Object
+     */
+    find(callback, ignorefunctions = false) {
         if (typeof callback == "function") {
             if (this.keys().length) {
                 let i = 0;
@@ -468,6 +538,11 @@ const arrayObjectFunctions = {
     }
 
 };
+/**
+     * @method hasKey Checks if a key is in arrayObjectFunctions or stringFunctions
+     * @param {String} key
+     * @returns Boolean
+     */
 function hasKey(key) {
     if (arrayObjectFunctions.hasOwnProperty(key) || stringFunctions.hasOwnProperty(key)) {
         return true;
@@ -477,35 +552,35 @@ function hasKey(key) {
 Object.assign(Object.prototype, arrayObjectFunctions);
 
 const stringFunctions = {
-    toHHMMSS: function () {
+    toHHMMSS() {
         return new Date(Number(this) * 1000).toTimeString().split(' ')[0];
     },
-    toNumber: function () {
+    toNumber() {
         return Number(this);
     },
-    round: function (place = 0) {
+    round(place = 0) {
         return Math.round(Number(this) * 10 ** place) / 10 ** place;
     },
-    floor: function (place = 0) {
+    floor(place = 0) {
         return Math.floor(Number(this) * 10 ** place) / 10 ** place;
     },
-    ceil: function (place = 0) {
+    ceil(place = 0) {
         return Math.ceil(Number(this) * 10 ** place) / 10 ** place;
     },
-    trunc: function () {
+    trunc() {
         return Math.trunc(Number(this));
     },
-    dec: function () {
+    dec() {
         return Number(this) % 1;
     },
-    abs: function () {
+    abs() {
         return Math.abs(Number(this));
     },
-    getSign: function () {
+    getSign() {
         const sign = Number(this) / Number(this).abs();
         return (!sign) ? 0 : sign;
     },
-    toTimeTill: function (date = new Date(this), time = Number(this), test = false) {
+    toTimeTill(date = new Date(this), time = Number(this), test = false) {
         return [~~(time / 8.64e7), ~~(time / 8.64e7 % 1 * 24), ~~(date.getMinutes()), ~~(date.getSeconds())]
             .filter(value => {
                 if (value && !test) {
@@ -516,13 +591,13 @@ const stringFunctions = {
                 }
             });
     },
-    isInteger: function () {
+    isInteger() {
         return isInteger(Number(this));
     }
 };
 const types = ['', 'k', 'M', 'G', 'T'];
 const numberFunctions = {
-    unitFormat: function (place = 1) {
+    unitFormat(place = 1) {
         return (this / 10 ** (~~(log10(this) / 3) * 3)).toFixed(place) + types[~~(log10(this) / 3)];
     }
 };
@@ -546,23 +621,23 @@ export function combine(target, source) {
     return { ...target, ...source };
 }
 const arrayFunctions = {
-    delete: function (index) {
+    delete(index) {
         return this.filter((item, i) => i !== index);
     },
-    random: function () {
+    random() {
         return this[~~(Math.random() * this.length)];
     },
-    equals: function (array) {
+    equals(array) {
         return this.every((value, i) => value === array[i]);
     },
-    reverseCopy: function () {
+    reverseCopy() {
         let array = [];
         for (let i = this.length - 1, a = 0; i >= 0 && a < this.length; i--, a++) {
             array[a] = this[i];
         }
         return array;
     },
-    accumulate: function (callback, initialValue, ignorefunctions = false, ignore = false) {
+    accumulate(callback, initialValue, ignorefunctions = false, ignore = false) {
         if (typeof callback == "function") {
             if (this.length) {
                 let i = 0;
@@ -678,18 +753,18 @@ const locationFunctions = {
 Object.assign(Location.prototype, locationFunctions);
 Object.assign(BlockLocation.prototype, locationFunctions);
 const betaPlayerFunctions = {
-    runCommands: function (commands) {
+    runCommands(commands) {
         ((isArray(arguments[0])) ? arguments[0] : [...arguments]).forEach(command => this.runCommand(command));
     },
-    getName: function () {
+    getName() {
         return this.name;
     },
-    getNameTag: function () {
+    getNameTag() {
         if (/"|\\/.test(this.name)) {
             this.nameTag = this.nameTag.replace(/"|\\/g, '');
         } return this.nameTag;
     }, //not beta but fixes nameSpoof command tartgeting issues
-    rot: function (isArray = true) {
+    rot(isArray = true) {
         const { x, y } = this.rotation;
         if (isArray) {
             return [x, y];
@@ -697,7 +772,7 @@ const betaPlayerFunctions = {
             return { x, y };
         }
     },
-    scoreTest: function (objective, min, max) {
+    scoreTest(objective, min, max) {
         if (isInteger(min) && isInteger(max)) {
             try {
                 const score = Number(this.runCommand(`scoreboard players test @s ${objective} *`).statusMessage.match(/-?\d+/));
@@ -717,7 +792,7 @@ const betaPlayerFunctions = {
             }
         }
     },
-    scoreAdd: function (objective, amount = 0) {
+    scoreAdd(objective, amount = 0) {
         try {
             return Number(this.runCommand(`scoreboard players add @s ${objective} ${amount}`).statusMessage.match(/-?\d+(?=[^-\d]$)/));
         } catch (error) {
@@ -725,7 +800,7 @@ const betaPlayerFunctions = {
             return;
         }
     },
-    scoreSet: function (objective, amount = 0) {
+    scoreSet(objective, amount = 0) {
         try {
             return Number(this.runCommand(`scoreboard players set @s ${objective} ${amount}`).statusMessage.match(/-?\d+(?=$)/));
         } catch (error) {
@@ -733,38 +808,38 @@ const betaPlayerFunctions = {
             return;
         }
     },
-    gamemode: function (index, selector = '') {
+    gamemode(index, selector = '') {
         try {
             content.warn({ test: this.runCommand(`testfor ${selector}`).statusMessage, selector });
             this.runCommand(`gamemode ${index} ${selector}`);
         } catch { }
     },
-    getPropertiesList: function () {
+    getPropertiesList() {
         const properties = [];
         for (const key in this) {
             properties.push(key);
         } return andArray(properties);
     },
-    tellraw: function (message) {
+    tellraw(message) {
         return this.runCommand(`tellraw @s {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
     },
-    tellrawStringify: function (message) {
+    tellrawStringify(message) {
         return this.runCommand(`tellraw @s {"rawtext":[{"text":"${JSON.stringify(message).replaceAll('"', '\\"')}"}]}`);
     },
-    tellrawJSON: function (json) {
+    tellrawJSON(json) {
         return this.runCommand(`tellraw @s {"rawtext":[${json}]}`);
 
     },
-    titleraw: function (message, location = 'actionbar') {
+    titleraw(message, location = 'actionbar') {
         return this.runCommand(`titleraw @s ${location} {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
     },
-    titlerawStringify: function (message, location = 'actionbar') {
+    titlerawStringify(message, location = 'actionbar') {
         return this.runCommand(`titleraw @s ${location} {"rawtext":[{"text":"${JSON.stringify(message).replaceAll('"', '\\"')}"}]}`);
     },
-    titlerawJSON: function (json, location = 'actionbar') {
+    titlerawJSON(json, location = 'actionbar') {
         return this.runCommand(`titleraw @s ${location} {"rawtext":[${json}]}`);
     },
-    clear: function (id) {
+    clear(id) {
         let inventory = this.getComponent('minecraft:inventory').container;
         for (let i = 0; i < inventory.size; i++) {
             const item = inventory.getItem(i);
@@ -787,28 +862,28 @@ const betaPlayerFunctions = {
         return amount;
 
     },
-    tellrawRawObject: function (obj) {
+    tellrawRawObject(obj) {
         return this.runCommand(`tellraw @s ` + JSON.stringify(obj));
     },
-    titleraw: function (message, location = 'actionbar') {
+    titleraw(message, location = 'actionbar') {
         return this.runCommand(`titleraw @s ${location} {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
     },
-    titlerawStringify: function (message, location = 'actionbar') {
+    titlerawStringify(message, location = 'actionbar') {
         return this.runCommand(`titleraw @s ${location} {"rawtext":[{"text":"${JSON.stringify(message).replaceAll('"', '\\"')}"}]}`);
     },
-    titlerawJSON: function (json, location = 'actionbar') {
+    titlerawJSON(json, location = 'actionbar') {
         return this.runCommand(`titleraw @s ${location} {"rawtext":[${json}]}`);
     },
-    titlerawRawObject: function (obj, location = 'actionbar') {
+    titlerawRawObject(obj, location = 'actionbar') {
         return this.runCommand(`titleraw @s ${location} ` + JSON.stringify(obj));
     },
-    clearCrossHare: function (id) {
+    clearCrossHare(id) {
         try {
             this.runCommand(`clear @s ${id} ${crossHareDataKey}`);
         } catch { }
 
     },
-    queryTopSolid: function (ceiling = 319) {
+    queryTopSolid(ceiling = 319) {
         const { location: { x, z } } = this;
         const locations = new BlockLocation(x.floor(), ceiling, z.floor())
             .blocksBetween(new BlockLocation(x.floor(), -64, z.floor())).reverse();
@@ -822,7 +897,7 @@ const betaPlayerFunctions = {
         }
         console.warn('hewidjdwwdnnwdkkj');
     },
-    ability: function (ability, bool = '', selector = '') {
+    ability(ability, bool = '', selector = '') {
         let abilityCurrent;
         try {
             abilityCurrent = JSON.parse(this.runCommand(`ability @s${selector} ${ability}`).displayString.match(/\w+$/)[0]?.toLowerCase());
@@ -836,7 +911,7 @@ const betaPlayerFunctions = {
         }
 
     },
-    removeAllTags: function () {
+    removeAllTags() {
         this.getTags().forEach(tag => this.removeTag(tag));
     },
     kick(reason) {
@@ -854,7 +929,7 @@ const betaPlayerFunctions = {
     disconnect() {
         this.triggerEvent('patches:disconnect');
     }
-    // setTag: function (tag) {
+    // setTag(tag) {
     //     try {
     //         tthis.runCommand(`tag @s add ${tag}`)
     //         return true
@@ -867,7 +942,7 @@ const betaPlayerFunctions = {
 Object.assign(Player.prototype, betaPlayerFunctions);
 Object.assign(Entity.prototype, betaPlayerFunctions);
 const inventoryContainerFunctions = {
-    removeItem: function (ItemStack) {
+    removeItem(ItemStack) {
         for (let i = this.size - 1; i >= 0; i--) {
             const item = this.getItem(i) ?? {};
             // overworld.runCommand(`say 'ItemStack', ${ItemStack.amount}, ${item.amount}`);
@@ -927,7 +1002,7 @@ Object.assign(PlayerInventoryComponentContainer.prototype, inventoryContainerFun
 Object.assign(BlockInventoryComponentContainer.prototype, inventoryContainerFunctions);
 
 const ItemStackFunctions = {
-    equalsItemStack: function (itemStack, ingoreNameTag = true) {
+    equalsItemStack(itemStack, ingoreNameTag = true) {
         if (this === itemStack) {
             return true;
         } else if ((this === undefined) || (itemStack === undefined)) {
@@ -952,7 +1027,7 @@ const ItemStackFunctions = {
 Object.assign(ItemStack.prototype, ItemStackFunctions);
 const EnchantmentTypes = Object.values(MinecraftEnchantmentTypes);
 const EnchantmentListFunctions = {
-    getArray: function () {
+    getArray() {
         const enchantmentArray = [];
         EnchantmentTypes.forEach(enchantmentType => {
             if (this.hasEnchantment(enchantmentType)) {
