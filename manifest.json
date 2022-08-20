@@ -26,11 +26,11 @@
 			]
 		},
 		{
-			"type":"script",
+			"type": "script",
 			"language": "javascript",
 			"uuid": "6dc2819b-4e3a-4bb5-b727-a2eb23a9734e",
 			"description": "mojang-minecraft module, required to use the mojang-minecraft module",
-			"entry": "scripts/patchy_api/main.js",
+			"entry": "scripts/package_import.js",
 			"version": [
 				1,
 				0,

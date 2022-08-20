@@ -1,3 +1,4 @@
+import '../main.js';
 import './chat.js';
 import './database_queue.js';
 import './database_test.js';
