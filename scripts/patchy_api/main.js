@@ -1,5 +1,10 @@
 // world.getDimension('overworld').runCommand('script debugger connect localhost 19144');
-import { world, Player, BlockLocation, EntityQueryOptions, EntityQueryScoreOptions, Trigger, EntityEventOptions, DynamicPropertiesDefinition, MinecraftEntityTypes, BeforeItemDefinitionTriggeredEvent } from "mojang-minecraft";
+const array = [];
+for (let key in console) {
+    array.push(key);
+}
+console.warn(JSON.stringify(array));
+import { world, Player, BlockLocation, EntityQueryOptions, EntityQueryScoreOptions, Trigger, EntityEventOptions, DynamicPropertiesDefinition, MinecraftEntityTypes, BeforeItemDefinitionTriggeredEvent, System, system } from "mojang-minecraft";
 
 import { ModalFormData } from 'mojang-minecraft-ui';
 // world.getDimension('overworld').runCommand('script debugger connect localhost 19144')
@@ -7,7 +12,7 @@ import "./libraries/utilities.js";
 import global from './libraries/classes/global.js';
 
 import time from "./libraries/classes/time.js";
-import { getScoreObjectsFromOnlinePlayers } from './libraries/scoreboard.js';
+// import { getScoreObjectsFromOnlinePlayers } from './libraries/scoreboard.js';
 import databases from "./libraries/classes/database.js";
 //import {overworld} from "./libraries/utilities.js"
 import errorBuider from "./libraries/classes/error.js";
@@ -29,7 +34,7 @@ global.deltaTimeArray = [];
 
 global.playerMap = {};
 global.joiningPlayers = [];
-
+world.events.before;
 const { random, floor } = Math;
 // let loaded = false;
 
@@ -60,8 +65,13 @@ let object = {
     }
 };
 
+// content.warn({ system: system.keys(), System: System.keys() });
 
-
+system.events.beforeWatchdogTerminate.subscribe((event) => {
+    const { terminateReason } = event;
+    console.log(terminateReason);
+    event.cancel = true;
+});
 // world.events.beforeDataDrivenEntityTriggerEvent.subscribe(event => {
 //     const cancel = [];
 //     eventBuilder.beforeDataDriven.forEach((key, {callback, suppressed}) => {
@@ -90,14 +100,14 @@ world.events.tick.subscribe(event => {
     //     return;
     // }
     // content.warn(native.stringify(eventBuilder, '<function>', false));
-    // overworld.runCommand(`event entity @e patches:kill`)
+    // overworld.runCommand(`event entity @e patches:kill`);
 
     // const { deltaTime, currentTick } = event;
     // if (!(currentTick % 10)) {
     //     overworld.runCommand(`say ${1 / deltaTime}`);
     // }
 
-    // console.warn(JSON.stringify(global))
+    // console.warn(JSON.stringify(global));
     global.joiningPlayers.forEach(player => {
 
         try {
@@ -111,10 +121,11 @@ world.events.tick.subscribe(event => {
                         callback(event);
                     }
                 } catch (error) {
-                    errorBuider.log(error, error.stack, { event: 'playerJoin', key: 'N/A' });
+                    errorBuider.log(error, error.stack, { event: 'playerJoin', key });
                 }
             });
             if (!global.loaded) {
+
                 try {
                     try { overworld.runCommand(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick`); } catch { }
                     databases.initialize();
@@ -123,13 +134,24 @@ world.events.tick.subscribe(event => {
                     server.scoreAdd('error', 'log');
                     console.warn(server.scoreAdd('error', 'save'), server.scoreAdd('error', 'log'));
                     global.loaded = true;
-                } catch (error) { errorBuider.log(error, error.stack, { event: 'worldLoad', key: 'N/A' }); }
+                } catch (error) { errorBuider.log(error, error.stack, { event: 'worldLoad - API', key: 'N/A' }); }
+                eventBuilder.worldLoad.forEach((key, { callback, suppressed }) => {
+                    try {
+                        if (!suppressed) {
+                            callback(event);
+                        }
+                    } catch (error) {
+                        errorBuider.log(error, error.stack, { event: 'worldLoad', key });
+                    }
+                });
             }
         } catch { /*console.warn(error, error.stack);*/ }
     });
     try {
+        // content.warn({ playerScoreboard });
         // content.warn({ propertyBuilder });
         if (global.loaded) {
+
             global.tickTime.tick = {};
             // content.warn(native.stringify(overworld.getBlock(new BlockLocation(35, 81, 97)).getComponent('inventory')));
             const { deltaTime } = event;
@@ -140,11 +162,14 @@ world.events.tick.subscribe(event => {
 
             global.players = [...world.getPlayers()].filter(player => !global.joiningPlayers.some(join => player.getName() === join.getName()));
             // content.warn(native.stringify(global.players));
-            global.nonStaffPlayers = [...world.getPlayers(Object.assign(new EntityQueryOptions(), { scoreOptions: [Object.assign(new EntityQueryScoreOptions(), { exclude: true, maxScore: 1, minScore: 1, objective: 'staff' })] }))].filter(player => !global.joiningPlayers.some(join => player.getName() === join.getName()));
+            global.nonStaffPlayers = [...world.getPlayers({
+                scoreOptions: [Object.assign(new EntityQueryScoreOptions(), { exclude: true, maxScore: 1, minScore: 1, objective: 'staff' })]
+            })].filter(player => !global.joiningPlayers.some(join => player.getName() === join.getName()));
             global.playerNames = global.players.map(({ name }) => name);
 
             // content.warn(global.playerNames);
-            global.scoreObject = getScoreObjectsFromOnlinePlayers(global.players);
+            // global.scoreObject = getScoreObjectsFromOnlinePlayers(global.players);
+
             let dimensions = [];
             let dead = {};
             global.players.forEach(player => {
@@ -194,7 +219,7 @@ world.events.tick.subscribe(event => {
             });
 
             global.dimensions = dimensions;
-            global.playerIds = global.scoreObject.forEach((key, value) => (value.playerId) ? ({ [value.playerId]: key }) : false, {});
+            // global.playerIds = global.scoreObject.forEach((key, value) => (value.playerId) ? ({ [value.playerId]: key }) : false, {});
             let keys = [];
             // content.warn(overworld.runCommand('tellraw @a { "rawtext": [ { "translate" : "Hello %%s and %%s", "with": { "rawtext" : [ { "text" : "Steve" }, { "translate" : "tile.stone.stone.name" } ] } } ] }'));
             // scoreboardTest();
@@ -562,18 +587,18 @@ world.events.playerLeave.subscribe(event => {
 
 
 
-world.events.weatherChange.subscribe(event => {
-    time.start('weatherChange');
+// world.events.weatherChange.subscribe(event => {
+//     time.start('weatherChange');
 
-    eventBuilder.weatherChange.forEach((key, { callback, suppressed }) => {
-        try {
-            callback(event, players, getScoreObjectsFromOnlinePlayers(players));
-        } catch (error) {
-            errorBuider.log(error, error.stack, { event: 'weatherChange', key });
-        }
-    });
-    global.tickTime.weatherChange = time.end('weatherChange');
-});
+//     eventBuilder.weatherChange.forEach((key, { callback, suppressed }) => {
+//         try {
+//             callback(event, players, getScoreObjectsFromOnlinePlayers(players));
+//         } catch (error) {
+//             errorBuider.log(error, error.stack, { event: 'weatherChange', key });
+//         }
+//     });
+//     global.tickTime.weatherChange = time.end('weatherChange');
+// });
 
 world.events.entityHit.subscribe(event => {
     time.start('playerHit');
@@ -636,3 +661,41 @@ world.events.worldInitialize.subscribe((event) => {
     content.warn({ t: 'jdjkwjkdwj', propertyBuilder, rand: propertyBuilder.rand });
     propertyBuilder.registerEvent(event);
 });
+
+import databases from './database.js';
+const joiningPlayers = {};
+const loaded = false;
+world.events.tick.subscribe(() => {
+    try {
+        const joiningPlayersArray = Object.values(joiningPlayers);
+        if (joiningPlayersArray.length) {
+            //runs setup when player joins to reduce resouces
+            joiningPlayersArray.forEach(player => {
+                const { name } = player;
+                try {
+                    try {
+                        player.runCommand('testfor @s');
+                    } catch { }
+                    delete joiningPlayers[name];
+                    if (!loaded) {
+                        databases.initalise();
+                        try { overworld.runCommand(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick`); } catch { }
+                        testDB();
+                        loaded = true;
+                    }
+                } catch (error) { console.warn(error, error.stack); }
+            });
+        }
+    } catch { console.warn(error, error.stack); }
+});
+//can only be used after player loads in
+function testDB() {
+    let testDatabase = databases.get('testDatabase');
+    if (!testDatabase) {
+        testDatabase = databases.add('testDatabase');
+        for (let i = 0; i < 2000; i++) {
+            testDatabase.set(`abc${i}`, Math.random());
+        }
+        databases.save('testDatabase');
+    }
+}

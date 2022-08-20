@@ -1,7 +1,7 @@
 import { rainbowWeight } from "../utilities.js";
 import databases from "./database.js";
 import global from "./global.js";
-import { getChatNameTag } from '../../../factions/plugins/player/name_tag.js';
+// import { getChatNameTag } from '../../../factions/plugins/player/name_tag.js';
 const ranks = ['§7Low§f', '§6High§f', '§3Master§f'];
 class PromptBuilder {
     constructor() {
@@ -50,14 +50,14 @@ class PromptBuilder {
     */
     check(sender, message) {
         if (this[sender.getName()]) {
-            const name = sender.getName()
+            const { name } = sender;
             const { anwsers } = this[name];
             if (anwsers) {
                 let bool = false;
                 anwsers.forEach((key, value) => {
                     if (key.toLowerCase() === message.toLowerCase() || key.toLowerCase() === '%any%') {
-                        const nameTag = getChatNameTag(sender);
-                        sender.tellraw(`${nameTag}: ${message}`);
+                        // const nameTag = getChatNameTag(sender);
+                        sender.tellraw(`${name}: ${message}`);
                         value(sender, message);
                         bool = true;
                     }

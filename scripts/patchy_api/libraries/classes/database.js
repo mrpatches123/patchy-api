@@ -1,10 +1,10 @@
-import { BlockLocation, TickEvent } from "mojang-minecraft";
-import config from "../../config.js";
+import { BlockLocation, TickEvent, world } from "mojang-minecraft";
 import { overworld, nether, end } from '../utilities.js';
+// const overworld = world.getDimension('overworld');
 const chunkSize = 32763;
-import { content } from "../../../patchy_api/libraries/utilities.js";
-import eventBuilder from "./events.js";
-import { binToString, binFromString } from '../bin.js';
+import { compress, decompress } from '../zip_iz77.js';
+
+
 // function permutate(array) {
 // 	return array.reduce(function permute(res, item, key, arr) {
 //       return res.concat(arr.length > 1 && arr.slice(0, key)
@@ -128,7 +128,7 @@ export class Databases {
                         json.push([order, entity.nameTag]);
                     });
                     if (name) {
-                        this[name] = new Database(JSON.parse(binToString(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''), 211, 1)));
+                        this[name] = new Database(JSON.parse(decompress(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''))));
                     }
                 }
             });
@@ -215,7 +215,7 @@ export class Databases {
                     const order = entity.getTags().find(tag => tag.includes('dbOrder:')).replace('dbOrder:', '');
                     json.push([order, entity.nameTag]);
                 });
-                return binToString(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''), 211, 1);
+                return decompress((json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join('')));
             } else {
                 return undefined;
             }
@@ -246,7 +246,7 @@ export class Databases {
         const { x, z } = this[name].__db_properties['coords'];
         if (x && z && this[name]) {
             //console.warn(x, z);
-            const stringifiedDatabase = binFromString(JSON.stringify(this[name]), 211, 1);
+            const stringifiedDatabase = compress((JSON.stringify(this[name])));
             //console.warn(stringifiedDatabase.length);
             //console.warn(stringifiedDatabase);
             const stringifiedDBLength = stringifiedDatabase.length;

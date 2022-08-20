@@ -32,7 +32,7 @@ class EventBuilder {
         this.playerLeave = {};
         this.tick = {};
         this.weatherChange = {};
-
+        this.worldLoad = {};
     }
     subscribe(key, eventObject) {
         eventObject.forEach((event, callback) => {

@@ -1,11 +1,14 @@
 {
   "scripts": {
     "update": "node src/update.js",
-    "reuuid": "node src/reUUID.js"
+    "reuuid": "node src/reUUID.js",
+    "generation": "node src/generation.js"
   },
   "dependencies": {
     "@types/mojang-gametest": "^0.1.2",
-    "@types/mojang-minecraft": "^0.1.4"
+    "@types/mojang-minecraft": "^0.1.6",
+    "caller-callsite": "^5.0.0",
+    "path": "^0.12.7"
   },
   "type": "module"
 }

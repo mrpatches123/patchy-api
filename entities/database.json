@@ -1,0 +1,59 @@
+{
+	"format_version": "1.17.0",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "patches:database",
+			"is_summonable": true,
+			"is_spawnable": true
+		},
+		"component_groups": {
+			"patches:kill": {
+				"minecraft:instant_despawn": {}
+			}
+		},
+		"components": {
+			"minecraft:health": {
+				"value": 1,
+				"min": 1
+			},
+			"minecraft:physics": {
+				"has_collision": false,
+				"has_gravity": false
+			},
+			"minecraft:collision_box": {
+				"width": 0,
+				"height": 0
+			},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": false
+			},
+			"minecraft:breathable": {
+				"breathes_water": true,
+				"breathes_lava": true,
+				"breathes_air": true,
+				"breathes_solids": true
+			},
+			"minecraft:damage_sensor": {
+				"triggers": [
+					{
+						"deals_damage": false
+					}
+				]
+			},
+			"minecraft:nameable": {
+				"always_show": false,
+				"allow_name_tag_renaming": false
+			}
+		},
+		"events": {
+			"patches:kill": {
+				"add": {
+					"component_groups": [
+						"patches:kill"
+					]
+				}
+			}
+		}
+	}
+}
