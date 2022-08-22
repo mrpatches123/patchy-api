@@ -18,7 +18,7 @@ import databases from "./libraries/classes/database.js";
 import errorBuider from "./libraries/classes/error.js";
 import { native, overworld, server } from "./libraries/utilities.js";
 import eventBuilder from "./libraries/classes/events.js";
-import './module_import.js';
+import '../package_import.js';
 import './plugins/api_imports.js';
 import propertyBuilder from './libraries/classes/property.js';
 // for (const key in Player.prototype) {
@@ -662,40 +662,3 @@ world.events.worldInitialize.subscribe((event) => {
     propertyBuilder.registerEvent(event);
 });
 
-import databases from './database.js';
-const joiningPlayers = {};
-const loaded = false;
-world.events.tick.subscribe(() => {
-    try {
-        const joiningPlayersArray = Object.values(joiningPlayers);
-        if (joiningPlayersArray.length) {
-            //runs setup when player joins to reduce resouces
-            joiningPlayersArray.forEach(player => {
-                const { name } = player;
-                try {
-                    try {
-                        player.runCommand('testfor @s');
-                    } catch { }
-                    delete joiningPlayers[name];
-                    if (!loaded) {
-                        databases.initalise();
-                        try { overworld.runCommand(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick`); } catch { }
-                        testDB();
-                        loaded = true;
-                    }
-                } catch (error) { console.warn(error, error.stack); }
-            });
-        }
-    } catch { console.warn(error, error.stack); }
-});
-//can only be used after player loads in
-function testDB() {
-    let testDatabase = databases.get('testDatabase');
-    if (!testDatabase) {
-        testDatabase = databases.add('testDatabase');
-        for (let i = 0; i < 2000; i++) {
-            testDatabase.set(`abc${i}`, Math.random());
-        }
-        databases.save('testDatabase');
-    }
-}

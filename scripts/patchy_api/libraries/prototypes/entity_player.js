@@ -276,6 +276,5 @@ const playerProperties = {
 		},
 	}
 };
-
 Object.defineProperties(Player.prototype, playerProperties);
 Object.defineProperties(Entity.prototype, playerProperties);

@@ -68,12 +68,14 @@ class CommandBuilder {
         if (requires) {
             let notPermissions;
             if (score) {
-                const scores = global.scoreObject[name];
-                score.forEach((objective, value) => { if (global.scoreObject[name][objective] !== value) { notPermissions = true; } });
+                score.forEach((objective, value) => {
+                    content.warn({ objective: sender.scores[objective] });
+                    if (sender.scores[objective] !== value) { notPermissions = true; }
+                });
             }
             if (tag) {
                 const tags = sender.getTags();
-                tag.forEach((objective, value) => { if (global.scoreObject[name][objective] !== value) { notPermissions = true; } });
+                tag.forEach((tag) => { if (tags.includes(tag)) { notPermissions = true; } });
             }
             if (notPermissions) {
                 sender.tellraw(`§cyou do not have permission to use this command!`);
@@ -220,12 +222,13 @@ class CommandBuilder {
             if (requires) {
                 let notPermissions;
                 if (score) {
-                    const scores = global.scoreObject[name];
-                    score.forEach((objective, value) => { if (global.scoreObject[name][objective] !== value) { notPermissions = true; } });
+                    score.forEach((objective, value) => {
+                        if (sender.scores[objective] !== value) { notPermissions = true; }
+                    });
                 }
                 if (tag) {
                     const tags = sender.getTags();
-                    tag.forEach((objective, value) => { if (global.scoreObject[name][objective] !== value) { notPermissions = true; } });
+                    tag.forEach((tag) => { if (tags.includes(tag)) { notPermissions = true; } });
                 }
                 if (notPermissions && permissions) {
                     sender.tellraw(`§cyou do not have permission to use view this command!`);

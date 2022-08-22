@@ -2,21 +2,9 @@ import { BlockLocation, TickEvent, world } from "mojang-minecraft";
 import { overworld, nether, end } from '../utilities.js';
 // const overworld = world.getDimension('overworld');
 const chunkSize = 32763;
-import { compress, decompress } from '../zip_iz77.js';
+// import { compress, decompress } from '../zip_255cs.js';
 
 
-// function permutate(array) {
-// 	return array.reduce(function permute(res, item, key, arr) {
-//       return res.concat(arr.length > 1 && arr.slice(0, key)
-//           .concat(arr.slice(key + 1))
-//           .reduce(permute, [])
-//           .map(function (perm) {
-//               return [item].concat(perm);
-//           }) || item);
-//   	}, []);
-// }
-
-// console.log(permutate([1,2,3,4,5,6,7,8,9]))
 class Database {
     constructor(json = {}) {
         Object.assign(this, json);
@@ -128,7 +116,7 @@ export class Databases {
                         json.push([order, entity.nameTag]);
                     });
                     if (name) {
-                        this[name] = new Database(JSON.parse(decompress(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''))));
+                        this[name] = new Database(JSON.parse(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join('')));
                     }
                 }
             });
@@ -215,7 +203,7 @@ export class Databases {
                     const order = entity.getTags().find(tag => tag.includes('dbOrder:')).replace('dbOrder:', '');
                     json.push([order, entity.nameTag]);
                 });
-                return decompress((json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join('')));
+                return (json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''));
             } else {
                 return undefined;
             }
@@ -246,7 +234,7 @@ export class Databases {
         const { x, z } = this[name].__db_properties['coords'];
         if (x && z && this[name]) {
             //console.warn(x, z);
-            const stringifiedDatabase = compress((JSON.stringify(this[name])));
+            const stringifiedDatabase = (JSON.stringify(this[name]));
             //console.warn(stringifiedDatabase.length);
             //console.warn(stringifiedDatabase);
             const stringifiedDBLength = stringifiedDatabase.length;
