@@ -1,13 +1,10 @@
 import config from '../config.js';
-import global from '../../patchy_api/libraries/classes/global.js';
-import commandBuilder from "../../patchy_api/libraries/classes/commands.js";
-import { content, native } from "../../patchy_api/libraries/utilities.js";
 
 const { prefix } = config;
 
 
 
-
+import { commandBuilder, content, native } from '../../patchy_api/modules.js';
 
 commandBuilder.register('rename', {
     description: "Used to enchant the item in hand.",

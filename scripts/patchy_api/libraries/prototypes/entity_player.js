@@ -1,7 +1,9 @@
-import { Player, Entity, ItemStack, Items, Location, MolangVariableMap, Vector } from 'mojang-minecraft';
+import { world, Player, Entity, ItemStack, Items, Location, MolangVariableMap, Vector } from '@minecraft/server';
+import errorLogger from '../classes/error';
+
 const { isInteger } = Number;
-import playerScoreboard from '../classes/scoreboard';
-import { content, native } from '../utilities';
+// import playerScoreboard from '../classes/scoreboard';
+import { content, native, server } from '../utilities';
 const { sin, cos } = Math;
 const betaPlayerFunctions = {
 	/**
@@ -10,11 +12,9 @@ const betaPlayerFunctions = {
 	 * @returns Array CommandRepsone
 	 */
 	runCommands(...commands) {
-		commands = (typeof commands[0] === 'array') ? arguments[0] : [...commands];
 		let returnArray = [];
-		for (const command of commands) {
-			returnArray.push(this.runCommand(command));
-		} return returnArray;
+		commands.forEach(command => returnArray.push(this.runCommand(command)));
+		return returnArray;
 	},
 	/**
 	 * @method getName gets player name property
@@ -24,7 +24,7 @@ const betaPlayerFunctions = {
 		return this.name;
 	},
 	/**
-	 * @method getName gets player nameTag propertygets player nameTag property
+	 * @method getNameTag gets player nameTag propertygets player nameTag property
 	 * @returns String 
 	 */
 	getNameTag() {
@@ -33,7 +33,7 @@ const betaPlayerFunctions = {
 		} return this.nameTag;
 	}, //not beta but fixes nameSpoof command tartgeting issues
 	/**
-	 * @method getName gets player roation property 
+	 * @method rot gets player roation property 
 	 * @param  {Boolean} isArray if true returns an array else object
 	 * @returns Array || Object 
 	 */
@@ -52,25 +52,22 @@ const betaPlayerFunctions = {
 	 * @param  {Boolean} max (Optional) 
 	 * @returns Number || Boolean 
 	 */
-	scoreTest(objective, min, max) {
-		const score = playerScoreboard.getScore(this, objective);
-		const minInt = isInteger(min);
-		const maxInt = isInteger(max);
-		if (score === undefined) { return; }
-		if (!minInt && !maxInt) { return score; }
-		if (minInt && !maxInt) { return score >= min; }
-		if (!minInt && maxInt) { return score <= max; }
-		if (minInt && maxInt) { return score >= min && score <= max; }
+	scoreTest(objective) {
+		const score = server.scoreTest(objective, this);
+		// if (score === undefined) {
+		// 	throw new Error(`scoreboard objective: ${objective}, is undefined for ${this.name}`);
+		// }
+		return score;
 	},
-	/**
-	 * @method — getScoresListed gets a players scores from a list or an array of objectiveIds
-	 * @param player
-	 * @param objectives — or argument Strings
-	 * @returns — Object 
-	 */
-	getScoresListed(...objectives) {
-		return playerScoreboard.getScoresListed(this, objectives);
-	},
+	// /**
+	//  * @method — getScoresListed gets a players scores from a list or an array of objectiveIds
+	//  * @param player
+	//  * @param objectives — or argument Strings
+	//  * @returns — Object 
+	//  */
+	// getScoresListed(...objectives) {
+	// 	return playerScoreboard.getScoresListed(this, objectives);
+	// },
 	// scores: new Proxy({}, {
 	// 	get(target, prop) {
 
@@ -110,22 +107,6 @@ const betaPlayerFunctions = {
 	tellraw(message) {
 		return this.runCommand(`tellraw @s {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
 	},
-	tellrawStringify(message) {
-		return this.runCommand(`tellraw @s {"rawtext":[{"text":"${JSON.stringify(message).replaceAll('"', '\\"')}"}]}`);
-	},
-	tellrawJSON(json) {
-		return this.runCommand(`tellraw @s {"rawtext":[${json}]}`);
-
-	},
-	titleraw(message, location = 'actionbar') {
-		return this.runCommand(`titleraw @s ${location} {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
-	},
-	titlerawStringify(message, location = 'actionbar') {
-		return this.runCommand(`titleraw @s ${location} {"rawtext":[{"text":"${JSON.stringify(message).replaceAll('"', '\\"')}"}]}`);
-	},
-	titlerawJSON(json, location = 'actionbar') {
-		return this.runCommand(`titleraw @s ${location} {"rawtext":[${json}]}`);
-	},
 	clear(id) {
 		let inventory = this.getComponent('minecraft:inventory').container;
 		for (let i = 0; i < inventory.size; i++) {
@@ -147,21 +128,6 @@ const betaPlayerFunctions = {
 			}
 		}
 		return amount;
-	},
-	tellrawRawObject(obj) {
-		return this.runCommand(`tellraw @s ` + JSON.stringify(obj));
-	},
-	titleraw(message, location = 'actionbar') {
-		return this.runCommand(`titleraw @s ${location} {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
-	},
-	titlerawStringify(message, location = 'actionbar') {
-		return this.runCommand(`titleraw @s ${location} {"rawtext":[{"text":"${JSON.stringify(message).replaceAll('"', '\\"')}"}]}`);
-	},
-	titlerawJSON(json, location = 'actionbar') {
-		return this.runCommand(`titleraw @s ${location} {"rawtext":[${json}]}`);
-	},
-	titlerawRawObject(obj, location = 'actionbar') {
-		return this.runCommand(`titleraw @s ${location} ` + JSON.stringify(obj));
 	},
 	clearCrossHare(id) {
 		try {
@@ -214,49 +180,40 @@ const betaPlayerFunctions = {
 	},
 	disconnect() {
 		this.triggerEvent('patches:disconnect');
-	},
-	spawnProjectile(entityId, velocity, offset = { x: 10, y: 0, z: 0 }, addPlayerVelocity) {
-		let { x, y, z } = offset;
-
-		const { headLocation: { x: hx, y: hy, z: hz }, viewVector, dimension } = this;
-		let { rotation: { x: rx, y: ry } } = this;
-		rx = rx * Math.PI / 180;
-		ry = ry * Math.PI / 180;
-		content.warn({ rx, ry });
-		//around x
-		// y = y * cos(rx) - z * sin(rx);
-		// z = y * sin(rx) + z * cos(rx);
-		//around y
-		z = z * cos(rx) - x * sin(rx);
-		x = x * cos(rx) + z * sin(rx);
-		// //around z
-		x = x * cos(ry) - y * sin(ry);
-		y = x * sin(ry) + y * cos(ry);
-		const newLocation = new Location(hx + x, hy + y, hz + z);
-		dimension.spawnParticle('minecraft:endrod', newLocation, new MolangVariableMap());
-		// const projectile = dimension.spawnEntity(entityId, newLocation);
-		// projectile.setRotation(x, y);
-		// const arrowVelocity = veiwVector.scale(velocity.magnitude() + 1.6);
-		// content.warn(arrowVelocity.magnitude());
-		// arrow.setVelocity(arrowVelocity);
-		// const markVariant = source.getComponent('minecraft:mark_variant');
-		// markVariant.value = 0;
 	}
+	// spawnProjectile(entityId, velocity, offset = { x: 10, y: 0, z: 0 }, addPlayerVelocity) {
+	// 	let { x, y, z } = offset;
+
+	// 	const { headLocation: { x: hx, y: hy, z: hz }, viewVector, dimension } = this;
+	// 	let { rotation: { x: rx, y: ry } } = this;
+	// 	rx = rx * Math.PI / 180;
+	// 	ry = ry * Math.PI / 180;
+	// 	content.warn({ rx, ry });
+	// 	//around x
+	// 	// y = y * cos(rx) - z * sin(rx);
+	// 	// z = y * sin(rx) + z * cos(rx);
+	// 	//around y
+	// 	z = z * cos(rx) - x * sin(rx);
+	// 	x = x * cos(rx) + z * sin(rx);
+	// 	// //around z
+	// 	x = x * cos(ry) - y * sin(ry);
+	// 	y = x * sin(ry) + y * cos(ry);
+	// 	const newLocation = new Location(hx + x, hy + y, hz + z);
+	// 	dimension.spawnParticle('minecraft:endrod', newLocation, new MolangVariableMap());
+	// 	// const projectile = dimension.spawnEntity(entityId, newLocation);
+	// 	// projectile.setRotation(x, y);
+	// 	// const arrowVelocity = veiwVector.scale(velocity.magnitude() + 1.6);
+	// 	// content.warn(arrowVelocity.magnitude());
+	// 	// arrow.setVelocity(arrowVelocity);
+	// 	// const markVariant = source.getComponent('minecraft:mark_variant');
+	// 	// markVariant.value = 0;
+	// }
 };
 
 Object.assign(Player.prototype, betaPlayerFunctions);
 Object.assign(Entity.prototype, betaPlayerFunctions);
 
 const playerProperties = {
-	/**
-	 * @property scoreId gets a player's scoreboard id with <Player instance>.id
-	 * @returns Number
-	 */
-	scoreId: {
-		get() {
-			return playerScoreboard.getId(this);
-		}
-	},
 	/**
 	 * @property scores any property gotten with return the score from the player's scoreboard 
 	 * any property set will set the score
@@ -267,7 +224,7 @@ const playerProperties = {
 			const player = this;
 			return new Proxy({}, {
 				get(target, objectiveId, value) {
-					return playerScoreboard.getScore(player, objectiveId);
+					return player.scoreTest(objectiveId);
 				},
 				set(target, objectiveId, value) {
 					player.scoreSet(objectiveId, value);
@@ -276,5 +233,6 @@ const playerProperties = {
 		},
 	}
 };
+
 Object.defineProperties(Player.prototype, playerProperties);
 Object.defineProperties(Entity.prototype, playerProperties);

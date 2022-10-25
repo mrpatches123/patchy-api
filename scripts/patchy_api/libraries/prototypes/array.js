@@ -49,6 +49,10 @@ const arrayFunctions = {
 		const arrayPost = this.filter((item, i) => (postfix) ? i > index : i >= index);
 		return [...arrayPre, ...array, ...arrayPost];
 	},
-
+	toObject() {
+		const object = {};
+		this.forEach(([key, value]) => object[key] = value);
+		return object;
+	}
 };
 Object.assign(Array.prototype, arrayFunctions);

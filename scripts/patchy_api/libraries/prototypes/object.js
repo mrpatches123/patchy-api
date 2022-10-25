@@ -3,6 +3,9 @@ const { isArray } = Array;
 const { assign } = Object;
 // import { content } from "../utilities.js";
 const arrayObjectFunctions = {
+	hasProperty(key) {
+		return key in this;
+	},
 	/**
 	 * @method keys does Object.keys() on any Object
 	 * @param {Boolean} ignoreFunctions 
@@ -206,6 +209,54 @@ const arrayObjectFunctions = {
 			}
 
 		}
+	},
+	/**
+	 * @method entries returns an array of arrays of key value parir [[key,value],[key,value]]
+	 * @returns Array
+	 */
+	entries() {
+		const array = [];
+		this.forEach((key, value) => array.push([key, value]));
+		return array;
+	},
+	/**
+	 * @method sortKeys returns a sorted Object
+	 * @param {Function} callback function params ([keyPrevious,valuePrevious],[keyCurrent,valueCurrent]) => 
+	 * @returns Object
+	 */
+	sortKeys(callback) {
+		const array = this.entries();
+		let sortedArray;
+		if (callback) {
+			sortedArray = array.sort(callback);
+		} else {
+			sortedArray = array.sort(([keyP], [keyC]) => {
+				const initC = keyC.includes('init');
+				const initP = keyP.includes('init');
+				const endC = keyC.includes('end');
+				const endP = keyP.includes('end');
+				if (initC || endP) {
+					if (initC && initP) {
+						return keyP.localeCompare(keyC);
+					} else {
+						return 1;
+					}
+				} else if (endC || initP) {
+					if (endC && endP) {
+						return keyP.localeCompare(keyC);
+					} else {
+						return -1;
+					}
+				} else if (callback === true) {
+					return keyP.localeCompare(keyC);
+				} else {
+					return 0;
+				}
+			});
+		}
+		const object = {};
+		sortedArray.forEach(([key, value]) => object[key] = value);
+		return object;
 	}
 
 };
@@ -214,7 +265,7 @@ const arrayObjectFunctions = {
 	 * @param {String} key
 	 * @returns Boolean
 	 */
-function hasKey(key) {
+export function hasKey(key) {
 	if (arrayObjectFunctions.hasOwnProperty(key) || stringFunctions.hasOwnProperty(key)) {
 		return true;
 	}

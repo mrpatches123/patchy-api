@@ -1,13 +1,21 @@
-import databases from '../libraries/classes/database.js';
-import eventBuilder from '../libraries/classes/events.js';
-import { content } from '../libraries/utilities.js';
+// import { content, eventBuilder, databases, global, native } from '../modules.js';
+// async function isPlayerLoaded(player) {
+// 	try {
 
-eventBuilder.subscribe('databaseTest', {
-	tick: () => {
-		// content.warn('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-		// const database = databases.get('testData') ?? databases.add('testData');
-		// database.set('test', { hi: 37887933839023, help: [389893, 390902092, 23899832] });
-		// databases.queueSave('testData');
-		// content.warn({ T: 'crap', databases });
-	}
-});
+// 		const test = await player.runCommandAsync('scoreboard players test @s staff *');
+// 		content.warn({ t: "3i33389", test: native.stringify(test) });
+
+// 		return true;
+// 	} catch (error) {
+// 		console.warn(error);
+// 		console.warn('not loafed');
+// 		return false;
+// 	}
+// }
+// eventBuilder.subscribe('databaseTest*API', {
+// 	tickAfterLoad: ({ currentTick }) => {
+// 		global.players.forEach((id, player) => {
+// 			isPlayerLoaded(player);
+// 		});
+// 	}
+// });

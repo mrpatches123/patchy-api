@@ -1,5 +1,5 @@
 import { overworld, nether, end } from '../utilities.js';
-import { World } from 'mojang-minecraft';
+import { World } from '@minecraft/server';
 
 const worldFunctions = {
 	/**

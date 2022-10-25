@@ -1,4 +1,4 @@
-import { MinecraftEnchantmentTypes, EnchantmentList, EnchantmentType } from "mojang-minecraft";
+import { MinecraftEnchantmentTypes, EnchantmentList, EnchantmentType } from "@minecraft/server";
 const EnchantmentTypes = Object.values(MinecraftEnchantmentTypes);
 const EnchantmentListFunctions = {
 	/**

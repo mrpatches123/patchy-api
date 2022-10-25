@@ -1,77 +1,11 @@
 
 
-import { Player, world } from "mojang-minecraft";
-import { content, native } from "../utilities";
-// import { content, native } from '../utilities.js';
+import { Player, PlayerJoinEvent, world } from "@minecraft/server";
+import { content, native, parseList, server } from '../utilities.js';
 // import time from "./time.js";
+import eventBuilder from "./events.js";
 
 
-/**
- * @function parseList spreads all arrays in an array into one single array
- * @param {Array} list 
- * @returns Array
- */
-function parseList(list) {
-	if (!Array.isArray(list)) { return; }
-	for (let i = 0; i < list.length; i++) {
-		const item = list[i];
-		if (Array.isArray(item)) {
-			list = [...list.slice(undefined, i), ...item, ...list.slice(i + 1)];
-			i--;
-		} else {
-			list[i] = list[i];
-		}
-
-	}
-	return list;
-}
-
-const overworld = world.getDimension('overworld');
-/**
- * @function objectiveAdd creates a scoreboard Objective
- * @param {String} objectiveId 
- * @param {String} display Optional? displayName for the Objective
- * @returns
- */
-export function objectiveAdd(objectiveId, display = '') {
-	try {
-		overworld.runCommand(`scoreboard objectives add ${objectiveId} dummy ${display}`);
-	} catch (error) { console.warn(error, error.stack); }
-}
-/**
- * @function objectiveAdd removes a scoreboard Objective
- * @param {String} objectiveId 
- * @returns
- */
-export function objectiveRemove(objectiveId) {
-	try {
-		overworld.runCommand(`scoreboard objectives remove ${objectiveId}`);
-	} catch (error) { console.warn(error, error.stack); }
-}
-/**
- * @function scoreAdd adds to a players scoreboard value and returns the resulting value
- * @param {Player} player 
- * @param {String} objectiveId 
- * @param {Number} value Optional? default = 0
- * @returns Number
- */
-export function scoreAdd(player, objectiveId, value = 0) {
-	try {
-		return Number(player.runCommand(`scoreboard players add @s ${objectiveId} ${value}`).statusMessage.match(/-?\d+(?=[^-\d]$)/));
-	} catch { }
-}
-/**
- * @function Set sets a player's scoreboard value and returns the resulting value
- * @param {Player} player 
- * @param {String} objectiveId 
- * @param {Number} value Optional? default = 0
- * @returns Number
- */
-function scoreSet(player, objectiveId, value = 0) {
-	try {
-		return Number(player.runCommand(`scoreboard players set @s ${objectiveId} ${value}`).statusMessage.match(/-?\d+(?=$)/));
-	} catch { }
-}
 class PlayersScoreboard {
 	constructor() {
 		this.updatedThisTick = false; //system to prevent excess scorebaord gets
@@ -83,56 +17,32 @@ class PlayersScoreboard {
 		so you dont have to loop over all of them to get one score*/
 		this.autoUpdate = true; // if you want it to auto update this.scores every tick
 
-		//allow system to wait until player loads in
-		world.events.playerJoin.subscribe(({ player }) => {
-			const { name } = player;
-			this.joiningPlayers[name] = player;
-		});
 
-		world.events.tick.subscribe(() => {
-			try {
-				this.updatedThisTick = false; //resets updatedThisTick
-				// time.start('scoreboardTest');
+		eventBuilder.subscribe("0init_scoreboard*IE", {
+			worldInitialize: () => {
+				server.objectiveRemove('identities');
+				server.objectiveAdd('identities');
+				server.objectiveAdd('playerId');
 
-
-				const joiningPlayersArray = Object.values(this.joiningPlayers);
-				if (joiningPlayersArray.length) {
-					//runs setup when player joins to reduce resouces
-					joiningPlayersArray.forEach(player => {
-						const { name } = player;
-						try {
-							try {
-
-
-								player.runCommand('testfor @s');
-							} catch { }
-							delete this.joiningPlayers[name];
-							if (!this.loaded) {
-								objectiveRemove('scoreIdentities');
-								objectiveAdd('scoreIdentities');
-								objectiveAdd('playerId');
-								this.loaded = true;
-							}
-
-							scoreAdd(player, 'scoreIdentities');
-							const { scoreboard } = world;
-							const scoreboardIdentity = player.scoreboard;
-							const { id } = scoreboardIdentity;
-							this.scores[id] = {};
-							this.ids[name] = id;
-							scoreSet(player, 'playerId', id);
-							this.scoreboardIdentities[id] = scoreboardIdentity;
-						} catch (error) { console.warn(error, error.stack); }
-					});
-				}
-				if (!this.loaded) { return; }
+			},
+			tick: () => {
 				if (!this.autoUpdate) { return; }
 				if (this.updatedThisTick) { return; }
 				this.updateScores();
-				// content.warn({ time: time.end('scoreboardTest'), scores: this.scores });
-
-			} catch (error) { console.warn(error, error.stack); }
+			},
+			playerJoined: ({ player }) => {
+				this.updatedThisTick = false; //resets updatedThisTick
+				// time.start('scoreboardTest');
+				const { scoreboard, name } = player;
+				if (!scoreboard) { content.warn({ score: player.scoreAdd('identities'), name }); return true; }
+				const { id } = scoreboard;
+				this.scores[id] = {};
+				this.ids[name] = id;
+				player.scoreSet('playerId', id);
+				this.scoreboardIdentities[id] = scoreboard;
+			}
 		});
+
 		//removes player from system when they leave
 		world.events.playerLeave.subscribe(({ playerName }) => {
 
@@ -146,7 +56,6 @@ class PlayersScoreboard {
 	 * @param {player} boolean 
 	 * @returns Number
 	 */
-
 	getId({ name }) {
 		return this.ids[name];
 	}
@@ -235,6 +144,6 @@ class PlayersScoreboard {
 		}
 	}
 }
-const playerScoreboard = new PlayersScoreboard();
+let playerScoreboard = new PlayersScoreboard();
 export default playerScoreboard;
 

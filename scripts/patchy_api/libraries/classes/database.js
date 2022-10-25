@@ -1,11 +1,11 @@
-import { BlockLocation, TickEvent, world } from "mojang-minecraft";
-import { overworld, nether, end } from '../utilities.js';
+import { BlockAreaSize, BlockLocation, world } from "@minecraft/server";
+import { overworld, nether, end, content, native } from '../utilities.js';
 // const overworld = world.getDimension('overworld');
 const chunkSize = 32763;
 // import { compress, decompress } from '../zip_255cs.js';
 
 
-class Database {
+export class Database {
     constructor(json = {}) {
         Object.assign(this, json);
         this.__db_properties = json.__db_properties ?? {};
@@ -92,6 +92,9 @@ Array.prototype.random = function () {
 //         .filter(item => !existingCoords.some(coord => coord.x === item.x && coord.z === item.z)).random();
 // }
 //
+
+
+const databasesArea = new BlockAreaSize(16, 1, 16);
 export class Databases {
     constructor() {
 
@@ -102,24 +105,37 @@ export class Databases {
      * @returns {void}
      */
     initialize() {
-        Array.from(Array(256), (item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 }))
-            .filter(({ x, z }) => Boolean(overworld.getEntitiesAtBlockLocation(new BlockLocation(x, -64, z)).length))
-            .forEach(({ x, z }) => {
-                const json = [];
-                let name;
-                let entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(x, -64, z));
-                if (entities) {
-                    entities = entities.filter(({ id }) => id === 'patches:database');
-                    const name = entities[0].getTags().find(tag => tag.includes('dbName:')).replace('dbName:', '');
-                    entities.forEach(entity => {
-                        const order = entity.getTags().find(tag => tag.includes('dbOrder:')).replace('dbOrder:', '');
-                        json.push([order, entity.nameTag]);
-                    });
-                    if (name) {
-                        this[name] = new Database(JSON.parse(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join('')));
-                    }
+        const entityArray = [];
+        const entities = [...overworld.getEntities({ type: 'patches:database' })];
+        content.warn({ entities: entities.length });
+        entities.forEach(entity => {
+            let { location } = entity;
+            location = location.toBlockLocation();
+            const { x, z } = location;
+            const index = entityArray.findIndex(([fx, fz]) => fx === x && fz === z);
+            if (index !== -1) {
+                entityArray[index].push(entity);
+            } else {
+                entityArray.push([x, z, entity]);
+            }
+
+        });
+        entityArray.forEach(entities => {
+
+            entities = entities.splice(2).filter(entity => entity);
+            const json = [];
+            if (entities) {
+                const name = entities[0].getTags().find(tag => tag.includes('dbName:')).replace('dbName:', '');
+                entities.forEach(entity => {
+                    const order = entity.getTags().find(tag => tag.includes('dbOrder:')).replace('dbOrder:', '');
+                    json.push([order, entity.nameTag]);
+                });
+                if (name) {
+                    this[name] = new Database(JSON.parse(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join('')));
                 }
-            });
+            }
+        });
+        // content.warn({ this: this });
     }
     /**
      * @method getRandCoord get a random coordinates from 0,0 to 15,15

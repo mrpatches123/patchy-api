@@ -16,10 +16,10 @@ commandBuilder.register('global', {
     callback: (sender, args) => {
 
         if (!args.length) {
-            sender.tellrawStringify(global);
+            sender.tell(JSON.stringify(global));
         } else {
             if (global[args[0]]) {
-                sender.tellrawStringify(global[args[0]]);
+                sender.tell(JSON.stringify(global[args[0]]));
             } else {
                 sender.tellraw(`key: ${args[0]}, doesn't exist`);
             }

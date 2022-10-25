@@ -1,0 +1,30 @@
+{
+	"function": {
+		"fb431371_c2f8_4433_a849_0610717bc8a6": {},
+		"85670e37_330b_49cf_ae91_f372aba46c98": {}
+	},
+	"entity": {
+		"BP/entities/player.json": {
+			"events": [
+				"minecraft:gain_bad_omen",
+				"minecraft:clear_add_bad_omen",
+				"minecraft:trigger_raid",
+				"minecraft:remove_raid_trigger",
+				"patches:disconnect",
+				"patches:kill",
+				"patches:container_open",
+				"patches:not_container_open"
+			],
+			"bridge_core_tags": [],
+			"identifiers": [
+				"minecraft:player"
+			],
+			"animation_references": [],
+			"families": [
+				"player"
+			],
+			"custom_components": [],
+			"custom_commands": []
+		}
+	}
+}

@@ -1,4 +1,4 @@
-import { InventoryComponentContainer, PlayerInventoryComponentContainer, BlockInventoryComponentContainer } from 'mojang-minecraft';
+import { InventoryComponentContainer, PlayerInventoryComponentContainer, BlockInventoryComponentContainer } from '@minecraft/server';
 const inventoryContainerFunctions = {
 	removeItem(ItemStack) {
 		for (let i = this.size - 1; i >= 0; i--) {

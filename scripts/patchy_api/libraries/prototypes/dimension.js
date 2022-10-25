@@ -1,4 +1,4 @@
-import { Dimension } from 'mojang-minecraft';
+import { Dimension } from '@minecraft/server';
 const dimensionFunctions = {
 	/**
 	 * @method runCommands

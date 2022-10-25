@@ -1,43 +1,44 @@
 import config from '../config.js';
-import global from '../../patchy_api/libraries/classes/global.js';
-import commandBuilder from "../../patchy_api/libraries/classes/commands.js";
-import { content, native } from "../../patchy_api/libraries/utilities.js";
-import { compress, decompress } from '../../patchy_api/libraries/zip.js';
+
+
+
+import { commandBuilder, content, formBuilder, native } from '../../patchy_api/modules.js';
+import { ActionFormData } from '@minecraft/server-ui';
+import { world } from '@minecraft/server';
+
+
 const { prefix } = config;
+const form = new ActionFormData();
+form.button('help');
+form.button('help1');
+form.button('help2');
+form.button('help3');
+form.show;
+let fI = 0;
+let ticks = 0;
+let stop = false;
+async function test(player) {
+    console.warn('formRecurive, ', fI++);
+    const response = await form.show(player);
+    if (response.cancelationReason === "userBusy") test(player);
+    else stop = true;
 
-
-
-
-
-commandBuilder.register('test', {
-    description: "Used to enchant the item in hand.",
+}
+commandBuilder.register('formawait', {
+    description: "formawait",
     usages: [
-        `${prefix}test`,
+        `${prefix}formawait`,
     ],
     prefix,
     callback: (sender, args) => {
-        const object = {
-            help: 'kjwdkjwdjkwdjkwdkj',
-            hello: {
-                help: 'w,wddwwdklwdkwdk',
-                jwkjwdjkwdjkdwj: 'wkllkwdklwdk',
-                helo: ['wklwklw', 'wdklwdkwd', 'wlwldklwd']
+        const call = () => {
+            console.warn('world.events.tick, ', ticks++);
+            if (stop) {
+                world.events.tick.unsubscribe(call);
             }
         };
-        for (let i = 0; i < 300; i++) {
-            object[i] = {
-                help: {
-                    rand: Math.random()
-                },
-                hi: 828828
-            };
-        }
-        const string = JSON.stringify(object);
-        content.warn({ string });
-        const compression = compress(string);
-        content.warn({ compression });
-        const decompression = decompress(compression);
-        content.warn({ decompression });
+        world.events.tick.subscribe(call);
+        test(sender);
     }
 });
 

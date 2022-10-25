@@ -1,29 +1,29 @@
-import { Location, BlockLocation } from 'mojang-minecraft';
+import { Location, BlockLocation } from '@minecraft/server';
 class TeleportBuilder {
 	constructor() {
 
 	}
 	/**
 	 * @method add 
-	 * @param {String} key 
-	 * @param {Location} location Object, Location, BlockLocation
-	 * @param {Object} rotation {x,y}, boolean (if false keeps rotation)
-	 * @param {Boolean} keepVelocity default? = false
+	 * @param {Object} teleportObject 
 	 */
-	add(key, { location, face, keepVelocity = false }) {
-		if (!(location instanceof Location) && !(location instanceof BlockLocation)) {
-			const { x, y, z } = location;
-			location = new Location(z, y, z);
-		}
-		const rotation = (face instanceof BlockLocation || face instanceof Location) ? undefined : face;
-		const facing = (rotation) ? face : undefined;
-		this[key] = {
-			location,
-			dimension,
-			rotation,
-			facing,
-			keepVelocity
-		};
+	add(teleportObject) {
+		teleportObject.forEach((key, value) => {
+			let { location, dimension, face, keepVelocity = false } = value;
+			if (!(location instanceof Location) && !(location instanceof BlockLocation)) {
+				return new Error(`location key of teleportObject Key: ${key}, should be a instance of Location or BlockLocation`);
+			}
+			const rotation = (face instanceof BlockLocation || face instanceof Location) ? undefined : face;
+			const facing = (rotation) ? face : undefined;
+			this[key] = {
+				location,
+				dimension,
+				rotation,
+				facing,
+				keepVelocity
+			};
+		});
+
 	}
 	remove(key) {
 		delete this[key];

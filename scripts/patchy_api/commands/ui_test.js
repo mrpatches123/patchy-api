@@ -1,13 +1,8 @@
 
-import commandBuilder from "../libraries/classes/commands.js";
-import errorLogger from "../libraries/classes/error.js";
-import propertyBuilder from "../libraries/classes/property.js";
-import databases from "../libraries/classes/database.js";
-import { overworld, content, assignToPath } from "../libraries/utilities.js";
 import config from '../config.js';
-import global from "../libraries/classes/global.js";
-import formBuilder from "../libraries/classes/form.js";
 const { commandPrefix: prefix } = config;
+
+import { commandBuilder, formBuilder } from '../modules.js';
 commandBuilder.register('uitest', {
 	description: "uitest",
 	usages: [
@@ -20,16 +15,6 @@ commandBuilder.register('uitest', {
 		}
 	},
 	callback: (sender, args) => {
-		formBuilder.showAwait(sender, 'awaitTest');
+		formBuilder.showAwait(sender, 'test');
 	}
-});
-
-formBuilder.create('awaitTest', {
-	action: [
-		{
-			button: {
-				text: 'hello'
-			}
-		}
-	]
 });

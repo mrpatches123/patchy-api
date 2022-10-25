@@ -1,4 +1,4 @@
-import { world, DynamicPropertiesDefinition, Trigger } from "mojang-minecraft";
+import { world, DynamicPropertiesDefinition, Trigger } from "@minecraft/server";
 import { content, native, overworld, server, typeOf, assignToPath } from "../utilities";
 import errorLogger from "./error";
 import global from "./global.js";

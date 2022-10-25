@@ -1,10 +1,6 @@
-import {
-    world,
-    Items,
-    BlockLocation
-} from 'mojang-minecraft';
+import { world, Items, BlockLocation, Player, Entity } from '@minecraft/server';
 import errorLogger from './classes/error.js';
-import '../libraries/prototypes/imports.js';
+import { hasKey } from './prototypes/object.js';
 export function typeOf(value) {
     if (typeof value === 'function') {
         try {
@@ -15,42 +11,32 @@ export function typeOf(value) {
     }
     return value?.constructor?.name;
 }
-export function pathIsObject(pathArray, object) {
-    return new Function('object', `return typeof object.${pathArray.join('?.')} === 'object' && !Array.isArray(object)`)(object);
-}
-export function pathIsUndefined(pathArray, object) {
-    return new Function('object', `return object.${pathArray.join('?.')} === undefined`)(object);
-}
-export function pathIsSettable(pathArray, object) {
-    const call = pathArray.slice(0, -1).every((key, i) => pathIsObject(pathArray.slice(0, -(i + 1)), object));
-    if (pathArray.slice(0, -1).length) {
-        return call;
-    } else {
-        return true;
-    }
-}
-export function assignToPath(pathArray, object, value) {
-    if (pathIsSettable(pathArray, object)) {
-        return new Function('object', 'value', `object.${pathArray.join('.')} = value; return object`)(object, value);
-    } else {
-        let stop = false;
-        pathArray.forEach((path, i) => {
-            const newPathArray = pathArray.slice(0, i + 1);
-            // console.log(newPathArray);
 
-            if (!stop && pathIsUndefined(newPathArray, object)) {
-                object = new Function('object', 'value', `object.${newPathArray.join('.')} = {}; return object`)(object, value);
-            } else if (!stop && pathIsSettable(newPathArray, object)) {
-                return;
-            } else {
-                stop = true;
-            }
-        });
-        if (!stop) {
-            return assignToPath(pathArray, object, value);
+export function hypot3(n1, n2, n3) {
+    return Math.sqrt(n1 ** 2 + n2 ** 2 + n3 ** 2);
+}
+export function hypot2(n1, n2) {
+    return Math.sqrt(n1 ** 2 + n2 ** 2);
+}
+/**
+ * @function parseList spreads all arrays in an array into one single array
+ * @param {Array} list 
+ * @returns Array
+ */
+
+export function parseList(list) {
+    if (!Array.isArray(list)) { return; }
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (Array.isArray(item)) {
+            list = [...list.slice(undefined, i), ...item, ...list.slice(i + 1)];
+            i--;
+        } else {
+            list[i] = list[i];
         }
 
     }
+    return list;
 }
 export const lockedItemKey = '§1§a§s§w§A';
 export const crossHareDataKey = 87;
@@ -89,8 +75,20 @@ export function andArray(array = []) {
     else if (ReturnArray.length === 2) { return ReturnArray.join(', ').replace(/,(?=\sand)|(?<=and),/g, ''); }
     return ReturnArray;
 }
+const blockFaceToNumber = {
+    "down": 0,
+    "east": 5,
+    "north": 2,
+    "south": 3,
+    "up": 1,
+    "west": 4,
+};
+
+
 export function blockFaceToCoords(blockFace, { x, y, z }) {
+    blockFace = blockFaceToNumber[blockFace];
     content.warn({ blockFace });
+
     let location = [x, y, z];
     [
         [0, -1, 0],
@@ -107,103 +105,122 @@ export function blockFaceToCoords(blockFace, { x, y, z }) {
 Math.randomBetween = function (n1, n2) {
     return n1 + Math.random() * Math.abs(n2 - n1);
 };
-export const native = {
 
-    toObject(objectFrom, value = '<Function>', ignoreFunctions = true, ignoreObjectFunctions = true) {
-        let clone;
-        if (typeof objectFrom === 'object') {
-            if (Array.isArray(objectFrom)) {
-                clone = [];
+
+
+// const array1 = {
+// 	help: []
+// };
+
+// console.log(assignToPath(['help', 0], array1, 2), true);
+
+
+
+export function pathIsObject(pathArray, object, allowArrays) {
+    if (!allowArrays) {
+        console.log(`return typeof object?.${pathArray.join('?.')} === 'object' && !Array.isArray(object?.${pathArray.join('?.')})`);
+        return new Function('object', `return typeof object?.${pathArray.join('?.')} === 'object' && !Array.isArray(object?.${pathArray.join('?.')})`)(object);
+    } else {
+        return new Function('object', `return typeof object?.${pathArray.join('?.')} === 'object'`)(object);
+    }
+}
+export function pathIsSettable(pathArray, object, allowArrays) {
+    const call = pathArray.slice(0, -1).every((key, i) => pathIsObject(pathArray.slice(0, -(i + 1)), object, allowArrays));
+    if (pathArray.slice(0, -1).length) {
+        return call;
+    } else {
+        return true;
+    }
+}
+export function assignToPath(pathArray, object, value, allowArrays = false) {
+    const mappedPathArray = pathArray.map(value => `[${(typeof value === 'number') ? value : `'${value}'`}]`);
+    //   	console.log(mappedPathArray)
+    //   console.log(pathIsSettable(mappedPathArray, object))
+    if (pathIsSettable(mappedPathArray, object, allowArrays)) {
+        console.log({ pathIsSettable: `object${mappedPathArray.join('')} = value; return object` });
+        return new Function('object', 'value', `object${mappedPathArray.join('')} = value; return object`)(object, value);
+    } else {
+        let stop = false;
+        pathArray.forEach((path, i) => {
+            const newPathArray = mappedPathArray.slice(0, i + 1);
+            // console.log(newPathArray);
+            if (!stop && !pathIsObject(newPathArray, object, allowArrays)) {
+                // console.log(`object${newPathArray.join('')} = {}; return object`);
+                object = new Function('object', `object${newPathArray.join('')} = {}; return object`)(object);
+            } else if (!stop && pathIsSettable(newPathArray, object, allowArrays)) {
+                return;
             } else {
-                clone = {};
+                stop = true;
             }
-        } else {
-            return objectFrom;
+            // console.log('obj', object);
+        });
+        if (!stop) {
+            return assignToPath(pathArray, object, value, allowArrays);
         }
-        inF(objectFrom, value, 'objectFrom');
 
-        function inF(ThisObject, Setvalue, logPath) {
-            console.log(logPath);
-            if (typeof ThisObject === 'object' && !Array.isArray(ThisObject)) {
-                clone = new Function('object', 'value', `{ object${logPath.replaceAll('objectFrom', '')} = value; return object}`)(clone, {});
-                for (const key in ThisObject) {
-                    inF(ThisObject[key], Setvalue, logPath + "['" + key + "']");
-                }
-
-            } else if (typeof ThisObject === 'object' && Array.isArray(ThisObject)) {
-                clone = new Function('object', 'value', `{ object${logPath.replaceAll('objectFrom', '')} = value; return object}`)(clone, []);
-                ThisObject.forEach((value, i) => {
-                    inF(value, Setvalue, logPath + "[" + i + "]");
-                });
-            } else {
-                let valueMain;
-                if (typeof ThisObject === 'function') {
-                    if (ignoreFunctions) {
-                        return;
-                    } //else if (ignoreObjectFunctions && hasKey(key)) {
-                    //return;
-                    //} else {
-                    //  valueMain = value;
-                    //}
-                } else {
-                    valueMain = ThisObject;
-                }
-
-                clone = new Function('object', 'value', `{ object${logPath.replaceAll('objectFrom', '')} = value; return object}`)(clone, valueMain);
+    }
+}
+const native = {
+    typeOf(input) {
+        switch (typeof input) {
+            case 'object': {
+                return (Array.isArray(input)) ? 'array' : 'object';
             }
-
+            default: {
+                return typeof input;
+            }
         }
-        return clone;
     },
-    stringify(objectFrom, value, ignoreFunctions, ignoreObjectFunctions) {
-        return JSON.stringify(this.toObject(objectFrom, value, ignoreFunctions, ignoreObjectFunctions));
-    },
-    stringifyEx(startObject, printF = false, space = undefined) {
-        let unsafeProperty = 'unsafeproperty.fixed';
-        function getString(ThisObject, before, isSpace) {
-            switch (typeof ThisObject) {
-                case 'function':
-                    return (`function ${ThisObject.name ?? ''}(${ThisObject.length} args)`);
-                case 'object':
-                    if (ThisObject == null) {
-                        return 'null';
-                    }
-                    if (!Object.entries(ThisObject).length) {
-                        return '{}';
-                    }
-                    if (!ThisObject[unsafeProperty]) {
-                        try {
-                            let isArray = Array.isArray(ThisObject);
-                            let ReturnString = isArray ? '[' : '{';
-                            let First = false;
-                            let nextS = before + '' + (space ?? '');
-                            ThisObject[unsafeProperty] = true;
-                            for (const key in ThisObject) {
-                                if (key == unsafeProperty) { continue; }
-                                if (typeof ThisObject[key] === 'function' & (!printF)) { continue; };
-                                try {
-                                    ReturnString += (First ? ',' : '') + '' + (isSpace ? '\n' : '') + nextS + (isArray ? '' : `"${key}":${(isSpace ? ' ' : '')}`) + getString(ThisObject[key], nextS, isSpace);
-                                } catch (error) {
-
-                                }
-                                First = true;
-                            }
-                        } catch (error) {
-                            ThisObject[unsafeProperty] = undefined;
-                            console.warn(error, error.stack);
-                        }
-                        delete ThisObject[unsafeProperty];
-                        return ReturnString + '' + ((space ?? false) ? "\n" + before : '') + (isArray ? ']' : '}');
-                    } else {
-                        return '{...}';
-                    }
-                default:
-                    return JSON.stringify(ThisObject);
+    toConstructed(type) {
+        switch (type) {
+            case "object": {
+                return {};
+            } case "array": {
+                return [];
+            } default: {
+                return false;
             }
+
         }
-        return getString(startObject, '', (space ?? '' != ''));
+    },
+    toObject(input) {
+        let output = this.toConstructed(this.typeOf(input));
+        if (!output) { return input; }
+        call(input, []);
+        function call(input1, path) {
+            console.log(path);
+            switch (native.typeOf(input1)) {
+                case "object": {
+                    for (const key in input1) {
+                        if (hasKey(key)) { return; }
+                        call(input1[key], [...path, key]);
+                    }
+                    break;
+                } case "array": {
+                    output = assignToPath(path, output, [], true);
+                    input1.forEach((item, i) => {
+                        call(item, [...path, i]);
+                    });
+                    break;
+                } case "function": {
+                    output = assignToPath(path, output, `function() { }`, true);
+                    break;
+                } default: {
+                    output = assignToPath(path, output, input1, true);
+                    break;
+                }
+            }
+        };
+
+
+        return output;
+    },
+    stringify(input, replacer, spacing) {
+        return JSON.stringify(this.toObject(input), replacer, spacing);
     }
 };
+export { native };
+
 export function toProperCase(string) {
     return string.replace(/_/g, ' ').replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 }
@@ -227,17 +244,50 @@ export const server = {
             console.warn('server.tellraw', error);
         }
     },
-    scoreTest(objective, name) {
+    /**
+     * @method scoreTest
+     * @param {String} objective 
+     * @param {Player} target Also be Entity or String
+     * @param {Player} findParticipant 
+     * @returns 
+     */
+    scoreTest(objective, target, findParticipant = false) {
+        if (findParticipant && (target instanceof Player || target instanceof Entity)) target = target?.name;
+        if (!target) throw new Error('target must be defined');
+        let scoreboardObjective;
+        let score;
+        let scoreboardIdentity;
+        try { scoreboardObjective = world.scoreboard.getObjective(objective); } catch (error) { console.warn(error, error.stack); }
+        if ((target instanceof Player || target instanceof Entity) && !findParticipant) {
+
+            scoreboardIdentity = target.scoreboard;
+            if (!target['scoreboard']) return;
+            // content.warn({ score });
+        } else {
+
+            try { scoreboardIdentity = scoreboardObjective.getParticipants().find(({ displayName } === target)); } catch { }
+        }
+        if (scoreboardObjective) {
+            try {
+                score = scoreboardObjective.getScore(scoreboardIdentity);
+            } catch {
+                // console.warn(error, error.stack);
+            }
+        }
+        return score;
+    },
+    objectiveAdd(objective, display = '') {
         try {
-            return Number(overworld.runCommand(`scoreboard players test ${name} ${objective} *`).statusMessage.match(/-?\d+/));
+            overworld.runCommand(`scoreboard objectives add ${objective} dummy ${display}`);
+            return true;
         } catch (error) {
             console.warn(error, error.stack);
             return;
         }
     },
-    objectiveAdd(objective, display = '') {
+    objectiveRemove(objective) {
         try {
-            overworld.runCommand(`scoreboard objectives add ${objective} dummy ${display}`);
+            overworld.runCommand(`scoreboard objectives remove ${objective}`);
             return true;
         } catch (error) {
             console.warn(error, error.stack);
@@ -263,15 +313,8 @@ export const server = {
 };
 
 export const content = {
-    warn(message) {
-        if (typeof message === 'object') {
-            content.warn(JSON.stringify(message));
-            // console.warn(native.stringifyEx(message));
-        } else {
-            console.warn(message);
-            // server.tellraw(message);
-        }
-
+    warn(...messages) {
+        console.warn(messages.map(message => JSON.stringify(message)).join(' '));
     }
 };
 
@@ -346,7 +389,24 @@ export function getNames() {
     return names;
 }
 
+function createArrayBetween(min, max) {
+    return Array.from(Array(max - min + 1), () => min++);
+}
+const charArray = [...createArrayBetween(33, 126), ...createArrayBetween(161, 321)].map(value => String.fromCharCode(value));
+const charObject = {};
+charArray.forEach((char, i) => charObject[char] = i);
+const valueUndefined = charArray[0];
 
+export function obfuscate255(string) {
+    return [...string].map(value => charArray[value.charCodeAt()] ?? valueUndefined).join('');
+}
+
+export function deobfuscate255(string) {
+    return [...string].map(value => String.fromCharCode(charObject[value])).join('');
+}
 
 
 export const overworld = world.getDimension('overworld'), nether = world.getDimension('nether'), end = world.getDimension('the end');
+
+
+

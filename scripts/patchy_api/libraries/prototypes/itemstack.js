@@ -1,4 +1,4 @@
-import { ItemStack } from "mojang-minecraft";
+import { ItemStack } from "@minecraft/server";
 const ItemStackFunctions = {
 	equalsItemStack(itemStack, ingoreNameTag = true) {
 		if (this === itemStack) {

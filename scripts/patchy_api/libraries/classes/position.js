@@ -5,8 +5,8 @@ const { floor } = Math;
 class PositionBuilder {
 	constructor() {
 
-		eventBuilder.subscribe({
-			tick: () => {
+		eventBuilder.subscribe('position*API', {
+			tickAfterLoad: () => {
 				global.players.forEach(player => {
 					const { location: { x, y, z } } = player;
 					this.forEach((key, { location1, location2, callback }) => {
@@ -34,20 +34,61 @@ class PositionBuilder {
 			}
 		});
 	}
-	add(key, callback, location1, location2) {
-		if (typeof location2 === 'function') {
-			[location1, location2] = sort3DRange([location1, location2]);
-		}
-		this[key] = {
-			location1,
-			location2,
-			callback
-		};
-		if (!location2) { return; }
+	// const postionObject = {
+	// 	positionKey: {
+	// 		callback: () => {
+
+	// 		},
+	// 		location1: new BlockLocation(x, y, z), //or location
+	// 		'location2?optional': new BlockLocation(x, y, z),
+	// 	}
+	// };
+	/**
+	 * @method add 
+	 * @param {Object} postionObject 
+	 */
+	add(postionObject) {
+		postionObject.forEach((key, value) => {
+			let { callback, location1, location2 } = value;
+			if (!(callback instanceof Function)) {
+				return new Error(`function key of postionObject Key: ${key}, should be a function`);
+			}
+			if (!(location1 instanceof Location) && !(location1 instanceof BlockLocation)) {
+				return new Error(`location1 key of postionObject Key: ${key}, should be a instance of Location or BlockLocation`);
+			}
+			if (location2 && !(location1 instanceof Location) && !(location1 instanceof BlockLocation)) {
+				return new Error(`location2 key of postionObject Key: ${key}, should be a instance of Location or BlockLocation`);
+			}
+			if (location2) {
+				[location1, location2] = sort3DRange([location1, location2]);
+			}
+			this[key] = {
+				location1,
+				location2,
+				callback
+			};
+			if (!location2) { return; }
+		});
+
 	}
+	/**
+	 * @method remove 
+	 * @param {string} key 
+	 */
 	remove(key) {
-		delete this.key;
+		delete this[key];
+	}
+	/**
+	 * @method removeKeys 
+	 * @param {string} key 
+	 * @param ...
+	 */
+	removeKeys(...keys) {
+		keys.forEach(key => {
+			delete this[key];
+		});
 	}
 }
 const positionBuilder = new PositionBuilder();
 export default positionBuilder;
+

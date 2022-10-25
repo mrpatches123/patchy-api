@@ -7,12 +7,13 @@ import { overworld, content } from "../libraries/utilities.js";
 const tellrawServer = (message) => {
     overworld.runCommand(`tellraw @a {"rawtext":[{"text":"${message.replaceAll('"', "'")}"}]}`);
 };
-eventBuilder.subscribe('commands', {
+eventBuilder.subscribe('commands*API', {
     beforeChat: ({ message, sender }) => {
+
         const name = sender.getName();
-        content.warn(Object.keys(commandBuilder));
+        content.warn({ commandBuilderKeys: Object.keys(commandBuilder['!']), staff: sender.scoreTest('staff') });
         const prefix = commandBuilder.getPrefix(message);
-        console.warn(prefix);
+        content.warn({ prefix });
         if (prefix) {
             commandBuilder.check(message, sender, prefix);
             return true;

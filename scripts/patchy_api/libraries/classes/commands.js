@@ -1,4 +1,4 @@
-import { Player } from "mojang-minecraft";
+import { Player } from "@minecraft/server";
 import config from "../../config.js";
 import { content } from "../utilities.js";
 import errorLogger from "./error.js";
@@ -19,10 +19,10 @@ class CommandBuilder {
      * @returns {void}
      */
     invalidSyntax(command, sender, prefix, error) {
-        return sender.runCommands([
+        return sender.runCommands(
             `playsound note.bass @s`,
             `tellraw @s {"rawtext":[{"text":"§c"},{"translate":"commands.generic.syntax", "with": ["${prefix}${command} ","${error[0]}","${error.filter((item, i) => { if (i !== 0) return item; }).join(" ")}"]}]}`
-        ]);
+        );
     }
     getPrefixs() {
         return Object.keys(this).filter(key => !key.startsWith('__')) ?? [];
@@ -54,22 +54,22 @@ class CommandBuilder {
             if (this.__aliasesObject[prefix][command]) {
                 command = this.__aliasesObject[prefix][command];
             } else {
-                sender.runCommands([
+                sender.runCommands(
                     `playsound note.bass @s`,
                     `tellraw @s {"rawtext":[{"text":"§c"},{"translate":"commands.generic.unknown", "with": ["§f${command}§c"]}]}`
-                ]);
+                );
                 return true;
             }
         }
         const { requires, callback } = this[prefix][command];
         const { score, tag } = requires ?? {};
         const name = sender.getName();
-
+        content.warn(this[prefix][command]);
         if (requires) {
             let notPermissions;
             if (score) {
                 score.forEach((objective, value) => {
-                    content.warn({ objective: sender.scores[objective] });
+                    content.warn({ value, objective, score: sender.scores[objective] ?? 'undifened' });
                     if (sender.scores[objective] !== value) { notPermissions = true; }
                 });
             }
@@ -219,10 +219,12 @@ class CommandBuilder {
         if (this[prefix]) {
             const { requires, description, usages } = this[prefix][command];
             const { score, tag } = requires;
+            // content.warn(this[prefix][command]);
             if (requires) {
                 let notPermissions;
                 if (score) {
                     score.forEach((objective, value) => {
+                        // content.warn({ [objective]: sender.scores[objective] });
                         if (sender.scores[objective] !== value) { notPermissions = true; }
                     });
                 }
@@ -237,10 +239,10 @@ class CommandBuilder {
             }
             if (subCommand && typeof usages === 'object' && !isArray(usages)) {
                 const { examples, subDescription } = this[prefix][command].usages[subCommand];
-                sender.runCommands([
+                sender.runCommands(
                     'playsound note.hat @s',
                     `tellraw @s {"rawtext":[{"text":"§e${command}:\n${description}\n§fUsage:${usages.map((item, i) => `\n - ${prefix}${command} ${usages[i]}`).join("")}"}]}`
-                ]);
+                );
 
             } else {
                 if (!isArray(usages)) {
@@ -251,10 +253,10 @@ class CommandBuilder {
                     sender.runCommand('playsound note.hat @s');
                     sender.tellraw(`§e${command}:\n${description}\n§fUsage:${usagesArray.join('')}`);
                 } else {
-                    sender.runCommands([
+                    sender.runCommands(
                         'playsound note.hat @s',
                         `tellraw @s {"rawtext":[{"text":"§e${command}:\n${description}\n§fUsage:${usages.map((item, i) => `\n - ${prefix}${command} ${usages[i]}`).join("")}"}]}`
-                    ]);
+                    );
 
                 }
 

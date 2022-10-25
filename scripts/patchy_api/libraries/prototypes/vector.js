@@ -1,4 +1,4 @@
-import { Vector } from "mojang-minecraft";
+import { Vector } from "@minecraft/server";
 
 const vectorFunctions = {
 	magnitude() {

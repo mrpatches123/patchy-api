@@ -1,4 +1,4 @@
-import { world, ItemStack, EntityQueryOptions, Items } from "mojang-minecraft";
+import { world, ItemStack, EntityQueryOptions, Items } from "@minecraft/server";
 import { content, native, toProperCase, lockedItemKey } from "../utilities.js";
 import eventBuilder from "./events.js";
 import global from './global.js';

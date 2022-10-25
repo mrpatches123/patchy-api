@@ -1,9 +1,5 @@
 import config from '../config.js';
-import commandBuilder from "../../patchy_api/libraries/classes/commands.js";
-
-
-import formBuilder from '../../patchy_api/libraries/classes/form.js';
-import toDo from '../../patchy_api/libraries/classes/toDo.js';
+import { formBuilder, commandBuilder, content } from '../../patchy_api/modules.js';
 const { prefix } = config;
 
 commandBuilder.register('menu', {
@@ -14,14 +10,8 @@ commandBuilder.register('menu', {
     ],
     aliases: ['m'],
     callback: (sender, args) => {
-        sender.tellraw(`§l§f[§9PAC§f] §aMove your camera and close chat to open the Menu!`);
-        let VVector = sender.viewVector;
-        toDo.waitFor((e) => {
-            formBuilder.show(sender, 'test');
-
-        }, (e) => {
-            return !e.sender.viewVector.equals(e.viewVector);
-        }, { sender: sender, viewVector: VVector });
+        content.warn('test', sender.name);
+        formBuilder.showAwait(sender, 'test', sender.id);
     }
 });
 

@@ -31,23 +31,24 @@
 			"uuid": "6dc2819b-4e3a-4bb5-b727-a2eb23a9734e",
 			"description": "mojang-minecraft module, required to use the mojang-minecraft module",
 			"entry": "scripts/package_import.js",
-			"version": [
-				1,
-				0,
-				0
-			]
+			"version": "1.0.0-beta"
 		}
 	],
 	"dependencies": [
 		{
-			"description": "mojang-minecraft module, required to use the mojang-minecraft module",
-			"uuid": "b26a4d4c-afdf-4690-88f8-931846312678",
+			"module_name": "mojang-minecraft",
 			"version": "1.0.0-beta"
 		},
 		{
-			"description": "mojang-minecraft-UI module, required to use the mojang-minecraft-UI module",
-			"uuid": "2BD50A27-AB5F-4F40-A596-3641627C635E",
+			"module_name": "mojang-minecraft-ui",
 			"version": "1.0.0-beta"
 		}
-	]
+	],
+	"metadata": {
+		"generated_with": {
+			"bridge": [
+				"1.8.4"
+			]
+		}
+	}
 }

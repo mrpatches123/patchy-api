@@ -1,165 +1,138 @@
-import { world } from "mojang-minecraft";
+import { world, EntityEventOptions } from "@minecraft/server";
+import { content, native, parseList } from "../utilities.js";
 import global from "./global.js";
-import time from './time.js'
-global.joiningPlayers = {};
+import time from './time.js';
+import errorBuider from './error.js';
+// content.warn(native.stringify({hasOwnProperty: world.events.hasProperty('beforeChat')}))
 class EventBuilder {
     constructor() {
         this.suppresses = {};
-        this.subscriptions = {}
-        this.worldLoad = { subscription: false };
-        this.playerJoin = {
-            subscription: () => {
-                world.events.playerJoin.subscribe(({ player }) => {
-                    global.joiningPlayers.unshift(player);
-                });
-                world.events.tick.subscribe(event => {
-                    global.joiningPlayers.forEach(player => {
-                        try {
-                            player.runCommand('testfor @s');
-                            // content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
-                            global.joiningPlayers = global.joiningPlayers.filter(player => !global.joiningPlayers.some(join => player.getName() === join.getName()));
-                            // content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
-                            eventBuilder.playerJoin.forEach((key, { callback, suppressed }) => {
-                                try {
-                                    if (!suppressed) {
-                                        callback(event);
-                                    }
-                                } catch (error) {
-                                    errorBuider.log(error, error.stack, { event: 'playerJoin', key });
-                                }
-                            });
-                            if (!global.loaded) {
-                                try {
-                                    global.loaded = true;
-                                } catch (error) { errorBuider.log(error, error.stack, { event: 'worldLoad - API', key: 'N/A' }); }
-                                eventBuilder.worldLoad.forEach((key, { callback, suppressed }) => {
-                                    try {
-                                        if (!suppressed) {
-                                            callback(event);
-                                        }
-                                    } catch (error) {
-                                        errorBuider.log(error, error.stack, { event: 'worldLoad', key });
-                                    }
-                                });
-                            }
-                        } catch { /*console.warn(error, error.stack);*/ }
-                    });
-                
-                })
-                        }
-        };
-        this.beforeExplosion = {
-            subscription: () => {
-                world.events.beforeExplosion.subscribe(event => {
-                    time.start('beforeExplosion');
-                    let { impactedBlocks, dimension } = event;
-                    const cancels = [];
-                    this.beforeExplosion.keys.forEach((key, { callback, suppressed }) => {
-                        try {
-                            if (!suppressed) {
-                                const { cancel, impactedBlocks: callImpactedBlocks } = callback(event) ?? {};
-                                if (callImpactedBlocks) {
-                                    impactedBlocks = impactedBlocks.filter(blockLocation => callImpactedBlocks
-                                        .some(blockLocation1 => blockLocation1 === blockLocation))
-                                        .map(({ x, y, z }) => new BlockLocation(x, y, z));;
-                                }
-                                cancels.push(cancel);
-                            }
+        this.subscriptions = {};
+        this.events = {};
+        // world.events.keysObject().forEach(key => {
+        //     if (!this.events.hasOwnProperty(key)) {
+        //         this[key] = {
+        //             subscription: true
+        //         };
+        //     }
+        // });
+        // this.forEach((key) => {
 
-                        } catch (error) {
-                            errorBuider.log(error, error.stack, { event: 'beforeExplosion', key });
-                        }
-                    });
-                    if (cancels.some(bool => bool)) { event.cancel = true; }
-
-                    event.impactedBlocks = impactedBlocks;
-                    global.tickTime.beforeExplosion = time.end('beforeExplosion');
-                });
-            }
-        };
-        this.playerHit = {
-            subscription: () => {
-                world.events.entityHit.subscribe(event => {
-                    time.start('playerHit');
-                    this.playerHit.keys.forEach((key, { callback, suppressed }) => {
-                        try {
-                            if (!suppressed) {
-                                callback(event);
-                            }
-                        } catch (error) {
-                            errorBuider.log(error, error.stack, { event: 'playerHit', key });
-                        }
-                    });
-                    global.tickTime.playerHit = time.end('playerHit');
-                }, Object.assign(new EntityEventOptions(), { entityTypes: ["minecraft:player"] }));
-            }
-        };
-        this.playerHurt = {
-            subscription: () => {
-                world.events.entityHurt.subscribe(event => {
-                    time.start('playerHurt');
-                    this.playerHurt.keys.forEach((key, { callback, suppressed }) => {
-                        try {
-                            if (!suppressed) {
-                                callback(event);
-                            }
-                        } catch (error) {
-                            errorBuider.log(error, error.stack, { event: 'playerHurt', key });
-                        }
-                    });
-                    global.tickTime.playerHurt = time.end('playerHurt');
-                }, Object.assign(new EntityEventOptions(), { entityTypes: ["minecraft:player"] }));
-            }
-        };
-        world.events.keys().forEach(key => {
-            if(!this.hasOwnProperty(key)) {
-                this[key] = {
-                    subscription: true
-                }
-            }
-        });
-        this.forEach((key) => {
-            
-            this[key].keys = {}
-            this[key].subscribed = 0
-        })
+        //     this[key].keysObject = {};
+        //     this[key].subscribed = 0;
+        // });
     }
+    queueNextTick(callback, ticksToSkip = 0) {
+        const queueCallback = (event) => {
+            if (ticksToSkip-- <= 0) {
+                callback(event);
+                world.events.tick.unsubscribe(queueCallback);
+            }
+        };
+        world.events.tick.subscribe(queueCallback);
+    }
+    add(eventObject) {
+        eventObject.forEach((eventKey, { subscription }) => {
+            // if (eventKey === 'playerJoin') {
+            //     content.warn('playerJoinADD')
+            // } 
+            if (!this.events.hasOwnProperty(eventKey)) {
+                this.events[eventKey] = {};
+                this.events[eventKey].keysObject = {},
+                    this.events[eventKey].subscribed = 0;
+            }
+            this.events[eventKey].subscription = subscription;
+        });
+    }
+    remove(...keysObject) {
+        keys = parseList(keys);
+        // keys.forEach(key)
+    }
+    /**
+     * @method subscribe 
+     * @param {String} key
+     * @param {ObjectEvents} eventObject
+     */
     subscribe(key, eventObject) {
-        eventObject.forEach((eventKey, callback) => {
-            if (!key) {
-                throw new Error(`argument 0 expected a key in the type: String`);
-            } else if (!callback) {
-                throw new Error(`argument 0 expected a key in the type: String`);
-            } if (!this[eventKey]) {
-                throw new Error(`${eventKey} not exist on class world or your not in beta`);
-                // } else if (this[event][key]) {
-                //     throw new Error(`the ${key} for the event: ${event} has already been subscribed. unsubscribe it with this.unsubscribe(<key>)`);
-            } else if (typeof callback !== 'function') {
-                throw new Error(`the callback for the event: ${eventKey} must be in the type: Function`);
-            } else {
-                if (!this[eventKey].subscribed) {
-                    if (this[eventKey].subscription === true) {
+        try {
+
+
+            eventObject.forEach((eventKey, callback) => {
+                // content.warn({[key]: eventKey})
+                // if (eventKey === 'playerJoin') {
+                //     content.warn('playerJoinSubscribe')
+                // } 
+                if (!this.events.hasOwnProperty(eventKey)) {
+                    this.events[eventKey] = {};
+                    this.events[eventKey].keysObject = {};
+                    this.events[eventKey].subscribed = 0;
+                    if (world.events.hasProperty(eventKey)) { this.events[eventKey].subscription = true; }
+                }
+                // content.warn({key,eventKey,hasEventKey:this.events.hasOwnProperty(eventKey),subscribed: this.events[eventKey].subscribed})
+                if (!this.events[eventKey].subscribed) {
+                    if (typeof this.events[eventKey].subscription === 'function' || native.typeOf(this.events[eventKey].subscription) === 'object') {
+
+                        this.subscriptions[eventKey] = this.events[eventKey].subscription;
+                        const subscribeObjectInternal = {};
+                        this.events[eventKey].subscription.forEach((key, value) => {
+                            // content.warn({key})
+                            if (!world.events.hasProperty(key) && !this.events.hasOwnProperty(key)) {
+                                return new Error(`Event: ${key}, does not of class world.events or EventBuilder`);
+                            } else if (native.typeOf(value) === 'object') {
+                                if (value.options || value.useWorldEvents || (world.events.hasProperty(key) && this.events.hasOwnProperty(key))) {
+                                    if (!world.events.hasProperty(key)) { return new Error(`key: ${key}, does not exsit on world.events class instance.`); }
+                                    if (value.options) {
+                                        world.events[key].subscribe(value.function, value.options);
+                                    } else {
+                                        world.events[key].subscribe(value.function);
+                                    }
+
+                                } else if (this.events.hasOwnProperty(key) || world.events.hasProperty(key)) {
+                                    subscribeObjectInternal[key] = value.function;
+                                } else {
+                                    new Error(`key: ${key}, does not exist on world.events or Eventbuilder class.`);
+                                }
+                            } else if (typeof value === 'function') {
+                                if ((world.events.hasProperty(key) && this.events.hasOwnProperty(key))) {
+                                    world.events[key].subscribe(value);
+                                } else {
+                                    subscribeObjectInternal[key] = value;
+                                }
+
+                            } else {
+                                new Error(`subscription Object: ${eventKey}, eventKey should be an Object with a function and/or options or just a function`);
+                            }
+                        });
+                        if (subscribeObjectInternal.length()) {
+                            this.subscribe(`${eventKey}*IE`, subscribeObjectInternal);
+                        }
+                    } else if (this.events[eventKey].subscription === true) {
                         if (eventKey.includes('before')) {
+                            if (!global.tickTime.hasOwnProperty(eventKey)) {
+                                global.tickTime[eventKey] = {};
+                            }
                             this.subscriptions[eventKey] = (event) => {
                                 time.start(eventKey);
-                                this[eventKey].keys.forEach((key, { callback, suppressed }) => {
+                                const cancels = [];
+                                this.events[eventKey].keysObject.forEach((key, { callback, suppressed }) => {
                                     try {
                                         if (!suppressed) {
-                                            cancel.push(callback(event));
+                                            cancels.push(callback(event));
                                         }
                                     } catch (error) {
                                         errorBuider.log(error, error.stack, { event: eventKey, key });
                                     }
                                 });
-                                if (cancel.some(bool => bool)) { event.cancel = true; }
+                                if (cancels.some(bool => bool)) { event.cancel = true; }
                                 global.tickTime[eventKey] = time.end(eventKey);
-                            }
-                            world.events[eventKey].subscribe()
-                            
+                            };
                         } else {
                             this.subscriptions[eventKey] = (event) => {
+                                if (!global.tickTime.hasOwnProperty(eventKey)) {
+                                    global.tickTime[eventKey] = {};
+                                }
                                 time.start(eventKey);
-                                this[event].keys.forEach((key, { callback, suppressed }) => {
+                                this.events[eventKey].keysObject.forEach((key, { callback, suppressed }) => {
                                     try {
                                         if (!suppressed) {
                                             callback(event);
@@ -169,44 +142,81 @@ class EventBuilder {
                                     }
                                 });
                                 global.tickTime[eventKey] = time.end(eventKey);
-                            }
-                            
+                            };
+
                         }
-                        world.events[eventKey].subscribe(this.subscriptions[eventKey])
-                        
-                    } else if (typeof this[eventKey].subscription === 'function') {
-                        this.subscriptions[eventKey] = this[eventKey].subscription 
-                        world.events[eventKey].subscribe(this.subscriptions[eventKey])
+                        world.events[eventKey].subscribe(this.subscriptions[eventKey]);
+
                     }
                 }
-                
-                if (!this[eventKey].keys.hasOwnProperty(key)) {
-                    this[eventKey].subscribed++
+                if (!this.events[eventKey].keysObject.hasOwnProperty(key)) {
+                    this.events[eventKey].subscribed++;
                 }
-                this[eventKey].keys[key] = {};
-                this[eventKey].keys[key].callback = callback;
-                this[eventKey].keys[key].suppressed = false;
+
+                this.events[eventKey].keysObject[key] = {};
+                this.events[eventKey].keysObject[key].callback = callback;
+                this.events[eventKey].keysObject[key].suppressed = false;
+                this.events[eventKey].keysObject = this.events[eventKey].keysObject.sortKeys();
+            });
+        } catch (error) {
+            console.warn('eventsubscribe', error, error.stack);
+        }
+
+    }
+    //eventKey =  the key for the event listed under this.events
+    //event = the key in keysObject for the object assigned to eventKey
+    unsubscribeEvent(eventKey, event) {
+        content.warn({ eventKey, event });
+        let { subscribed } = this.events[eventKey];
+        subscribed = this.events[eventKey].subscribed -= (subscribed) ? 1 : 0;
+        if (!subscribed) {
+            if (native.typeOf(this.subscriptions[event] === 'object')) {
+                let unsubscribeBuilder = false;
+                this.events[eventKey].subscription.forEach((key, value) => {
+                    if (!world.events.hasProperty(key) && !this.events.hasOwnProperty(key)) {
+                        return new Error(`Event: ${key}, does not of class world.events or EventBuilder`);
+                    } else if (native.typeOf(value) === 'object') {
+                        if (value.options || value.useWorldEvents) {
+                            if (!world.events.hasProperty(key)) { return new Error(`key: ${key}, does not exsit on world.events class instance.`); }
+                            world.events[key].unsubscribe(value.function);
+                        } else if (this.events.hasOwnProperty(key) || world.events.hasProperty(key)) {
+                            unsubscribeBuilder = true;
+                        } else {
+                            new Error(`key: ${key}, does not exsit on world.events or Eventbuilder class.`);
+                        }
+                    } else if (typeof value === 'function') {
+                        unsubscribeBuilder = true;
+                    } else {
+                        new Error(`subscription Object: ${eventKey}, eventKey should be an Object with a function and/or options or just a function`);
+                    }
+                });
+                if (unsubscribeBuilder) {
+                    this.unsubscribeAll(`${key}*IE`);
+                }
+            } else {
+                world.events[eventKey].unsubscribe(this.subscriptions[eventKey]);
             }
-        });
+
+
+        }
+        if (!this.events.hasOwnProperty(eventKey)) {
+            throw new Error(`Event: ${eventKey}, with the key: ${event}, does not exist`);
+        } else {
+            delete this.events[eventKey].keysObject[event];
+        }
     }
     unsubscribe(key, events) {
-        
+
         if (Array.isArray(events)) {
             events.forEach(event => {
-                if (!--this[event].subscribed) {
-                    world.events[eventKey].unsubscribe(this.subscriptions[event])
-                }
-                if (!this.hasOwnProperty(event)) {
-                    throw new Error(`Event: ${events}, does not exist`);
-                } else {
-                    delete this[event].keys[key];
-                }
+                this.unsubscribeEvent(key, event);
             });
+
         } else {
-            if (!this[events]) {
+            if (!this.events[events]) {
                 throw new Error(`${events} not exist on class world or your not in beta`);
             } else {
-                delete this[events].keys[key];
+                this.unsubscribeEvent(key, events);
             }
         }
     }
@@ -214,7 +224,15 @@ class EventBuilder {
         if (!key) {
             eventBuilder = new EventBuilder();
         } else {
-            this.forEach((event, keys) => delete this[event].keys[key]);
+            // content.warn({this: this})
+            this.events.forEach((event) => {
+                if (!this.events[event].keysObject) {
+                    // content.warn(this.events[event])
+                }
+                if (this.events[event].keysObject.hasOwnProperty(key)) {
+                    this.unsubscribeEvent(event, key);
+                }
+            });
         }
     }
     //0 = none running
@@ -223,19 +241,19 @@ class EventBuilder {
     suppress(key, events) {
         if (Array.isArray(events)) {
             events.forEach(event => {
-                if (!this[events]) {
+                if (!this.events[events]) {
                     throw new Error(`${events} not exist on class world or your not in beta`);
                 } else {
-                    this[event].keys[key].suppressed = true;
+                    this.events[event].keysObject[key].suppressed = true;
                 }
 
             });
         } else {
-            if (!this[events]) {
+            if (!this.events[events]) {
                 throw new Error(`${events} not exist on class world or your not in beta`);
             } else {
-                if (this[events].hasOwnProperty(key)) {
-                    this[events][key].suppressed = true;
+                if (this.events[events].hasOwnProperty(key)) {
+                    this.events[events][key].suppressed = true;
                 }
             }
         }
@@ -244,15 +262,15 @@ class EventBuilder {
     suppressAll(key) {
         if (this.suppresses[key] !== 0) {
             if (!key) {
-                this.forEach((event, callbacks) => callbacks.forEach(eventKey => {
-                    if (this[eventKey].keys.hasOwnProperty(key)) {
-                        this[event].keys[eventKey].suppressed = true;
+                this.events.forEach((event, callbacks) => callbacks.forEach(eventKey => {
+                    if (this.events[eventKey].keysObject.hasOwnProperty(key)) {
+                        this.events[event].keysObject[eventKey].suppressed = true;
                     }
                 }));
             } else {
-                this.forEach((event, callbacks) => callbacks.forEach(eventKey => {
-                    if (this[event].keys.hasOwnProperty(key)) {
-                        this[event].keys[key].suppressed = true;
+                this.events.forEach((event, callbacks) => callbacks.forEach(eventKey => {
+                    if (this.events[event].keysObject.hasOwnProperty(key)) {
+                        this.events[event].keysObject[key].suppressed = true;
                     }
 
                 }));
@@ -263,21 +281,21 @@ class EventBuilder {
     unsuppress(key, events) {
         if (Array.isArray(events)) {
             events.forEach(event => {
-                if (!this[events]) {
+                if (!this.events[events]) {
                     throw new Error(`${events} not exist on class world or your not in beta`);
                 } else {
-                    if (this[event].keys.hasOwnProperty(key)) {
-                        this[event].keys[key].suppressed = false;
+                    if (this.events[event].keysObject.hasOwnProperty(key)) {
+                        this.events[event].keysObject[key].suppressed = false;
                     }
                 }
 
             });
         } else {
-            if (!this[events]) {
+            if (!this.events[events]) {
                 throw new Error(`${events} not exist on class world or your not in beta`);
             } else {
-                if (this[events].keys.hasOwnProperty(key)) {
-                    this[events].keys[key].suppressed = false;
+                if (this.events[events].keysObject.hasOwnProperty(key)) {
+                    this.events[events].keysObject[key].suppressed = false;
                 }
             }
         }
@@ -289,15 +307,15 @@ class EventBuilder {
 
             if (!key) {
                 this.forEach((event, eventKeys) => eventKeys.forEach(eventKey => {
-                    if (this[eventKey].keys[key]) {
-                        this[event].keys[eventKey].suppressed = false;
+                    if (this.events[eventKey].keysObject[key]) {
+                        this.events[event].keysObject[eventKey].suppressed = false;
                     }
                 }));
             } else {
 
                 this.forEach((event, eventKeys) => eventKeys.forEach(eventKey => {
-                    if (this[event].keys[key]) {
-                        this[event].keys[key].suppressed = false;
+                    if (this.events[event].keysObject[key]) {
+                        this.events[event].keysObject[key].suppressed = false;
                     }
                 }));
             }
@@ -308,8 +326,10 @@ class EventBuilder {
 let eventBuilder = new EventBuilder();
 export default eventBuilder;
 // try { overworld.runCommand(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick`); } catch { }
-//                                     databases.initialize();
-//                                     server.objectiveAdd('error');
-                
-//                                     server.scoreAdd('error', 'log');
-//                                     console.warn(server.scoreAdd('error', 'save'), server.scoreAdd('error', 'log'));
+//									 databases.initialize();
+//									 server.objectiveAdd('error');
+
+//									 server.scoreAdd('error', 'log');
+//									 console.warn(server.scoreAdd('error', 'save'), server.scoreAdd('error', 'log'));
+
+

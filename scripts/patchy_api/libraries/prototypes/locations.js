@@ -1,4 +1,4 @@
-import { BlockLocation, Location } from "mojang-minecraft";
+import { BlockLocation, Location } from "@minecraft/server";
 const { hypot } = Math;
 const locationTypes = {
 	Location,
