@@ -3,26 +3,9 @@ import global from '../libraries/classes/global.js';
 import { EntityEventOptions, Player, world } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
 import errorBuider from "../libraries/classes/error.js";
+import { EntityHurtEvent } from '@minecraft/server';
 global.joiningPlayers = [];
 global.tickAfterLoadI = 0;
-/**
- * @function isPlayerLoaded
- * @param {Player} player 
- * @returns {Boolean}
- */
-async function isPlayerLoaded(player) {
-	try {
-
-		await player.runCommand('testfor @a');
-		// content.warn({ t: "3i33389", test: test });
-
-		return true;
-	} catch (error) {
-		console.warn(error);
-		console.warn('not loafed');
-		return false;
-	}
-}
 
 eventBuilder.add({
 	worldLoad: {
@@ -84,14 +67,14 @@ eventBuilder.add({
 			},
 			tick: {
 				useWorldEvents: true,
-				function: () => {
-					global.joiningPlayers.forEach(join => {
-						// content.warn(join.name);
-						try {
-							let playerLoaded = isPlayerLoaded(join);
+				function: ({ currentTick }) => {
+					// if (global.joiningPlayers) content.warn(native.stringify(global.joiningPlayers));
+					global.joiningPlayers.forEach(async (join) => {
 
-							if (!playerLoaded) { content.warn({ playerLoaded }); return; }
+						try {
+							let playerLoaded = Boolean(await join.runCommandAsync('testfor @s').catch(error => error));
 							content.warn({ playerLoaded });
+							if (!playerLoaded) return;
 							global.loading = true;
 							if (!playerLoaded && !global.loaded) { return; }
 							let cancel = false;
@@ -101,19 +84,21 @@ eventBuilder.add({
 							// content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
 							eventBuilder.events.playerJoined.keysObject.forEach((key, { callback, suppressed }) => {
 								try {
+									content.warn({ player: join.name, key });
 									Keys.push(key);
 									if (!suppressed) {
 										if (cancel) { return; }
 										const shouldReturn = callback({ player: join });
 										if (shouldReturn) { cancel = true; }
+
 									}
 								} catch (error) {
-									errorBuider.log(error, error.stack, { event: 'playerJoin', key });
+									errorBuider.log(error, error.stack, { event: 'playerJoined', key });
 								}
 							});
 							// content.warn({ Keys });
 							if (!cancel) { global.joiningPlayers = global.joiningPlayers.filter(player => !global.joiningPlayers.some(join => player.id === join.id)); }
-						} catch (error) { /*console.warn(error, error.stack);*/ }
+						} catch (error) { console.warn(error, error.stack); }
 					});
 					global.loadedPlayers = true;
 
@@ -148,7 +133,7 @@ eventBuilder.add({
 
 				event.impactedBlocks = impactedBlocks;
 				global.tickTime.beforeExplosion = time.end('beforeExplosion');
-			},
+			}
 		}
 	},
 	playerHit: {
@@ -167,7 +152,7 @@ eventBuilder.add({
 					});
 					global.tickTime.playerHit = time.end('playerHit');
 				},
-				options: Object.assign(new EntityEventOptions(), { entityTypes: ["minecraft:player"] })
+				options: { entityTypes: ["minecraft:player"] }
 			}
 		}
 	},
@@ -187,24 +172,35 @@ eventBuilder.add({
 					});
 					global.tickTime.playerHurt = time.end('playerHurt');
 				},
-				options: Object.assign(new EntityEventOptions(), { entityTypes: ["minecraft:player"] })
+				options: { entityTypes: ["minecraft:player"] }
 			}
 		}
 	},
-	beforeBlockBreak: {
+	playerDeath: {
 		subscription: {
 
-			// blockBreak:(event) => {
-			//	 const { dimension, brokenBlockPermutation, block: {location: blockLocation } } = event
-
-
-			// });
-			// entityCreate:({entity}) => {
-			//	 if (entity.id === 'minecraft:item') {
-
-			//	 }
-			// });
+			entityHurt: {
+				/**
+				 * @param {EntityHurtEvent} event
+				 */
+				function: event => {
+					const { hurtEntity, damagingEntity, projectile, cause, damage } = event;
+					time.start('playerDeath');
+					this.playerDeath.events.keysObject.forEach((key, { callback, suppressed }) => {
+						try {
+							if (!suppressed) {
+								callback({ playerDied: hurtEntity, killer: damagingEntity, projectile, cause, damage });
+							}
+						} catch (error) {
+							errorBuider.log(error, error.stack, { event: 'playerDeath', key });
+						}
+					});
+					global.tickTime.playerDeath = time.end('playerDeath');
+				},
+				options: { entityTypes: ["minecraft:player"] }
+			}
 		}
-	}
-
+	},
 });
+
+// world.say(`123 - ${JSON.stringify(eventBuilder, null, 4)}`);

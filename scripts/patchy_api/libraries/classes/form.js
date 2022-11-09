@@ -5,6 +5,7 @@ import wait from './wait.js';
 import eventBuilder from './events.js';
 import global from './global.js';
 import time from './time.js';
+import errorLogger from './error.js';
 const forms = { action, modal, message };
 server.objectiveAdd('world');
 const { isArray } = Array;
@@ -221,7 +222,13 @@ const methods = {
 // scoreboardName = if undefined memory
 class FormBuilder {
     constructor() {
+        this.__awaitingPlayers = {};
+        eventBuilder.subscribe('form*API', {
+            playerLeft: ({ playerId }) => {
+                if (this.__awaitingPlayers.hasOwnProperty(playerId)) this.__awaitingPlayers[playerId] = false;
 
+            }
+        });
     }
     /**
      * @method create
@@ -232,27 +239,60 @@ class FormBuilder {
         this[key] = data;
     }
     /**
-     * @typedef {(receiver: Player) => {}} ConformationCallback
-     */
-    /**
      * @method showConformation
      * @param {Player} receiver 
      * @param {String} body 
-     * @param {ConformationCallback} callbackIfYes 
-     * @param {ConformationCallback} callbackIfNo 
+     * @param {(receiver: Player) => {}} callbackIfYes 
+     * @param {(receiver: Player) => {}} callbackIfNo 
      */
     async showConformation(receiver, body, callbackIfYes, callbackIfNo) {
-        const form = new message();
-        form.body(body);
-        form.button1('Yes');
-        form.button2('No');
-        const { selection } = await form.show(receiver);
-        if (selection) {
-            if (callbackIfYes instanceof Function) callbackIfYes(receiver);
-        } else {
-            if (callbackIfNo instanceof Function) callbackIfNo(receiver);
+        try {
+            const form = new message();
+            form.body(body);
+            form.button1('Yes');
+            form.button2('No');
+            const { selection, canceled, cancelationReason } = await form.show(receiver);
+            if (canceled) return cancelationReason;
+            if (selection) {
+                if (callbackIfYes instanceof Function) callbackIfYes(receiver);
+            } else {
+                if (callbackIfNo instanceof Function) callbackIfNo(receiver);
+            }
+        } catch (error) {
+            errorLogger.log(error, error.stack, { key: 'showConformation', event: 'formShow' });
         }
     };
+    /**
+     * @method showConformationAwait
+     * @param {Player} receiver 
+     * @param {String} body 
+     * @param {(receiver: Player) => {}} callbackIfYes 
+     * @param {(receiver: Player) => {}} callbackIfNo 
+     */
+    async showConformationAwait(receiver, body, callbackIfYes, callbackIfNo) {
+        try {
+
+            const form = new message();
+            form.body(body);
+            form.button1('Yes');
+            form.button2('No');
+            let response;
+            while (true) {
+                response = await form.show(receiver);
+                content.warn({ response: native.stringify(response) });
+                const { cancelationReason } = response;
+                if (cancelationReason !== 'userBusy') break;
+            }
+            const { selection } = response;
+            if (selection) {
+                if (callbackIfYes instanceof Function) callbackIfYes(receiver);
+            } else {
+                if (callbackIfNo instanceof Function) callbackIfNo(receiver);
+            }
+        } catch (error) {
+            errorLogger.log(error, error.stack, { key: 'showConformation', event: 'formShow' });
+        }
+    }
     /**
      * @method showAwait
      * @param {Player} player 
@@ -260,6 +300,11 @@ class FormBuilder {
      * @param  {...any} extraArguments
      */
     showAwait(player, key, ...extraArguments) {
+        const { id } = player;
+        if (this.__awaitingPlayers[id] === false) return delete this.__awaitingPlayers[id];
+        if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) return player.tell('§cyou are already awaiting the same form!');
+        if (!this.__awaitingPlayers.hasOwnProperty(id)) this.__awaitingPlayers[id] = {};
+        this.__awaitingPlayers[id][key] = 0;
         player.tell('§l§eClose chat to open the Menu!');
         const generatedForm = this.generateForm(player, key, ...extraArguments);
         this.showForm(player, key, generatedForm, true, ...extraArguments)
@@ -480,6 +525,7 @@ class FormBuilder {
      * @param  {...any} extraArguments 
      */
     async showForm(player, key, generatedForm, awaitShow, ...extraArguments) {
+        const { id } = player;
         const { form, formArray, type } = generatedForm;
         const response = await form.show(player);
         const { canceled, cancelationReason } = response;
@@ -488,9 +534,15 @@ class FormBuilder {
         if (canceled) {
             if (awaitShow && cancelationReason === 'userBusy') {
                 eventBuilder.queueNextTick(() => this.showAwaitTest(player, key, ...extraArguments), 3);
+            } else {
+                content.warn(this.__awaitingPlayers);
+                if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) delete this.__awaitingPlayers[id][key];
+
             }
+
             return;
         }
+        if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) delete this.__awaitingPlayers[id][key];
         // content.warn({ text: this[key][type] });
         const responsibleObjects = formArray.filter(object => object.some((key, value) => typeof value === 'object'));
         if (responses[type] === 'selection') {
@@ -576,6 +628,7 @@ class FormBuilder {
 
 const formBuilder = new FormBuilder();
 export default formBuilder; 4;
+
 
 
 

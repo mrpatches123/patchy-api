@@ -1,3 +1,5 @@
+import { content } from "../utilities";
+
 const arrayFunctions = {
 	delete(index) {
 		return this.filter((item, i) => i !== index);
@@ -15,6 +17,14 @@ const arrayFunctions = {
 		}
 		return array;
 	},
+	/**
+	 * @method accumulate
+	 * @param {(value: any, i: Number, initialValue: any) => {}} callback 
+	 * @param {any} initialValue 
+	 * @param {Boolean} ignorefunctions 
+	 * @param {Boolean} ignore 
+	 * @returns {any}
+	 */
 	accumulate(callback, initialValue, ignorefunctions = false, ignore = false) {
 		if (typeof callback == "function") {
 			if (this.length) {
@@ -22,10 +32,17 @@ const arrayFunctions = {
 				for (const value of this) {
 					if (typeof value === 'function' && ignorefunctions) { continue; }
 					const call = callback(value, i++, initialValue);
-					if (initialValue && (call || ignore) && typeof initialValue == 'object' && isArray(initialValue)) {
+					if (!initialValue || (!call && ignore)) continue;
+					if (initialValue instanceof Array) {
 						initialValue.push(call);
+					} else if (initialValue instanceof Object) {
+						initialValue = { ...initialValue, ...call };
+					} else if (typeof initialValue === 'number' || typeof initialValue === 'string') {
+						initialValue += call;
 					}
+					content.warn({ t: 'accumulatejkwwdjkwdjk', i, initialValue, call, bool: initialValue instanceof Object });
 				}
+
 				if (initialValue) { return initialValue; }
 			}
 		}

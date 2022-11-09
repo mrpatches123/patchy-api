@@ -9,6 +9,7 @@ formBuilder.create('test', {
         {
             button: {
                 text: 'button',
+                iconPath: 'textures/forms/Main/Test',
                 reopen: true
             }
         },
@@ -25,7 +26,10 @@ formBuilder.create('test', {
         },
         {
             button: {
-                text: '%accessibility.button.exit'
+                text: 'Profile'
+            },
+            callback: (player) => {
+                formBuilder.show(player, 'playerProfile');
             }
         },
         {

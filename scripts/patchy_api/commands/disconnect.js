@@ -21,5 +21,5 @@ commandBuilder.register('disconnect', {
     callback: (sender, args) => {
         sender.disconnect();
     }
-
 });
+

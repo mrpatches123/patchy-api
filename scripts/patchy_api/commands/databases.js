@@ -19,6 +19,11 @@ commandBuilder.register('databases', {
     },
     aliases: ['dbs'],
     callback: (sender, args) => {
-        sender.tellraw(databases.getFromEntity(args[0]));
+        if (args[0]) {
+            if (!databases.hasOwnProperty(args[0])) sender.tell(`database: ${args[0]}, does not exist!`);
+            sender.tell(databases.getFromEntity(args[0]));
+        } else {
+            sender.tell(JSON.stringify(databases));
+        }
     }
 });

@@ -38,9 +38,10 @@ const arrayObjectFunctions = {
 			}
 		}
 	},
+	/** @typedef {String} key */
 	/**
 	 * @method forEach interates over the object and can accumulate the return of each call into an object or Array depending on the initialValue
-	 * @param {Function} callback(key, value, index, initialValue)
+	 * @param {(key: string, value: this[key], i: Number, initialValue: any)} callback(key, value, index, initialValue)
 	 * @param {any} initialValue undefined, Object or Array if you want to
 	 * @param {Boolean} 
 	 * @param {Boolean} ignore ignores if current call is false
@@ -272,3 +273,7 @@ export function hasKey(key) {
 }
 
 Object.assign(Object.prototype, arrayObjectFunctions);
+
+const object = { wjkdjd: 9 };
+
+object.forEach();

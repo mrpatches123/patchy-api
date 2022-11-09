@@ -19,7 +19,7 @@ commandBuilder.register('events', {
         }
     },
     callback: (sender, args) => {
-        sender.tellraw(JSON.stringify(eventBuilder, null, 4));
+        sender.tellraw(native.stringify(eventBuilder, null, 4));
         // sender.tellraw(JSON.stringify(eventBuilder));
     }
 });

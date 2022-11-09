@@ -4,23 +4,61 @@ import global from "./global.js";
 import time from './time.js';
 import errorBuider from './error.js';
 // content.warn(native.stringify({hasOwnProperty: world.events.hasProperty('beforeChat')}))
+import { BeforeChatEvent, BeforeDataDrivenEntityTriggerEvent, BeforeExplosionEvent, BeforeItemDefinitionTriggeredEvent, BeforeItemUseEvent, BeforeItemUseOnEvent, BeforePistonActivateEvent, BlockBreakEvent, BlockExplodeEvent, BlockPlaceEvent, ButtonPushEvent, ChatEvent, DataDrivenEntityTriggerEvent, EffectAddEvent, EntityCreateEvent, EntityHitEvent, EntityHurtEvent, ExplosionEvent, ItemCompleteChargeEvent, ItemDefinitionTriggeredEvent, ItemReleaseChargeEvent, ItemStartChargeEvent, ItemStartUseOnEvent, ItemStopChargeEvent, ItemStopUseOnEvent, ItemUseEvent, ItemUseOnEvent, LeverActionEvent, PistonActivateEvent, PlayerJoinEvent, PlayerLeaveEvent, ProjectileHitEvent, TickEvent, WeatherChangeEvent, WorldInitializeEvent } from '@minecraft/server';
+/**
+ * @typedef {Object} ObjectEventSubscribe
+ * @property {(arg: BeforeChatEvent) => {}} beforeChat
+ * @property {(arg: BeforeDataDrivenEntityTriggerEvent) => {}} beforeDataDrivenEntityTriggerEvent
+ * @property {(arg: BeforeExplosionEvent) => {}} beforeExplosion
+ * @property {(arg: BeforeItemDefinitionTriggeredEvent) => {}} beforeItemDefinitionEvent
+ * @property {(arg: BeforeItemUseEvent) => {}} beforeItemUse
+ * @property {(arg: BeforeItemUseOnEvent) => {}} beforeItemUseOn
+ * @property {(arg: BeforePistonActivateEvent) => {}} beforePistonActivate
+ * @property {(arg: BlockBreakEvent) => {}} blockBreak
+ * @property {(arg: BlockExplodeEvent) => {}} blockExplode
+ * @property {(arg: BlockPlaceEvent) => {}} blockPlace
+ * @property {(arg: ButtonPushEvent) => {}} buttonPush
+ * @property {(arg: ChatEvent) => {}} chat
+ * @property {(arg: DataDrivenEntityTriggerEvent) => {}} dataDrivenEntityTriggerEvent
+ * @property {(arg: EffectAddEvent) => {}} effectAdd
+ * @property {(arg: EntityCreateEvent) => {}} entityCreate
+ * @property {(arg: EntityHitEvent) => {}} entityHit
+ * @property {(arg: EntityHurtEvent) => {}} entityHurt
+ * @property {(arg: ExplosionEvent) => {}} explosion
+ * @property {(arg: ItemCompleteChargeEvent) => {}} itemCompleteCharge
+ * @property {(arg: ItemDefinitionTriggeredEvent) => {}} itemDefinitionEvent
+ * @property {(arg: ItemReleaseChargeEvent) => {}} itemReleaseCharge
+ * @property {(arg: ItemStartChargeEvent) => {}} itemStartCharge
+ * @property {(arg: ItemStartUseOnEvent) => {}} itemStartUseOn
+ * @property {(arg: ItemStopChargeEvent) => {}} itemStopCharge
+ * @property {(arg: ItemStopUseOnEvent) => {}} itemStopUseOn
+ * @property {(arg: ItemUseEvent) => {}} itemUse
+ * @property {(arg: ItemUseOnEvent) => {}} itemUseOn
+ * @property {(arg: LeverActionEvent) => {}} leverActivate
+ * @property {(arg: PistonActivateEvent) => {}} pistonActivate
+ * @property {(arg: PlayerJoinEvent) => {}} playerJoin
+ * @property {(arg: PlayerLeaveEvent) => {}} playerLeave
+ * @property {(arg: ProjectileHitEvent) => {}} projectileHit
+ * @property {(arg: TickEvent) => {}} tick
+ * @property {(arg: WeatherChangeEvent) => {}} weatherChange
+ * @property {(arg: WorldInitializeEvent) => {}} worldInitialize
+ * @property {(arg: TickEvent) => {}} tickAfterLoad
+ * @property {(arg: PlayerJoinEvent) => {}} playerJoined
+ * @property {(arg: EntityHitEvent) => {}} playerHit
+ * @property {(arg: EntityHurtEvent) => {}} playerHurt
+ * @property {(arg: {playerId: String, playerName: String}) => {}} playerLeft
+ * @property {(arg: { id: String, key: String, target: String, type: String, value: any }) => {}} requestAdded
+ * @property {() => {}} worldLoad
+*/
+// world.events.worldInitialize.subscribe(() => {
+//     content.warn('klwdkldwkjwdjkwd');
+// });
 class EventBuilder {
     constructor() {
         this.suppresses = {};
         this.subscriptions = {};
         this.events = {};
-        // world.events.keysObject().forEach(key => {
-        //     if (!this.events.hasOwnProperty(key)) {
-        //         this[key] = {
-        //             subscription: true
-        //         };
-        //     }
-        // });
-        // this.forEach((key) => {
-
-        //     this[key].keysObject = {};
-        //     this[key].subscribed = 0;
-        // });
+        this.classId = Math.random();
     }
     queueNextTick(callback, ticksToSkip = 0) {
         const queueCallback = (event) => {
@@ -51,13 +89,18 @@ class EventBuilder {
     /**
      * @method subscribe 
      * @param {String} key
-     * @param {ObjectEvents} eventObject
+     * @param {ObjectEventSubscribe} eventObject
      */
     subscribe(key, eventObject) {
+        // content.warn({ key, eventObject: native.stringify(eventObject) });
         try {
 
 
             eventObject.forEach((eventKey, callback) => {
+                if (!world.events.hasProperty(eventKey) && !this.events.hasOwnProperty(eventKey)) {
+                    world.say(`${key} - ${eventKey} - ${JSON.stringify(this, null, 4)}`);
+                    throw new Error(`Bool: ${this.events.hasOwnProperty(eventKey)}, Event: ${eventKey} does not exist`);
+                }
                 // content.warn({[key]: eventKey})
                 // if (eventKey === 'playerJoin') {
                 //     content.warn('playerJoinSubscribe')
@@ -68,14 +111,15 @@ class EventBuilder {
                     this.events[eventKey].subscribed = 0;
                     if (world.events.hasProperty(eventKey)) { this.events[eventKey].subscription = true; }
                 }
+
                 // content.warn({key,eventKey,hasEventKey:this.events.hasOwnProperty(eventKey),subscribed: this.events[eventKey].subscribed})
                 if (!this.events[eventKey].subscribed) {
-                    if (typeof this.events[eventKey].subscription === 'function' || native.typeOf(this.events[eventKey].subscription) === 'object') {
 
+                    if (typeof this.events[eventKey].subscription === 'function' || native.typeOf(this.events[eventKey].subscription) === 'object') {
                         this.subscriptions[eventKey] = this.events[eventKey].subscription;
                         const subscribeObjectInternal = {};
+
                         this.events[eventKey].subscription.forEach((key, value) => {
-                            // content.warn({key})
                             if (!world.events.hasProperty(key) && !this.events.hasOwnProperty(key)) {
                                 return new Error(`Event: ${key}, does not of class world.events or EventBuilder`);
                             } else if (native.typeOf(value) === 'object') {
@@ -166,7 +210,7 @@ class EventBuilder {
     //eventKey =  the key for the event listed under this.events
     //event = the key in keysObject for the object assigned to eventKey
     unsubscribeEvent(eventKey, event) {
-        content.warn({ eventKey, event });
+        // content.warn({ eventKey, event });
         let { subscribed } = this.events[eventKey];
         subscribed = this.events[eventKey].subscribed -= (subscribed) ? 1 : 0;
         if (!subscribed) {
@@ -323,13 +367,6 @@ class EventBuilder {
         }
     }
 }
-let eventBuilder = new EventBuilder();
+const eventBuilder = new EventBuilder();
 export default eventBuilder;
-// try { overworld.runCommand(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick`); } catch { }
-//									 databases.initialize();
-//									 server.objectiveAdd('error');
-
-//									 server.scoreAdd('error', 'log');
-//									 console.warn(server.scoreAdd('error', 'save'), server.scoreAdd('error', 'log'));
-
 

@@ -1,13 +1,14 @@
-import eventBuilder from "./events";
+import eventBuilder from "./events.js";
 import { sort3DRange } from '../utilities.js';
-import global from "./global";
+import global from "./global.js";
+import players from "./players.js";
 const { floor } = Math;
 class PositionBuilder {
 	constructor() {
 
 		eventBuilder.subscribe('position*API', {
 			tickAfterLoad: () => {
-				global.players.forEach(player => {
+				players.get().forEach((id, player) => {
 					const { location: { x, y, z } } = player;
 					this.forEach((key, { location1, location2, callback }) => {
 						const { x: x1, y: y1, z: z1 } = location1;

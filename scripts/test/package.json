@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "typescript-json": "^3.3.20"
+  }
+}

@@ -1,5 +1,5 @@
 import { world, Player, Location, InventoryComponentContainer, EnchantmentList, Enchantment, MinecraftBlockTypes } from '@minecraft/server';
-import { native, overworld, time, blockFaceToCoords, content } from '../../patchy_api/modules';
+import { native, overworld, time, blockFaceToCoords, content, formBuilder } from '../../patchy_api/modules.js';
 const global = {};
 global.players = {};
 const maxCord = 30000000;
@@ -93,26 +93,23 @@ const ileagalEntities = [
 world.events.beforeItemUseOn.subscribe((events) => {
 
 });
-world.events.entityCreate.subscribe(({ entity }) => {
-	const { dimension, id: entityId, location, rotation } = entity;
-	const length = [...dimension.getEntities()].length;
-	const { x, z } = location;
-	if (excludedEntities.includes(entityId) || entity.hasTag(`fixed`)) return;
-	entity.teleport(new Location(x, -65, z), dimension, 0, 0);
-	entity.kill();
-	if (length > 300) return;
-	if (!ileagalEntities.includes(entityId)) {
-		try {
-
-
-			const newEntity = dimension.spawnEntity(entityId, location);
-			newEntity.addTag(`fixed`);
-		} catch (error) {
-			console.warn(`${entityId} is broke`);
-		}
-	}
-
-});
+// world.events.entityCreate.subscribe(({ entity }) => {
+// 	const { dimension, id: entityId, location, rotation } = entity;
+// 	const length = [...dimension.getEntities()].length;
+// 	const { x, z } = location;
+// 	if (excludedEntities.includes(entityId) || entity.hasTag(`fixed`)) return;
+// 	entity.teleport(new Location(x, -65, z), dimension, 0, 0);
+// 	entity.kill();
+// 	if (length > 300) return;
+// 	if (!ileagalEntities.includes(entityId)) {
+// 		try {
+// 			const newEntity = dimension.spawnEntity(entityId, location);
+// 			newEntity.addTag(`fixed`);
+// 		} catch (error) {
+// 			console.warn(`${error} - ${entityId} is broke`);
+// 		}
+// 	}
+// });
 const exemptedBlocks = [
 	'minecraft:shulker_box',
 	'minecraft:undyed_shulker_box'
@@ -142,5 +139,9 @@ world.events.beforeItemUseOn.subscribe((event) => {
 // 		block.setPermutation(permutation);
 // 	}
 
+world.events.beforeItemUse.subscribe(({ item, source }) => {
+	if (item.typeId !== 'minecraft:compass') return;
+	formBuilder.show(source, 'test', source.id);
+});
 
 // world.events.beforeDataDrivenEntityTriggerEvent.subscribe(),

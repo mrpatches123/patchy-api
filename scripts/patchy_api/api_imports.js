@@ -2,12 +2,16 @@
 
 
 
+import './libraries/prototypes/native_imports.js';
+import './events/events_first.js';
+import './events/events_second.js';
+//import custom events above here
+import './libraries/prototypes/minecraft_imports.js';
+
 import './main.js';
 //events
-import './events/events_old.js';
 
-//for id to work //1.19.40 makes it worthless but for now its fine.
-import './libraries/classes/scoreboard.js';
+
 
 //plugins
 import './plugins/chat.js';
@@ -28,3 +32,4 @@ import './commands/ui_test.js';
 import './commands/echest.js';
 import './commands/tag_databases.js';
 import './commands/request.js';
+import './commands/players.js';

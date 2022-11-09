@@ -23,7 +23,6 @@ class PlayersScoreboard {
 				server.objectiveRemove('identities');
 				server.objectiveAdd('identities');
 				server.objectiveAdd('playerId');
-
 			},
 			tick: () => {
 				if (!this.autoUpdate) { return; }

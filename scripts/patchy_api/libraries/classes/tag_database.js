@@ -4,6 +4,7 @@ import { Database } from './database.js';
 import global from './global.js';
 import eventBuilder from './events.js';
 import { Player, world } from '@minecraft/server';
+import time from './time.js';
 const tagLength = 'tagDB:'.length;
 class TagDatabases {
 	constructor() {
@@ -18,6 +19,7 @@ class TagDatabases {
 		});
 	}
 	initalize(player) {
+		time.start('TagDatabases');
 		const { id } = player;
 		const tags = player.getTags();
 		content.warn("hello", tags);
@@ -41,6 +43,7 @@ class TagDatabases {
 			if (!this[databaseId].hasOwnProperty(id)) this[databaseId][id] = new Database(JSON.parse(fullrawDatabase));
 			content.warn({ this: this[databaseId][id] });
 		});
+		content.warn({ TagDatabases: time.end('TagDatabases') });
 	}
 	initalizeAll() {
 		this.clear();
@@ -69,7 +72,7 @@ class TagDatabases {
 
 	}
 	queueSave(player, databaseId) {
-		content.warn({ name: player.name, databaseId });
+		// content.warn({ name: player.name, databaseId });
 		const { id } = player;
 		if (!this.hasOwnProperty(databaseId)) return new Error(`databaseId: ${databaseId}, does not exist on tag database`);
 		if (!this.__queuedSaves.saves.hasOwnProperty(databaseId)) this.__queuedSaves.saves[databaseId] = {};
@@ -79,7 +82,6 @@ class TagDatabases {
 		if (!this.__queuedSaves.subscribed) {
 			eventBuilder.subscribe('end_tagSaveQueue*API', {
 				tickAfterLoad: () => {
-					content.warn(this.__queuedSaves.saves, this.__queuedSaves.saves.length());
 					if (!this.__queuedSaves.saves.length()) return eventBuilder.unsubscribeEvent('tickAfterLoad', 'end_tagSaveQueue*API');
 					this.__queuedSaves.saves.forEach((key, value) => {
 						value.forEach((id, player) => {
@@ -92,7 +94,7 @@ class TagDatabases {
 		}
 	}
 	save(databaseId, player) {
-		content.warn({ t: 'tDB', databaseId });
+		// content.warn({ t: 'tDB', databaseId });
 		const { id } = player;
 		if (!this.hasOwnProperty(databaseId)) return new Error(`databaseId: ${databaseId}, does not exist on tag database`);
 
@@ -123,7 +125,7 @@ class TagDatabases {
 
 			if (rawTexts && rawTexts.length) rawTexts.forEach(tag => player.removeTag(tag));
 			const chunkSize = 32767 - (sliceLength + 8);
-			content.warn({ t: 'saveTag', dtata: this[databaseId] });
+			// content.warn({ t: 'saveTag', dtata: this[databaseId] });
 			const stringifiedDatabase = JSON.stringify(this[databaseId][id]);
 			const stringifiedDBLength = stringifiedDatabase.length;
 			const databaseChunks = Array.from(Array(Math.ceil(stringifiedDBLength / chunkSize)), (item, i) => stringifiedDatabase.substr(i * chunkSize, chunkSize));

@@ -1,9 +1,9 @@
 import { world, Player, Entity, ItemStack, Items, Location, MolangVariableMap, Vector } from '@minecraft/server';
-import errorLogger from '../classes/error';
+import errorLogger from '../classes/error.js';
 
 const { isInteger } = Number;
-// import playerScoreboard from '../classes/scoreboard';
-import { content, native, server } from '../utilities';
+// import playerScoreboard from '../classes/scoreboard.js';
+import { content, native, server } from '../utilities.js';
 const { sin, cos } = Math;
 const betaPlayerFunctions = {
 	/**
@@ -213,11 +213,14 @@ const betaPlayerFunctions = {
 Object.assign(Player.prototype, betaPlayerFunctions);
 Object.assign(Entity.prototype, betaPlayerFunctions);
 
+
+import players from '../classes/players.js';
+
 const playerProperties = {
 	/**
 	 * @property scores any property gotten with return the score from the player's scoreboard 
 	 * any property set will set the score
-	 * @returns Number
+	 * @returns {{[objectiveId: String]: Number}}
 	 */
 	scores: {
 		get() {
@@ -230,6 +233,32 @@ const playerProperties = {
 					player.scoreSet(objectiveId, value);
 				}
 			});
+		},
+	},
+	/**
+	 * @property properties returns dynmic properties stored on the player
+	 * @returns {{[identifier: String]: Number | Boolean | String}}
+	 */
+	properties: {
+		get() {
+
+			const player = this;
+			return new Proxy({}, {
+				get(target, identifier) {
+					return players.getProperty(player, identifier);
+				},
+				set(target, identifier, value) {
+					try {
+						content.warn(identifier, value);
+						players.setProperty(player, identifier, value);
+						return Reflect.set(...arguments);
+					} catch (error) {
+						errorLogger.log(error, error.stack, { key: 'PlayerDynamicProperties', event: 'N/A' });
+					}
+				}
+
+			});
+
 		},
 	}
 };

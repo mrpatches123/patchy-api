@@ -5,8 +5,8 @@
     "generation": "node src/generation.js"
   },
   "dependencies": {
-    "@types/mojang-gametest": "^0.1.2",
-    "@types/mojang-minecraft": "^0.1.7",
+    "@minecraft/server": "^1.0.0-beta.release.1.19.40",
+    "@minecraft/server-ui": "^1.0.0-beta.release.1.19.40",
     "caller-callsite": "^5.0.0",
     "path": "^0.12.7"
   },

@@ -1,19 +1,26 @@
 
 
-import { content, time, tagDatabases, eventBuilder, formBuilder, global, requestBuilder } from '../../patchy_api/modules.js';
-
+import { world } from '@minecraft/server';
+import { content, time, tagDatabases, eventBuilder, formBuilder, global, requestBuilder, players } from '../../patchy_api/modules.js';
+import config from '../config.js';
+const { profilePictures, online, offine } = config;
 formBuilder.create('friendsTest', {
 	action: (receiver) => {
+		const { id: idReceiver, nameReceiver } = receiver;
 		const playerStorage = tagDatabases.get(receiver, 'playerStorage');
 		const friends = playerStorage.get('friends');
 		const { mutal = {} } = friends ?? {};
 		const elementArray = [];
-		mutal.forEach((id, name) => elementArray.push({
+		const onlineIds = Object.keys(players.get());
+		const teleportRequests = requestBuilder.getMemoryTarget('friends', idReceiver, Object.keys(mutal), 'tpa');
+		world.say(JSON.stringify(teleportRequests));
+		mutal.forEach((id, { name, profilePictureId = 0 }) => elementArray.push({
 			button: {
-				text: name
+				text: `${(onlineIds.includes(id)) ? online : offine} ${name} ${(teleportRequests.hasOwnProperty(id)) ? `§b(1)` : ''}`,
+				iconPath: profilePictures[profilePictureId]
 			},
 			callback: (receiver) => {
-				formBuilder.show(receiver, 'manageFreind', id, name);
+				formBuilder.show(receiver, 'manageFreind', id, name, profilePictureId);
 			}
 		}));
 		return [{
@@ -42,6 +49,7 @@ formBuilder.create('friendsTest', {
 		}];
 	}
 });
+
 formBuilder.create('friendRequests', {
 	action: [
 		(receiver) => {
@@ -56,14 +64,18 @@ formBuilder.create('friendRequests', {
 			if (incomingBool) {
 
 				returnArray.push({
-					body: 'Incomming Requests'
-				}, ...incoming.forEach((id, name) => {
+					button: {
+						text: 'Incomming Requests',
+						reopen: true
+					}
+				}, ...incoming.forEach((id, { name, profilePictureId = 0 }) => {
 					return ({
 						button: {
-							text: name
+							text: name,
+							iconPath: profilePictures[profilePictureId]
 						},
 						callback: () => {
-							formBuilder.show(receiver, 'friendsRequestsManage', 'incomming', id, name);
+							formBuilder.show(receiver, 'friendsRequestsManage', 'incomming', id, name, profilePictureId);
 						}
 					});
 				}, []));
@@ -71,14 +83,18 @@ formBuilder.create('friendRequests', {
 			if (outgoingBool) {
 
 				returnArray.push({
-					body: 'Outgoing Requests'
-				}, ...outgoing.forEach((id, name) => {
+					button: {
+						text: 'Outgoing Requests',
+						reopen: true
+					}
+				}, ...outgoing.forEach((id, { name, profilePictureId = 0 }) => {
 					return ({
 						button: {
-							text: name
+							text: name,
+							iconPath: profilePictures[profilePictureId]
 						},
 						callback: () => {
-							formBuilder.show(receiver, 'friendsRequestsManage', 'outgoing', id, name);
+							formBuilder.show(receiver, 'friendsRequestsManage', 'outgoing', id, name, profilePictureId);
 						}
 
 					});
@@ -109,7 +125,8 @@ formBuilder.create('friendRequests', {
 	]
 });
 formBuilder.create('friendsRequestsManage', {
-	action: (receiver, type, id, name) => {
+	action: (receiver, type, id, name, profilePictureId) => {
+		content.warn({ t: 'friendsRequestsManage', receiverName: receiver.name, type, name, id, });
 		switch (type) {
 			case "outgoing":
 				return ([
@@ -121,19 +138,23 @@ formBuilder.create('friendsRequestsManage', {
 							text: "Cancel"
 						},
 						callback: () => {
-							formBuilder.showConformation(receiver, `Are you sure you want to cancel your friend request to ${name}?`, (receiver) => {
-								const { id: idReceiver, name: nameReceiver } = receiver;
-								const playerStorage = tagDatabases.get(receiver, 'playerStorage');
-								const friends = playerStorage.get('friends') ?? {};
-								const { requests: { incoming = {}, outgoing = {} } = {}, mutal = {} } = friends;
-								requestBuilder.add('friends', idReceiver, id, { action: 'remove', name, date: time.now() });
-								delete friends.requests.outgoing[id];
-								delete friends.requests.incoming[id];
-								playerStorage.set('friends', friends);
-								tagDatabases.queueSave(receiver, 'playerStorage');
-								receiver.tell(`You send a request to be ${name}'s friend!`);
-								player.tell(`${nameReceiver} sent a request to be your friend!`);
-							});
+							const { id: idReceiver, name: nameReceiver, properties: { profilePictureId = 0 } } = receiver;
+							// const profilePictureIconPath = profilePictures[profilePictureId];
+							const playerStorage = tagDatabases.get(receiver, 'playerStorage');
+							const friends = playerStorage.get('friends') ?? {};
+							const { requests: { incoming = {}, outgoing = {} } = {}, mutal = {} } = friends;
+							requestBuilder.add('friends', idReceiver, id, 'remove', { date: time.now() });
+							if (friends.hasOwnProperty('requests')) {
+								if (friends.requests.hasOwnProperty('incoming') && friends.requests.incoming.hasOwnProperty(id)) delete friends.requests.incoming[id];
+								if (friends.requests.hasOwnProperty('outgoing') && friends.requests.outgoing.hasOwnProperty(id)) delete friends.requests.outgoing[id];
+							}
+							if (friends.hasOwnProperty('mutal')) delete friends.mutal[id];
+
+							friends.mutal[id] = { profilePictureId, name };
+							playerStorage.set('friends', friends);
+							tagDatabases.queueSave(receiver, 'playerStorage');
+							receiver.tell(`You send a request to be ${name}'s friend!`);
+
 						}
 					},
 					{
@@ -148,28 +169,29 @@ formBuilder.create('friendsRequestsManage', {
 			case "incomming":
 				return ([
 					{
-						body: `What would you like to do with your friend request to ${name}?`
+						body: `What would you like to do with ${name}'s friend request to you?`
 					},
 					{
 						button: {
 							text: "Accept"
 						},
 						callback: (receiver) => {
-							formBuilder.showConformation(receiver, `Are you sure you want to accept ${name}'s friend request?`, (receiver) => {
-								const { id: idReceiver, name: nameReceiver } = receiver;
-								const playerStorage = tagDatabases.get(receiver, 'playerStorage');
-								const friends = playerStorage.get('friends') ?? {};
-								const { requests: { incoming = {}, outgoing = {} } = {}, mutal = {} } = friends;
-								requestBuilder.add('friends', idReceiver, id, { action: 'add', name, date: time.now() });
-								delete friends.requests.incoming[id];
-								delete friends.requests.outgoing[id];
-								if (friends.hasOwnProperty('mutal')) friends.mutal = {};
-								friends.mutal[id] = name;
-								playerStorage.set('friends', friends);
-								tagDatabases.queueSave(receiver, 'playerStorage');
-								receiver.tell(`You send a request to be ${name}'s friend!`);
-								player.tell(`${nameReceiver} sent a request to be your friend!`);
-							});
+							const { id: idReceiver, name: nameReceiver, properties: { profilePictureId: profilePictureIdReceiver = profilePictures[0] } } = receiver;
+							const playerStorage = tagDatabases.get(receiver, 'playerStorage');
+							const friends = playerStorage.get('friends') ?? {};
+							const { requests: { incoming = {}, outgoing = {} } = {}, mutal = {} } = friends;
+							requestBuilder.add('friends', idReceiver, id, 'add', { name: nameReceiver, profilePictureId: profilePictureIdReceiver, date: time.now() });
+							if (friends.hasOwnProperty('requests')) {
+								if (friends.requests.hasOwnProperty('incoming') && friends.requests.incoming.hasOwnProperty(id)) delete friends.requests.incoming[id];
+								if (friends.requests.hasOwnProperty('outgoing') && friends.requests.outgoing.hasOwnProperty(id)) delete friends.requests.outgoing[id];
+							}
+							if (!friends.hasOwnProperty('mutal')) friends.mutal = {};
+							friends.mutal[id] = { name, profilePictureId };
+							content.warn({ t: 'incommingwknjndwuiwdhu', idReceiver, id, friends });
+							playerStorage.set('friends', friends);
+							tagDatabases.queueSave(receiver, 'playerStorage');
+							receiver.tell(`You accepted a request to be ${name}'s friend request and are now friends!`);
+
 						}
 					},
 					{
@@ -177,21 +199,23 @@ formBuilder.create('friendsRequestsManage', {
 							text: "Deny"
 						},
 						callback: (receiver) => {
-							formBuilder.showConformation(receiver, `Are you sure you want to deny ${name}'s friend request?`, (receiver) => {
-								const { id: idReceiver, name: nameReceiver } = receiver;
-								const playerStorage = tagDatabases.get(receiver, 'playerStorage');
-								const friends = playerStorage.get('friends') ?? {};
-								const { requests: { incoming = {}, outgoing = {} } = {}, mutal = {} } = friends;
 
-								requestBuilder.add('friends', idReceiver, id, { action: 'remove', name, date: time.now() });
+							const { id: idReceiver, name: nameReceiver } = receiver;
+							const playerStorage = tagDatabases.get(receiver, 'playerStorage');
+							const friends = playerStorage.get('friends') ?? {};
+							const { requests: { incoming = {}, outgoing = {} } = {}, mutal = {} } = friends;
 
-								delete friends.requests.incoming[id];
+							requestBuilder.add('friends', idReceiver, id, 'remove', { date: time.now() });
+							if (friends.hasOwnProperty('requests')) {
+								if (friends.requests.hasOwnProperty('incoming') && friends.requests.incoming.hasOwnProperty(id)) delete friends.requests.incoming[id];
+								if (friends.requests.hasOwnProperty('outgoing') && friends.requests.outgoing.hasOwnProperty(id)) delete friends.requests.outgoing[id];
+							}
+							if (friends.hasOwnProperty('mutal')) delete friends.mutal[id];
+							playerStorage.set('friends', friends);
+							tagDatabases.queueSave(receiver, 'playerStorage');
+							receiver.tell(`You send a request to be ${name}'s friend!`);
+							player.tell(`${nameReceiver} sent a request to be your friend!`);
 
-								playerStorage.set('friends', friends);
-								tagDatabases.queueSave(receiver, 'playerStorage');
-								receiver.tell(`You send a request to be ${name}'s friend!`);
-								player.tell(`${nameReceiver} sent a request to be your friend!`);
-							});
 						}
 					},
 					{
@@ -208,27 +232,31 @@ formBuilder.create('friendsRequestsManage', {
 });
 formBuilder.create('friendsAdd', {
 	action: (receiver) => {
-		const { id: idReceiver, name: nameReceiver } = receiver;
+		const { id: idReceiver, name: nameReceiver, properties: { profilePictureId: profilePictureIdReceiver = 0 } } = receiver;
 		const playerStorage = tagDatabases.get(receiver, 'playerStorage');
 		const friends = playerStorage.get('friends') ?? {};
 		const { requests: { incoming = {}, outgoing = {} } = {}, mutal = {} } = friends;
+		content.warn({ nameReceiver, friends });
 		const elementArray = [];
 		const incomingLength = incoming.length();
-		global.players.filter((id, player) => {
+		const playersA = players.get();
+		content.warn({ players: playersA.map((key, value) => value.name) });
+		playersA.filter((id, player) => {
 			console.warn({ id, name: player.name, outgoing });
-			return !outgoing.hasOwnProperty(id) && !mutal.hasOwnProperty(id) && id !== idReceiver.toString();
+			return !outgoing.hasOwnProperty(id) && !incoming.hasOwnProperty(id) && !mutal.hasOwnProperty(id) && id !== idReceiver.toString();
 		}).forEach((id, player) => {
 
-			const { name } = player;
+			const { name, properties: { profilePictureId = 0 } } = player;
 			elementArray.push({
 				button: {
-					text: name
+					text: name,
+					iconPath: profilePictures[profilePictureId]
 				},
 				callback: () => {
-					requestBuilder.add('friends', idReceiver, id, { action: 'add', name, date: time.now() });
+					requestBuilder.add('friends', idReceiver, id, 'add', { name: nameReceiver, profilePictureId: profilePictureIdReceiver, date: time.now() });
 					if (!friends.hasOwnProperty('requests')) friends.requests = {};
 					if (!friends.requests.hasOwnProperty('outgoing')) friends.requests.outgoing = {};
-					friends.requests.outgoing[id] = name;
+					friends.requests.outgoing[id] = { name, profilePictureId };
 					playerStorage.set('friends', friends);
 					tagDatabases.queueSave(receiver, 'playerStorage');
 					receiver.tell(`You send a request to be ${name}'s friend!`);
@@ -263,35 +291,165 @@ formBuilder.create('friendsAdd', {
 	}
 });
 formBuilder.create('manageFreind', {
-	action: (receiver, i, id, name) => {
-		const { id: idReceiver } = receiver;
+	action: (receiver, id, name, profilePictureId) => {
+		const { id: idReceiver, name: nameReceiver } = receiver;
+		const playerStorage = tagDatabases.get(receiver, 'playerStorage');
+		const friends = playerStorage.get('friends') ?? {};
+		const { mutal = {} } = friends ?? {};
+		const teleportRequest = requestBuilder.getMemoryTarget('friends', idReceiver, Object.keys(mutal), 'tpa')[id];
+		content.warn({ id, name, profilePictureId });
 		const online = Object.keys(global.players).includes(id);
+		const player = players.get()[id];
 		content.warn({ id, name });
 		return ([
 			{
-				title: 'Friend Manager',
-				body: `How would you like to manage ${name}`
+				title: 'Manage, Friend ',
+				body: `How would you like to manage ${name}`,
+				button: {
+					text: 'Profile Picture',
+					iconPath: profilePictures[profilePictureId],
+					reopen: true
+				}
 			},
 			() => {
-				if (online) {
+				if (!online) return;
+				if (teleportRequest) {
+					return ({
+						button: {
+							text: 'Manage Teleport Request'
+						},
+						callback: () => {
+							formBuilder.show(receiver, 'manageTpa', id, name, profilePictureId);
+						}
+					});
+				} else {
 					return ({
 						button: {
 							text: 'Request Teleport'
 						},
 						callback: () => {
-
+							requestBuilder.addMemory('friends', idReceiver, id, 'tpa', { date: time.now() });
+							player.tell(`§b${nameReceiver} sent you a request to teleport to you.`);
 						}
 					});
 				}
+
 			},
 			{
 				button: {
 					text: 'Remove'
 				},
 				callback: () => {
-					requestBuilder.add('friends', idReceiver, id, { action: 'remove', id });
+					formBuilder.showConformation(receiver, `Are you sure you want to remove ${name} as a friend?`, () => {
+						requestBuilder.add('friends', idReceiver, id, 'remove', { date: time.now() });
+					});
+				}
+			},
+			{
+				refresh: {
+					text: 'Refresh'
+				}
+			},
+			{
+				button: {
+					text: 'Back'
+				},
+				callback: () => {
+					formBuilder.show(receiver, 'friendsTest');
 				}
 			}
 		]);
 	}
 });
+
+formBuilder.create('tpaRequests', {
+	action: [
+		{
+			title: 'Teleport Requests'
+		},
+		(receiver) => {
+			const { id: idReceiver } = receiver;
+			const playerStorage = tagDatabases.get(receiver, 'playerStorage');
+			const friends = playerStorage.get('friends') ?? {};
+			const { mutal = {} } = friends;
+			return ([...requestBuilder.getMemoryTarget('friends', idReceiver, Object.keys(mutal), true).forEach((id, { tpa: { name, profilePictureId } }) => ({
+				button: {
+					text: name,
+					iconPath: profilePictures[profilePictureId]
+				},
+				callback: () => {
+					formBuilder.show(receiver, 'manageTpa', id, name, profilePictureId);
+				}
+			}), [])]);
+		},
+		{
+			refresh: {
+				text: 'Refresh'
+			}
+		},
+		{
+			button: {
+				text: 'Back'
+			},
+			callback: (receiver) => {
+				formBuilder.show(receiver, 'friendsTest');
+			}
+		}
+
+	]
+});
+formBuilder.create('manageTpa', {
+	action: [
+		{
+			title: 'Mangage Teleport Request'
+		},
+		(receiver, i, id, name, profilePictureId) => {
+			const { id: idReceiver, name: nameReceiver } = receiver;
+			const requestee = players.get()[id];;
+			const { id: idRequestee } = requestee;
+			return ([
+				{
+					body: `What would you like to do with ${name}'s Teleport Request`
+				},
+				{
+					button: {
+						text: 'Accept'
+					},
+					callback: () => {
+						if (!requestBuilder?.friends?.[id]?.[idReceiver]?.tpa) return receiver.tell(`${name} canceled their tpa request to you`);
+						requestee.tell(`§3Close chat to open Teleport Conformation!`);
+						formBuilder.showConformationAwait(requestee, `Do you still want to teleport to ${nameReceiver}?`, () => {
+							const { location, dimension, rotation: { x: rx, y: ry } } = receiver;
+							if (!requestBuilder?.friends?.[idRequestee]?.[idReceiver]?.tpa) return receiver.tell(`You could not be teleported since ${name} canceled their tpa request to you or left.`);
+							requestee.teleport(location, dimension, rx, ry);
+
+							requestBuilder.removeMemory('friends', idRequestee, idReceiver, 'tpa');
+						}, () => {
+							requestBuilder.removeMemory('friends', idRequestee, idReceiver, 'tpa');
+						});
+					}
+				},
+				{
+					button: {
+						text: 'Deny'
+					},
+					callback: () => {
+						const { id: idRequestee } = requestee;
+						requestBuilder.removeMemory('friends', idRequestee, idReceiver, 'tpa');
+						receiver.tell(`§c${nameReceiver} has Denied your teleport Request!`);
+					}
+				}
+			]);
+		},
+		{
+			button: {
+				text: 'Back'
+			},
+			callback: (receiver) => {
+				formBuilder.show(receiver, 'tpaRequests');
+			}
+		}
+	]
+});
+
+

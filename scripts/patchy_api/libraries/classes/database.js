@@ -1,5 +1,6 @@
-import { BlockAreaSize, BlockLocation, world } from "@minecraft/server";
+import { BlockAreaSize, BlockLocation, world, Entity } from "@minecraft/server";
 import { overworld, nether, end, content, native } from '../utilities.js';
+import time from "./time.js";
 // const overworld = world.getDimension('overworld');
 const chunkSize = 32763;
 // import { compress, decompress } from '../zip_255cs.js';
@@ -14,7 +15,7 @@ export class Database {
      * @method set set a keys for its value in the Database
      * @param {String} key key for value.
      * @param {any} value value for key.
-     * @returns {Databases} this
+     * @returns {Database} this
      */
 
     set(key, value) {
@@ -92,7 +93,7 @@ Array.prototype.random = function () {
 //         .filter(item => !existingCoords.some(coord => coord.x === item.x && coord.z === item.z)).random();
 // }
 //
-
+const coords256 = Array.from(Array(256), (item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 }));
 
 const databasesArea = new BlockAreaSize(16, 1, 16);
 export class Databases {
@@ -106,6 +107,9 @@ export class Databases {
      */
     initialize() {
         const entityArray = [];
+        /**
+         * @type Array<Entity>
+         */
         const entities = [...overworld.getEntities({ type: 'patches:database' })];
         content.warn({ entities: entities.length });
         entities.forEach(entity => {
@@ -121,7 +125,7 @@ export class Databases {
 
         });
         entityArray.forEach(entities => {
-
+            time.start('databaseInitTest');
             entities = entities.splice(2).filter(entity => entity);
             const json = [];
             if (entities) {
@@ -132,18 +136,21 @@ export class Databases {
                 });
                 if (name) {
                     this[name] = new Database(JSON.parse(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join('')));
+                    // content.warn({ [name]: this[name] });
                 }
+                content.warn({ name, gettime: time.end('databaseInitTest'), length: JSON.stringify(this[name]).length });
             }
+
         });
         // content.warn({ this: this });
+        // content.warn(this.get('requestsAPI'));
     }
     /**
      * @method getRandCoord get a random coordinates from 0,0 to 15,15
      * @returns {{x:Number,z:Number}}
      */
     _getRandCoords() {
-        return Array.from(Array(256), (item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 }))
-            .filter(({ x, z }) => !(this ?? {}).some((key, { __db_properties: { coords: { x: ex, z: ez } = {} } = {} }) => x === ex && z === ez)).random();
+        return coords256.filter(({ x, z }) => !(this ?? {}).some((key, { __db_properties: { coords: { x: ex, z: ez } = {} } = {} }) => x === ex && z === ez)).random();
     }
     getPropertiesObject() {
         return { coords: this._getRandCoords()/*, saveTicks: (Object.keys(this).length + 1) * 2 */ };
@@ -151,7 +158,7 @@ export class Databases {
     /**
      * @method add adds a database on Databases
      * @param {String} name Database name
-     * @returns {Databases} this
+     * @returns {Database} this
      */
     add(name) {
         if (!name) {
@@ -206,20 +213,23 @@ export class Databases {
         if (!name) {
             throw new Error('must input Database name');
         } else {
-            const propertiesObject = (this[name] ?? {}).__db_properties;
-            const { coords = undefined } = propertiesObject ?? {};
-
+            const { __db_properties: propertiesObject = {} } = this[name] ?? {};
+            const { coords } = propertiesObject;
+            // content.warn({ propertiesObject });
             if (!coords) { return; }
             let entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(coords.x, -64, coords.z));
+            // content.warn({ entities: entities.map(({ nameTag }) => nameTag) });
             if (entities.length) {
-                entities = entities.filter(({ id }) => id === 'patches:database');
+                entities = entities.filter(({ typeId }) => typeId === 'patches:database');
                 const name = entities[0].getTags().find(tag => tag.includes('dbName:')).replace('dbName:', '');
                 const json = [];
                 entities.forEach(entity => {
                     const order = entity.getTags().find(tag => tag.includes('dbOrder:')).replace('dbOrder:', '');
                     json.push([order, entity.nameTag]);
                 });
-                return (json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''));
+                const string = (json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''));
+                content.warn({ string });
+                return string;
             } else {
                 return undefined;
             }
@@ -250,32 +260,44 @@ export class Databases {
         const { x, z } = this[name].__db_properties['coords'];
         if (x && z && this[name]) {
             //console.warn(x, z);
+            time.start('test37763');
             const stringifiedDatabase = (JSON.stringify(this[name]));
-            //console.warn(stringifiedDatabase.length);
-            //console.warn(stringifiedDatabase);
-            const stringifiedDBLength = stringifiedDatabase.length;
-            const database = Array.from(Array(Math.ceil(stringifiedDBLength / chunkSize)), (item, i) => stringifiedDatabase.substr(i * chunkSize, chunkSize));
+            const stringify = time.end('test37763');
+            // content.warn({ length: stringifiedDatabase.length, stringifiedDatabase });
+            let size = (stringifiedDatabase.length / chunkSize) | 0;
+            const database = Array(++size);
+            time.start('test37763');
+            for (let i = 0, offset = 0; i < size; i++, offset += chunkSize) {
+                database[i] = stringifiedDatabase.substr(offset, chunkSize);
+            }
+            const chunk = time.end('test37763');
+            time.start('test37763');
             const databaseLength = database.length;
             let entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(x, -64, z));
             const entitiesLength = (entities ?? []).length;
             const difference = databaseLength - entitiesLength;
+            // content.warn({ difference });
             for (let i = 0; i < difference.abs(); i++) {
                 if (difference.getSign() === 1) {
                     overworld.spawnEntity('patches:database', new BlockLocation(x, -64, z));
                 } else { entities[0].triggerEvent('patches:kill'); }
             }
+            const entityCorrect = time.end('test37763');
+            let entitySet;
+            time.start('test37763');
             entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(x, -64, z));
             if (entities.length) {
-                // databaseSplit.forEach((item) => console.warn(stringifiedDBLength, stringifiedDBLength / stringLength, stringLength, item.length));
                 entities.forEach((entity, i) => {
                     entity.nameTag = database[i];
                     entity.removeAllTags();
                     entity.addTag(`dbOrder:${i}`);
                     entity.addTag(`dbName:${name}`);
                 });
+                entitySet = time.end('test37763');
             } else {
                 throw new Error(`Database: ${name}, does not exist`);
             }
+            content.warn({ t: 'databaseSAavebej', stringify, chunk, entityCorrect, entitySet });
         }
     }
     /**
@@ -311,3 +333,5 @@ export class Databases {
 }
 let databases = new Databases();
 export default databases;
+
+

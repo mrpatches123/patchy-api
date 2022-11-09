@@ -5,6 +5,7 @@ import databases from '../../../patchy_api/libraries/classes/database.js';
 import global from '../../../patchy_api/libraries/classes/global.js';
 import eventBuilder from '../../../patchy_api/libraries/classes/events.js';
 import discipline from '../../libraries/discipline.js';
+
 eventBuilder.subscribe('nuker', {
     tickAfterLoad: ({ deltaTime }) => {
         let anticheat = databases.get('anticheat') ?? databases.add('anticheat');
@@ -28,6 +29,7 @@ eventBuilder.subscribe('nuker', {
                     }
                 });
 
+
                 blockBreaks.forEach(({ block: { location }, brokenBlockPermutation, dimension }) => {
                     dimension.getBlock(location).setPermutation(brokenBlockPermutation);
                 });
@@ -43,3 +45,5 @@ eventBuilder.subscribe('nuker', {
         }
     }
 });
+
+

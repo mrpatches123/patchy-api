@@ -18,12 +18,35 @@ export function hypot3(n1, n2, n3) {
 export function hypot2(n1, n2) {
     return Math.sqrt(n1 ** 2 + n2 ** 2);
 }
+
+export function guessTheNumber(condition, maxAmount) {
+    const dividend = maxAmount / 2;
+    let currentNumber = dividend;
+    let lastCondition;
+    let iterations = Math.ceil(Math.log2(maxAmount) + maxAmount / 22000);
+    for (let i = 0; i < iterations; i++) {
+        const divsor = 2 ** i;
+        const guess = (lastCondition === undefined) ? currentNumber : (lastCondition) ? currentNumber - dividend / divsor : currentNumber + dividend / divsor;
+        lastCondition = Boolean(condition(guess));
+        console.log(i, guess, lastCondition);
+        currentNumber = guess;
+    }
+    return currentNumber;
+}
+export async function testXpLevel(player, testLevel) {
+    const bool = false;
+    try { await player.runCommandAsync(`tesfor @s[lm=${testLevel}]`); bool = true; } catch { }
+    return bool;
+}
+
+export const xp = guessTheNumber(async (guess) => {
+    return await testXpLevel(player, Math.round(guess));
+}, 24000);
 /**
  * @function parseList spreads all arrays in an array into one single array
  * @param {Array} list 
  * @returns Array
  */
-
 export function parseList(list) {
     if (!Array.isArray(list)) { return; }
     for (let i = 0; i < list.length; i++) {

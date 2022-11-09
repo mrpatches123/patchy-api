@@ -1,6 +1,46 @@
-import { world } from '@minecraft/server';
+import { world, Player } from '@minecraft/server';
 import { content, time, databases, eventBuilder, global } from '../../patchy_api/modules.js';
 const array = Array.from(Array(5000), (value, i) => i);
+
+
+
+// class PlayerPlus extends Player {
+// 	constructor(player) {
+// 		this.player = player;
+// 	}
+// 	hi() {
+// 		world.say(`[${this.name}] hi`);
+// 	}
+// }
+
+// PlayerPlus.name;
+// function makePlayerPlus(player) {
+// 	return new Proxy(player, {
+// 		get(target, key, receiver) {
+// 			if (key in player) {
+// 				return player;
+// 			} else {
+// 				return new PlayerPlus(player);
+// 			}
+// 		},
+// 		set(target, key, value) {
+// 			if (key in player) {
+// 				player;
+// 			} else {
+// 				return new PlayerPlus(player);
+// 			}
+// 		}
+// 	});
+// }
+// eventBuilder.subscribe('playerTest', {
+// 	tickAfterLoad: () => {
+// 		[...world.getPlayers()].forEach(player => {
+// 			const newPlayer = new PlayerPlus(player);
+// 			newPlayer.hi();
+// 		});
+// 	}
+// });
+
 
 // eventBuilder.subscribe('testDatabase', {
 // 	tickAfterLoad: () => {
@@ -14,6 +54,7 @@ const array = Array.from(Array(5000), (value, i) => i);
 // 		});
 // 	}
 // });
+
 // 		content.warn('db');
 		// 		time.start('testDatabase');
 		// 		let testDatabase = databases.getFromEntity('testDatabase');

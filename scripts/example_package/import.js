@@ -5,10 +5,14 @@ import './commands/menu.js';
 import './commands/test.js';
 import './commands/tags.js';
 import './commands/enchant_all.js';
+import './commands/test_func_form.js';
 //forms
 import './forms/test.js';
 import './forms/friends_test.js';
+import './forms/profile.js';
 
+//properties
+import './properties/player.js';
 //plugins
 import './plugins/example.js';
 import './plugins/request_watch_test.js';
