@@ -21,7 +21,7 @@
 //     callback: (sender, args) => {
 //         global.loaded = false;
 //         global.joiningPlayers = global.players;
-//         content.warn(sender.runCommand('reload'));
+//         content.warn(sender.runCommandAsync('reload'));
 
 //     }
 // });

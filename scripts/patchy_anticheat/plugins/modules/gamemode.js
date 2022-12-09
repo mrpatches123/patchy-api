@@ -45,16 +45,16 @@ eventBuilder.subscribe('gamemode', {
 				const name = player.getName();
 				// content.warn({ gameremode, name });
 				const { playerId } = global.scoreObject[name] ?? {};
-				// overworld.runCommand(`say ${JSON.stringify(toggles)}`)
+				// overworld.runCommandAsync(`say ${JSON.stringify(toggles)}`)
 
 
 				let { previousGamemode = gamemode, gamemodeother = 0 } = global.playerMap[name] ?? {};
 				if (restrictArray[gamemode]) {
 					discipline.check(player, `§4failed ${gamemodeName(previousGamemode, gamemode)}`, 'gamemode');
 					if (!gamemodeother) {
-						player.runCommand(`gamemode ${restrictArray.indexsOf(false)[0]}`);
+						player.runCommandAsync(`gamemode ${restrictArray.indexsOf(false)[0]}`);
 					} else {
-						player.runCommand(`gamemode ${restrictArray.indexsOf(false)[1]}`);
+						player.runCommandAsync(`gamemode ${restrictArray.indexsOf(false)[1]}`);
 					}
 				}
 				if (!global.playerMap[name]) {

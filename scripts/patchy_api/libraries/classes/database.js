@@ -111,7 +111,7 @@ export class Databases {
          * @type Array<Entity>
          */
         const entities = [...overworld.getEntities({ type: 'patches:database' })];
-        content.warn({ entities: entities.length });
+        // content.warn({ entities: entities.length });
         entities.forEach(entity => {
             let { location } = entity;
             location = location.toBlockLocation();
@@ -138,7 +138,7 @@ export class Databases {
                     this[name] = new Database(JSON.parse(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join('')));
                     // content.warn({ [name]: this[name] });
                 }
-                content.warn({ name, gettime: time.end('databaseInitTest'), length: JSON.stringify(this[name]).length });
+                // content.warn({ name, gettime: time.end('databaseInitTest'), length: JSON.stringify(this[name]).length });
             }
 
         });
@@ -167,10 +167,10 @@ export class Databases {
             throw new Error(`Database: ${name}, exists`);
         } else {
             const propertiesObject = this.getPropertiesObject();
-            overworld.runCommand(`say 'prop', ${JSON.stringify(propertiesObject)}`);
+            overworld.runCommandAsync(`say 'prop', ${JSON.stringify(propertiesObject)}`);
             this[name] = new Database();
             Object.assign(this[name].__db_properties, propertiesObject);
-            // overworld.runCommand(`say db ${JSON.stringify(this[name])}`);
+            // overworld.runCommandAsync(`say db ${JSON.stringify(this[name])}`);
             return this[name];
         }
     }
@@ -228,7 +228,7 @@ export class Databases {
                     json.push([order, entity.nameTag]);
                 });
                 const string = (json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''));
-                content.warn({ string });
+                // content.warn({ string });
                 return string;
             } else {
                 return undefined;
@@ -259,7 +259,7 @@ export class Databases {
         //console.warn(name);
         const { x, z } = this[name].__db_properties['coords'];
         if (x && z && this[name]) {
-            //console.warn(x, z);
+            console.warn(x, z);
             time.start('test37763');
             const stringifiedDatabase = (JSON.stringify(this[name]));
             const stringify = time.end('test37763');
@@ -297,7 +297,7 @@ export class Databases {
             } else {
                 throw new Error(`Database: ${name}, does not exist`);
             }
-            content.warn({ t: 'databaseSAavebej', stringify, chunk, entityCorrect, entitySet });
+            // content.warn({ t: 'databaseSAavebej', stringify, chunk, entityCorrect, entitySet });
         }
     }
     /**

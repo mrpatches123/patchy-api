@@ -1,4 +1,4 @@
-import { BlockLocation, Location } from "@minecraft/server";
+import { BlockLocation, Location, Vector3 } from "@minecraft/server";
 const { hypot } = Math;
 const locationTypes = {
 	Location,
@@ -48,3 +48,4 @@ const locationFunctions = {
 };
 Object.assign(Location.prototype, locationFunctions);
 Object.assign(BlockLocation.prototype, locationFunctions);
+Object.assign(Object.prototype, locationFunctions);

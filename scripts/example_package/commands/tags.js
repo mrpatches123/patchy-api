@@ -20,7 +20,7 @@ commandBuilder.register('tags', {
             });
             tagDatabases.initalizeAll();
         } else if (args[0] === '%all%') {
-            players.get().forEach((id, player) => {
+            players.get().iterate((player) => {
                 player.getTags().forEach(tag => {
                     player.removeTag(tag);
                 });

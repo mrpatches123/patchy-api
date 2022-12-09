@@ -28,7 +28,7 @@ class RequestBuilder {
 	 * @param {boolean} isArray 
 	 */
 	getMemoryTarget(id, target, keys, type, isArray = false) {
-		content.warn({ RequestBuilder: this });
+		// content.warn({ RequestBuilder: this });
 		const returnType = (isArray) ? [] : {};
 
 		if (typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[0] is not a String or Number!`);
@@ -138,7 +138,7 @@ class RequestBuilder {
 
 		// content.warn(11111, 'RequestBuilderwatch');
 		const call = () => {
-			content.warn('help');
+			// content.warn('help');
 			let database = databases.get("requestsAPI") ?? databases.add("requestsAPI");
 			const requests = database.get(id) ?? {};
 			// content.warn({ id, requests });

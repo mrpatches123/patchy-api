@@ -49,7 +49,7 @@ eventBuilder.subscribe('invSeeCheck', {
             if (entity) { entity.addTag('player'); }
         });
         try {
-            overworld.runCommand('event entity @e[type=patches:inventory,tag=!player] patches:kill_inv');
+            overworld.runCommandAsync('event entity @e[type=patches:inventory,tag=!player] patches:kill_inv');
         } catch { }
     }
 });
@@ -66,7 +66,7 @@ eventBuilder.subscribe('invSeeCheck', {
             const entity = sender.dimension.spawnEntity('patches:inventory', sender.headLocation);
             entity.nameTag = 'invsee';
             entity.addTag('player');
-            console.warn(overworld.runCommand('tag @e list').statusMessage);
+            console.warn(overworld.runCommandAsync('tag @e list').statusMessage);
             const playerInventory = player.getComponent('minecraft:inventory').container;
             const entityInventory = entity.getComponent('minecraft:inventory').container;
             for (let i = 0; i < playerInventory.size; i++) {

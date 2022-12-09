@@ -1,6 +1,7 @@
 import config from '../config.js';
 import global from '../../patchy_api/libraries/classes/global.js';
 import commandBuilder from "../../patchy_api/libraries/classes/commands.js";
+import { native } from '../modules.js';
 
 const { commandPrefix: prefix } = config;
 commandBuilder.register('global', {
@@ -19,7 +20,7 @@ commandBuilder.register('global', {
             sender.tell(JSON.stringify(global));
         } else {
             if (global[args[0]]) {
-                sender.tell(JSON.stringify(global[args[0]]));
+                sender.tell(JSON.stringify(global[args[0]], null, 4));
             } else {
                 sender.tellraw(`key: ${args[0]}, doesn't exist`);
             }

@@ -9,7 +9,7 @@ const dimensionFunctions = {
 		commands = (typeof commands[0] === 'array') ? arguments[0] : [...commands];
 		let returnArray = [];
 		for (const command of commands) {
-			returnArray.push(this.runCommand(command));
+			returnArray.push(this.runCommandAsync(command));
 		} return returnArray;
 
 	},

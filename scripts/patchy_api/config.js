@@ -1,5 +1,6 @@
 const config = {
-    commandPrefix: "!"
+    commandPrefix: "!",
+    tpsPrecision: 200
 };
 
 export default config;

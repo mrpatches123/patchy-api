@@ -17,7 +17,13 @@ formBuilder.create('playerProfile', {
 				callback: (receiver) => {
 					formBuilder.show(receiver, 'changeProfilePicture');
 				}
+			},
+			{
+				back: {
+					text: 'Back'
+				}
 			}
+
 		]);
 	}
 });
@@ -51,7 +57,6 @@ formBuilder.create('changeProfilePicture', {
 						outgoing.forEach(idTarget => {
 							requestBuilder.add('friends', id, idTarget, 'profilePictureChange', { profilePictureId, date: time.now() });
 						});
-
 					});
 				}
 			}));

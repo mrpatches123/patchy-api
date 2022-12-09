@@ -1,5 +1,4 @@
-import { content } from "../utilities";
-
+import { content } from "../utilities.js";
 const arrayFunctions = {
 	delete(index) {
 		return this.filter((item, i) => i !== index);
@@ -19,10 +18,10 @@ const arrayFunctions = {
 	},
 	/**
 	 * @method accumulate
-	 * @param {(value: any, i: Number, initialValue: any) => {}} callback 
-	 * @param {any} initialValue 
-	 * @param {Boolean} ignorefunctions 
-	 * @param {Boolean} ignore 
+	 * @param {(value: any, i: Number, initialValue: any) => {}} callback
+	 * @param {any} initialValue
+	 * @param {Boolean} ignorefunctions
+	 * @param {Boolean} ignore
 	 * @returns {any}
 	 */
 	accumulate(callback, initialValue, ignorefunctions = false, ignore = false) {

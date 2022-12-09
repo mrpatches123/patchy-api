@@ -13,7 +13,7 @@ const betaPlayerFunctions = {
 	 */
 	runCommands(...commands) {
 		let returnArray = [];
-		commands.forEach(command => returnArray.push(this.runCommand(command)));
+		commands.forEach(command => returnArray.push(this.runCommandAsync(command)));
 		return returnArray;
 	},
 	/**
@@ -81,7 +81,7 @@ const betaPlayerFunctions = {
 	 */
 	scoreAdd(objective, amount = 0) {
 		try {
-			return Number(this.runCommand(`scoreboard players add @s ${objective} ${amount}`).statusMessage.match(/-?\d+(?=[^-\d]$)/));
+			return Number(this.runCommandAsync(`scoreboard players add @s ${objective} ${amount}`).statusMessage.match(/-?\d+(?=[^-\d]$)/));
 		} catch (error) {
 			console.warn(error, error.stack);
 			return;
@@ -89,7 +89,7 @@ const betaPlayerFunctions = {
 	},
 	scoreSet(objective, amount = 0) {
 		try {
-			return Number(this.runCommand(`scoreboard players set @s ${objective} ${amount}`).statusMessage.match(/-?\d+(?=$)/));
+			return Number(this.runCommandAsync(`scoreboard players set @s ${objective} ${amount}`).statusMessage.match(/-?\d+(?=$)/));
 		} catch (error) {
 			console.warn(error, error.stack);
 			return;
@@ -97,15 +97,15 @@ const betaPlayerFunctions = {
 	},
 	gamemode(index, selector = '') {
 		try {
-			content.warn({ test: this.runCommand(`testfor ${selector}`).statusMessage, selector });
-			this.runCommand(`gamemode ${index} ${selector}`);
+			content.warn({ test: this.runCommandAsync(`testfor ${selector}`).statusMessage, selector });
+			this.runCommandAsync(`gamemode ${index} ${selector}`);
 		} catch { }
 	},
 	getPropertiesList() {
 		return andArray(this.keys());
 	},
 	tellraw(message) {
-		return this.runCommand(`tellraw @s {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
+		return this.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
 	},
 	clear(id) {
 		let inventory = this.getComponent('minecraft:inventory').container;
@@ -131,7 +131,7 @@ const betaPlayerFunctions = {
 	},
 	clearCrossHare(id) {
 		try {
-			this.runCommand(`clear @s ${id} ${crossHareDataKey}`);
+			this.runCommandAsync(`clear @s ${id} ${crossHareDataKey}`);
 		} catch { }
 
 	},
@@ -152,11 +152,11 @@ const betaPlayerFunctions = {
 	ability(ability, bool = '', selector = '') {
 		let abilityCurrent;
 		try {
-			abilityCurrent = JSON.parse(this.runCommand(`ability @s${selector} ${ability}`).displayString.match(/\w+$/)[0]?.toLowerCase());
+			abilityCurrent = JSON.parse(this.runCommandAsync(`ability @s${selector} ${ability}`).displayString.match(/\w+$/)[0]?.toLowerCase());
 		} catch { }
 		// content.warn(abilityCurrent);
 		if (abilityCurrent !== undefined && abilityCurrent !== bool) {
-			this.runCommand(`ability @s ${ability} ${bool}`);
+			this.runCommandAsync(`ability @s ${ability} ${bool}`);
 			return !abilityCurrent;
 		} else {
 			return abilityCurrent;
@@ -168,7 +168,7 @@ const betaPlayerFunctions = {
 	},
 	kick(reason) {
 		try {
-			this.runCommand(`kick "${this.name}" ${reason}`);
+			this.runCommandAsync(`kick "${this.name}" ${reason}`);
 		} catch (error) {
 			const { statusCode } = JSON.parse(error);
 			if (statusCode === -2147483648) {
@@ -215,8 +215,19 @@ Object.assign(Entity.prototype, betaPlayerFunctions);
 
 
 import players from '../classes/players.js';
+import loads from '../classes/load.js';
 
 const playerProperties = {
+	/**
+	 * @property loaded can player have commands ran on them
+	 * @returns {Boolean}
+	 */
+	loaded: {
+		get() {
+			const { id } = this;
+			return loads.loads.hasOwnProperty(id);
+		}
+	},
 	/**
 	 * @property scores any property gotten with return the score from the player's scoreboard 
 	 * any property set will set the score

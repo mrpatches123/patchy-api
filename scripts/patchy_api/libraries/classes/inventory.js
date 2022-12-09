@@ -233,7 +233,7 @@ export default inventoryBuilder;
 //   const slotsTop = [];
 //   const slotsBottom = [];
 //   const center = { x: Math.ceil(x / 2), y: Math.ceil(y / 2) };
-//   console.log(center);
+//   // console.log(center);
 //   slots.push(Math.floor(y / 2) * x + center.x - 1);
 //   for (let i = 1, m = 0, a = 1; i < items; i++, m++) {
 //     if (m === 0) {
@@ -250,4 +250,4 @@ export default inventoryBuilder;
 //   }
 //   return { slotsBottom, slots, slotsTop };
 // }
-// console.log(radial({ items: 23 }));
+// // console.log(radial({ items: 23 }));

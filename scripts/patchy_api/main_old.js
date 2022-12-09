@@ -1,4 +1,4 @@
-// world.getDimension('overworld').runCommand('script debugger connect localhost 19144');
+// world.getDimension('overworld').runCommandAsync('script debugger connect localhost 19144');
 const array = [];
 for (let key in console) {
     array.push(key);
@@ -7,7 +7,7 @@ console.warn(JSON.stringify(array));
 import { world, Player, BlockLocation, EntityQueryOptions, EntityQueryScoreOptions, Trigger, EntityEventOptions, DynamicPropertiesDefinition, MinecraftEntityTypes, BeforeItemDefinitionTriggeredEvent, System, system } from "@minecraft/server";
 
 import { ModalFormData } from '@minecraft/server-ui';
-// world.getDimension('overworld').runCommand('script debugger connect localhost 19144')
+// world.getDimension('overworld').runCommandAsync('script debugger connect localhost 19144')
 import "./libraries/utilities.js";
 import global from './libraries/classes/global.js';
 
@@ -69,7 +69,7 @@ let object = {
 
 system.events.beforeWatchdogTerminate.subscribe((event) => {
     const { terminateReason } = event;
-    console.log(terminateReason);
+    // console.log(terminateReason);
     event.cancel = true;
 });
 // world.events.beforeDataDrivenEntityTriggerEvent.subscribe(event => {
@@ -100,18 +100,18 @@ world.events.tick.subscribe(event => {
     //     return;
     // }
     // content.warn(native.stringify(eventBuilder, '<function>', false));
-    // overworld.runCommand(`event entity @e patches:kill`);
+    // overworld.runCommandAsync(`event entity @e patches:kill`);
 
     // const { deltaTime, currentTick } = event;
     // if (!(currentTick % 10)) {
-    //     overworld.runCommand(`say ${1 / deltaTime}`);
+    //     overworld.runCommandAsync(`say ${1 / deltaTime}`);
     // }
 
     // console.warn(JSON.stringify(global));
     global.joiningPlayers.forEach(player => {
 
         try {
-            player.runCommand('testfor @s');
+            player.runCommandAsync('testfor @s');
             // content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
             global.joiningPlayers = global.joiningPlayers.filter(player => !global.joiningPlayers.some(join => player.getName() === join.getName()));
             // content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
@@ -127,7 +127,7 @@ world.events.tick.subscribe(event => {
             if (!global.loaded) {
 
                 try {
-                    try { overworld.runCommand(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick`); } catch { }
+                    try { overworld.runCommandAsync(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick`); } catch { }
                     databases.initialize();
                     server.objectiveAdd('error');
 
@@ -221,7 +221,7 @@ world.events.tick.subscribe(event => {
             global.dimensions = dimensions;
             // global.playerIds = global.scoreObject.forEach((key, value) => (value.playerId) ? ({ [value.playerId]: key }) : false, {});
             let keys = [];
-            // content.warn(overworld.runCommand('tellraw @a { "rawtext": [ { "translate" : "Hello %%s and %%s", "with": { "rawtext" : [ { "text" : "Steve" }, { "translate" : "tile.stone.stone.name" } ] } } ] }'));
+            // content.warn(overworld.runCommandAsync('tellraw @a { "rawtext": [ { "translate" : "Hello %%s and %%s", "with": { "rawtext" : [ { "text" : "Steve" }, { "translate" : "tile.stone.stone.name" } ] } } ] }'));
             // scoreboardTest();
             const total = global.tickTime.tick.total;
             global.tickTime.tick = {};
@@ -452,7 +452,7 @@ world.events.blockPlace.subscribe(event => {
 //                 if (!item) { continue; }
 //                 inventory.setItem(i, Object.assign(item, {amount: 0} ))
 //             }
-//             player.runCommand('say nbt hacker')
+//             player.runCommandAsync('say nbt hacker')
 //         }
 //     }
 // });

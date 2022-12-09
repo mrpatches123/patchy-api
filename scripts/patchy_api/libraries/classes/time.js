@@ -25,7 +25,7 @@ class Time {
    * @returns {Number}
    */
   get(key) {
-    return this.now() - this[key];
+    return Number(this.now() - this[key]);
   }
   /**
    * @method now Data.now() fix worthless

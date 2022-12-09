@@ -46,7 +46,7 @@ commandBuilder.register('unban', {
                     anticheat.filter(id => isInteger(Number(id))).forEach((id, value) => {
                         if (Boolean(args[1])) {
                             scoreboardsNames.forEach(objective => {
-                                overworld.runCommand(`scoreboard players set "${value.nameTag}" ${objective} 0`);
+                                overworld.runCommandAsync(`scoreboard players set "${value.nameTag}" ${objective} 0`);
                             });
                         }
                         names.push(anticheat.get(id).name ?? 'undefined');

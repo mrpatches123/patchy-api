@@ -15,10 +15,10 @@ project.files.forEach((path, buffer) => {
 		const returns = match.match(/@returns.+/g);
 		const regExp = `(?<=^(?:export\\s*)?(?:class|function|const|let|var)\\s*)\\w+(?=.*?\\s+{[\\s\\S]+${((method) ? method.toString().replace(/([\(\).])/g, '\\$1') : method)})`;
 		const parent = content.match(new RegExp(regExp));
-		console.log({ regExp: regExp.replaceAll('\\', '\\'), path, parent: ((parent) ? parent.slice(-1).join('') : 'null'), method, functions, parameters, returns });
+		// console.log({ regExp: regExp.replaceAll('\\', '\\'), path, parent: ((parent) ? parent.slice(-1).join('') : 'null'), method, functions, parameters, returns });
 		return `@path ${path}\n@parent ${(parent && !functions) ? parent.slice(-1).join('') : 'null'}\n${[...(method && !functions) ? method : (!method && functions) ? functions : [], ...(parameters) ? parameters : [], ...(returns) ? returns : []].join('\n')}`;
 	});
 	contents.push(...fixedMatches);
-	// console.log(path, matches);
+	// // console.log(path, matches);
 });
-console.log(contents.join('\n\n'));;;;
+// console.log(contents.join('\n\n'));;;;

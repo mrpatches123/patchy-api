@@ -1,7 +1,7 @@
 
 
 
-
+import './libraries/classes/load.js';
 import './libraries/prototypes/native_imports.js';
 import './events/events_first.js';
 import './events/events_second.js';
@@ -19,6 +19,7 @@ import './plugins/database_queue.js';
 import './plugins/database_test.js';
 import './plugins/player_joined.js';
 import './plugins/world_load.js';
+import './plugins/update_test.js';
 //commands;
 
 import './commands/error.js';
@@ -33,3 +34,5 @@ import './commands/echest.js';
 import './commands/tag_databases.js';
 import './commands/request.js';
 import './commands/players.js';
+import './commands/tps.js';
+import './commands/leaderboard.js';

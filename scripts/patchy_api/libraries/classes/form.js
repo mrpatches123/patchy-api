@@ -223,12 +223,13 @@ const methods = {
 class FormBuilder {
     constructor() {
         this.__awaitingPlayers = {};
-        eventBuilder.subscribe('form*API', {
-            playerLeft: ({ playerId }) => {
-                if (this.__awaitingPlayers.hasOwnProperty(playerId)) this.__awaitingPlayers[playerId] = false;
+        this.players = {};
+        // eventBuilder.subscribe('form*API', {
+        //     playerLeft: ({ playerId }) => {
+        //         if (this.__awaitingPlayers.hasOwnProperty(playerId)) this.__awaitingPlayers[playerId] = false;
 
-            }
-        });
+        //     }
+        // });
     }
     /**
      * @method create
@@ -368,8 +369,8 @@ class FormBuilder {
      */
     generateForm(player, key, ...extraArguments) {
         const { name, id } = player;
-        const { lastFormShown = { key, extraArguments } } = global.playerMap[id] = {};
-        global.playerMap[id].lastFormShown = { key, extraArguments };
+        // const { lastFormShown = { key, extraArguments } } = global.playerMap[id] = {};
+        // global.playerMap[id].lastFormShown = { key, extraArguments };
         // if (!extraArguments.length) { extraArguments = []; }
         // content.warn({ extraArguments });
         if (!this[key]) {
@@ -525,23 +526,26 @@ class FormBuilder {
      * @param  {...any} extraArguments 
      */
     async showForm(player, key, generatedForm, awaitShow, ...extraArguments) {
+
         const { id } = player;
+        if (!this.players.hasOwnProperty(id)) this.players[id] = {};
+        if (!this.players[id].hasOwnProperty('formTree')) this.players[id].formTree = [];
+        const index = this.players[id].formTree.findIndex(({ key: fkey }) => fkey === key);
+        if (index > -1) this.players[id].formTree[index] = { key, extraArguments };
+        else this.players[id].formTree.push({ key, extraArguments });
         const { form, formArray, type } = generatedForm;
-        const response = await form.show(player);
-        const { canceled, cancelationReason } = response;
-
-        content.warn({ t: 'response', canceled, cancelationReason, timeMS: time.end('form') });
-        if (canceled) {
-            if (awaitShow && cancelationReason === 'userBusy') {
-                eventBuilder.queueNextTick(() => this.showAwaitTest(player, key, ...extraArguments), 3);
-            } else {
-                content.warn(this.__awaitingPlayers);
-                if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) delete this.__awaitingPlayers[id][key];
-
-            }
-
-            return;
+        // const response = await form.show(player);
+        // const { canceled, cancelationReason } = response;
+        let response;
+        while (true) {
+            response = await form.show(player);
+            const { cancelationReason } = response;
+            if (!awaitShow || cancelationReason !== 'userBusy') {
+                if (awaitShow && this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) delete this.__awaitingPlayers[id][key];
+                break;
+            };
         }
+        // content.warn({ t: 'response', canceled, cancelationReason, timeMS: time.end('form') });
         if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) delete this.__awaitingPlayers[id][key];
         // content.warn({ text: this[key][type] });
         const responsibleObjects = formArray.filter(object => object.some((key, value) => typeof value === 'object'));
@@ -627,7 +631,7 @@ class FormBuilder {
 }
 
 const formBuilder = new FormBuilder();
-export default formBuilder; 4;
+export default formBuilder;
 
 
 

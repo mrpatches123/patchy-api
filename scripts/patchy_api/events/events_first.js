@@ -2,155 +2,111 @@ import eventBuilder from "../libraries/classes/events.js";
 import global from '../libraries/classes/global.js';
 import { EntityEventOptions, Player, world } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
-import errorBuider from "../libraries/classes/error.js";
+import errorLogger from "../libraries/classes/error.js";
 import { EntityHurtEvent } from '@minecraft/server';
-global.joiningPlayers = [];
+import time from '../libraries/classes/time.js';
+global.playerJoined = {};
 global.tickAfterLoadI = 0;
-
-eventBuilder.add({
+let a = 0;
+eventBuilder.register({
 	worldLoad: {
 		subscription: {
-			tick: () => {
-				const { loading, loaded } = global;
-				if (loading && !loaded) {
-					eventBuilder.events.worldLoad.keysObject.forEach((key, { callback, suppressed }) => {
-						try {
-							if (!suppressed) {
-								callback();
-							}
-						} catch (error) {
-							errorBuider.log(error, error.stack, { event: 'worldLoad', key });
-						}
-					});
-					global.loadedPlayers = false;
-					global.loaded = true;
+			tick: {
+				function: () => {
+					const { loaded, loading } = global;
+					if (loading && !loaded) {
+						eventBuilder.getEvent('worldLoad').iterate();
+						global.loadedPlayers = false;
+						global.loaded = true;
+					}
 				}
 			}
 		}
 	},
 	tickAfterLoad: {
 		subscription: {
-			tick: (event) => {
-				const { loading, loaded, loadedPlayers } = global;
-				if (loaded && loadedPlayers) {
-					eventBuilder.events.tickAfterLoad.keysObject.forEach((key, { callback, suppressed }) => {
-						try {
-							if (key.includes('formAwait')) {
-								content.warn({ key, t: 'wiohdqwqwioqjwq0uje0q3iwoeht4wj[eu09hri930jqfeh8ubf9' });
-							}
-							if (!suppressed) {
-								callback(event);
-							}
-						} catch (error) {
-							errorBuider.log(error, error.stack, { event: 'tickAfterLoad', key });
-						}
-					});
-				} else if (loading && (!loaded || !loadedPlayers) && global.tickAfterLoadI++ > 20) {
-					global.loaded = true;
-					global.loadedPlayers = true;
+			tick: {
+				function: (event) => {
+					const { loaded, loadedPlayers } = global;
+					// content.warn({ bool: loaded && loadedPlayers });
+					if (loaded && loadedPlayers) {
+						eventBuilder.getEvent('tickAfterLoad').iterate(event);
+					}
+					// else if ((loading && (!loaded && !loadedPlayers)) || global.tickAfterLoadI++ > 100) {
+					// 	global.loaded = true;
+					// 	global.loadedPlayers = true;
+					// }
 				}
 			}
 		}
 	},
 	playerJoined: {
 		subscription: {
-			playerJoin: {
-				useWorldEvents: true,
-				function: ({ player }) => {
-					global.joiningPlayers.push(player);
-					content.warn(global.joiningPlayers.map(({ name }) => name));
-				}
-			},
-			worldInitialize: () => {
-				global.joiningPlayers = [...world.getPlayers()];
-				content.warn('dlkkwklwdklwlkwklkwldwfkqnfnweoifhnipowewe', global.joiningPlayers.map(({ name }) => name));
-			},
 			tick: {
-				useWorldEvents: true,
 				function: ({ currentTick }) => {
-					// if (global.joiningPlayers) content.warn(native.stringify(global.joiningPlayers));
-					global.joiningPlayers.forEach(async (join) => {
+					const players = world.getAllPlayers();
+					players.forEach((player, i) => {
+						const { loaded, id, name } = player;
+						// content.warn(28928282, name);
 
-						try {
-							let playerLoaded = Boolean(await join.runCommandAsync('testfor @s').catch(error => error));
-							content.warn({ playerLoaded });
-							if (!playerLoaded) return;
-							global.loading = true;
-							if (!playerLoaded && !global.loaded) { return; }
-							let cancel = false;
-							const Keys = [];
-							// content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
+						if (!loaded) return;
+						if (!global.hasOwnProperty('loading')) global.loading = true;
+						if (!global.loaded) return;
+						if (global.playerJoined.hasOwnProperty(id)) return;
+						eventBuilder.getEvent('playerJoined').iterate({ player }, (key, callback) => {
+							callback({ player });
+						});
+						global.playerJoined[id] = 1;
 
-							// content.warn({t:'players', jp: global.joiningPlayers.map(player => native.toObject(player))})
-							eventBuilder.events.playerJoined.keysObject.forEach((key, { callback, suppressed }) => {
-								try {
-									content.warn({ player: join.name, key });
-									Keys.push(key);
-									if (!suppressed) {
-										if (cancel) { return; }
-										const shouldReturn = callback({ player: join });
-										if (shouldReturn) { cancel = true; }
+						if (players.length === i + 1 && !global.hasOwnProperty('loadedPlayers')) return;
+						global.loadedPlayers = true;
 
-									}
-								} catch (error) {
-									errorBuider.log(error, error.stack, { event: 'playerJoined', key });
-								}
-							});
-							// content.warn({ Keys });
-							if (!cancel) { global.joiningPlayers = global.joiningPlayers.filter(player => !global.joiningPlayers.some(join => player.id === join.id)); }
-						} catch (error) { console.warn(error, error.stack); }
+
 					});
-					global.loadedPlayers = true;
+
 
 				}
-
 			}
 		}
 	},
-	beforeExplosion: {
-		subscription: {
-			beforeExplosion: event => {
-				time.start('beforeExplosion');
-				let { impactedBlocks, dimension } = event;
-				const cancels = [];
-				this.beforeExplosion.events.keysObject.forEach((key, { callback, suppressed }) => {
-					try {
-						if (!suppressed) {
-							const { cancel, impactedBlocks: callImpactedBlocks } = callback(event) ?? {};
-							if (callImpactedBlocks) {
-								impactedBlocks = impactedBlocks.filter(blockLocation => callImpactedBlocks
-									.some(blockLocation1 => blockLocation1 === blockLocation))
-									.map(({ x, y, z }) => new BlockLocation(x, y, z));;
-							}
-							cancels.push(cancel);
-						}
+	// beforeExplosion: {
+	// 	subscription: {
+	// 		beforeExplosion: event => {
+	// 			let { impactedBlocks, dimension } = event;
+	// 			const cancels = [];
+	// 			const eventKey = 'beforeExplosion';
+	// 			time.start(`${eventKey}*Events*API`);
 
-					} catch (error) {
-						errorBuider.log(error, error.stack, { event: 'beforeExplosion', key });
-					}
-				});
-				if (cancels.some(bool => bool)) { event.cancel = true; }
+	// 			this.beforeExplosion.events.keysObject.forEach((key, { callback, suppressed }) => {
+	// 				try {
+	// 					time.start(`${eventKey}*${key}*Events*API`);
+	// 					if (!suppressed) {
+	// 						const { cancel, impactedBlocks: callImpactedBlocks } = callback(event) ?? {};
+	// 						if (callImpactedBlocks) {
+	// 							impactedBlocks = impactedBlocks.filter(blockLocation => callImpactedBlocks
+	// 								.some(blockLocation1 => blockLocation1 === blockLocation))
+	// 								.map(({ x, y, z }) => new BlockLocation(x, y, z));;
+	// 						}
+	// 						cancels.push(cancel);
+	// 					}
+	// 					global.tickTime[eventKey].keys[key] = time.end(`${eventKey}*${key}*Events*API`);
+	// 				} catch (error) {
+	// 					errorLogger.log(error, error.stack, { event: 'beforeExplosion', key });
+	// 				}
+	// 			});
+	// 			if (cancels.some(bool => bool)) { event.cancel = true; }
 
-				event.impactedBlocks = impactedBlocks;
-				global.tickTime.beforeExplosion = time.end('beforeExplosion');
-			}
-		}
-	},
+	// 			event.impactedBlocks = impactedBlocks;
+	// 			global.tickTime.beforeExplosion = time.end('beforeExplosion');
+	// 			global.tickTime[eventKey].total = time.end(`${eventKey}*Events*API`);
+	// 		}
+	// 	}
+	// },
 	playerHit: {
 		subscription: {
 			entityHit: {
 				function: event => {
-					time.start('playerHit');
-					this.playerHit.events.keysObject.forEach((key, { callback, suppressed }) => {
-						try {
-							if (!suppressed) {
-								callback(event);
-							}
-						} catch (error) {
-							errorBuider.log(error, error.stack, { event: 'playerHit', key });
-						}
-					});
-					global.tickTime.playerHit = time.end('playerHit');
+					eventBuilder.getEvent('playerHit').iterate(event);
 				},
 				options: { entityTypes: ["minecraft:player"] }
 			}
@@ -160,17 +116,7 @@ eventBuilder.add({
 		subscription: {
 			entityHurt: {
 				function: event => {
-					time.start('playerHurt');
-					this.playerHurt.events.keysObject.forEach((key, { callback, suppressed }) => {
-						try {
-							if (!suppressed) {
-								callback(event);
-							}
-						} catch (error) {
-							errorBuider.log(error, error.stack, { event: 'playerHurt', key });
-						}
-					});
-					global.tickTime.playerHurt = time.end('playerHurt');
+					eventBuilder.getEvent('playerHurt').iterate(event);
 				},
 				options: { entityTypes: ["minecraft:player"] }
 			}
@@ -184,20 +130,10 @@ eventBuilder.add({
 				 * @param {EntityHurtEvent} event
 				 */
 				function: event => {
-					const { hurtEntity, damagingEntity, projectile, cause, damage } = event;
-					time.start('playerDeath');
-					this.playerDeath.events.keysObject.forEach((key, { callback, suppressed }) => {
-						try {
-							if (!suppressed) {
-								callback({ playerDied: hurtEntity, killer: damagingEntity, projectile, cause, damage });
-							}
-						} catch (error) {
-							errorBuider.log(error, error.stack, { event: 'playerDeath', key });
-						}
-					});
-					global.tickTime.playerDeath = time.end('playerDeath');
+					eventBuilder.getEvent('playerDeath').iterate(event);
 				},
-				options: { entityTypes: ["minecraft:player"] }
+
+				entityOptions: { entityTypes: ["minecraft:player"] }
 			}
 		}
 	},

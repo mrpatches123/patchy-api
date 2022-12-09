@@ -42,7 +42,7 @@ eventBuilder.subscribe('itemChangeLog', {
                 // console.warn(JSON.stringify(oldItemArray),JSON.stringify(itemArray),JSON.stringify(itemsOutArray),JSON.stringify(itemsInArray));
 
                 // console.warn(JSON.stringify(itemsOutArray),JSON.stringify(itemsInArray),itemChangeMessage);
-                try { overworld.runCommand(`tellraw @a[scores={Notifications=1,InvNotifications=1}] {"rawtext":[{"text":"§l§f[§9PAC§f] §7${name} §f${itemChangeMessage}"}]}`); } catch { }
+                try { overworld.runCommandAsync(`tellraw @a[scores={Notifications=1,InvNotifications=1}] {"rawtext":[{"text":"§l§f[§9PAC§f] §7${name} §f${itemChangeMessage}"}]}`); } catch { }
             }
             if (global.playerMap[name].itemsChangeArray.length > 2) {
                 global.playerMap[name].itemsChangeArray.pop();

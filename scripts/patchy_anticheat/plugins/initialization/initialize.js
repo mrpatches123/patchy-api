@@ -20,27 +20,27 @@ export const scoreboardsNames = {
 };
 
 function initializeServer() {
-    try { overworld.runCommand('scoreboard objectives add Toggles dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add initializedpac dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add playerId dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add staff dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add gmother dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add ALLNotifications dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add Notifications dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add InvNotifications dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add boots_prot dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add leggings_prot dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add chestplate_prot dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add helmet_prot dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add RandKillId dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add dead dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add Killed dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add KillsS dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add KillsT dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add DeathsS dummy'); } catch { }
-    try { overworld.runCommand('scoreboard objectives add used32k dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add Toggles dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add initializedpac dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add playerId dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add staff dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add gmother dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add ALLNotifications dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add Notifications dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add InvNotifications dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add boots_prot dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add leggings_prot dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add chestplate_prot dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add helmet_prot dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add RandKillId dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add dead dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add Killed dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add KillsS dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add KillsT dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add DeathsS dummy'); } catch { }
+    try { overworld.runCommandAsync('scoreboard objectives add used32k dummy'); } catch { }
     scoreboardsNames.forEach((key, objective) => {
-        try { overworld.runCommand(`scoreboard objectives add ${objective} dummy`); } catch { }
+        try { overworld.runCommandAsync(`scoreboard objectives add ${objective} dummy`); } catch { }
     });
     if (!global.playerMap) {
         global.playerMap = {};

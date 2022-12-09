@@ -23,7 +23,7 @@ commandBuilder.register('databases', {
             if (!databases.hasOwnProperty(args[0])) sender.tell(`database: ${args[0]}, does not exist!`);
             sender.tell(databases.getFromEntity(args[0]));
         } else {
-            sender.tell(JSON.stringify(databases));
+            sender.tell(JSON.stringify(databases, (key, value) => (value instanceof Function) ? '<f>' : value));
         }
     }
 });

@@ -1,7 +1,8 @@
 import { Player, EntityQueryOptions, DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, PlayerInventoryComponentContainer } from "@minecraft/server";
 import { content, native } from "../utilities.js";
-
+import global from "./global.js";
 import eventBuilder from "./events.js";
+import loads from "./load.js";
 const typeDefinitionFunctions = { number: 'defineNumber', string: 'defineString', boolean: 'defineBoolean' };
 const types = Object.keys(typeDefinitionFunctions);
 function isDefined(input) {
@@ -30,6 +31,57 @@ class Inventory {
 		});
 	};
 }
+class PlayerIterator {
+	constructor(players) {
+		this.players = players;
+		this.playerArray = Object.values(players);
+	}
+	/**
+	 * @method iterate
+	 * @param {(player: Player, i) => {}} callback 
+	 */
+	iterate(callback) {
+		this.playerArray.forEach((player, i) => {
+			callback(player, i);
+		});
+	}
+	/**
+	 * @method array
+	 * @returns {Player[]}
+	 */
+	array() {
+		return this.playerArray;
+	}
+	/**
+	 * @method object
+	 * @returns {{[key: String]: Player}}
+	 */
+	object() {
+		return this.players;
+	}
+	/**
+	 * @method ids
+	 * @returns {String[]}
+	 */
+	ids() {
+		return this.playerArray.map(({ id }) => id);
+	}
+	/**
+	 * @method namess
+	 * @returns {String[]}
+	 */
+	names() {
+		return this.playerArray.map(({ name }) => name);
+	}
+	[Symbol.iterator]() {
+		let index = 0;
+		const data = this.playerArray;
+		return {
+			next: () => ({ value: data[index++], done: !(index in data) })
+		};
+	};
+
+}
 class Players {
 	constructor() {
 		this.propertyStorage = {};
@@ -39,38 +91,10 @@ class Players {
 		 * @type {({[key: String]: Player})}
 		 */
 		this.inventorys = {};
-		this.loaded = {};
 		this.registered = false;
-		const playersObject = this;
-		this.joiningPlayers = [];
-		eventBuilder.subscribe('end_players*API', {
-			playerJoined: ({ player }) => {
-				const { id } = player;
-				content.warn({ id });
-				playersObject.loaded[id] = player;
-				content.warn({ t: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', players: playersObject.loaded.map((key, value) => value.name) });
-			},
-			worldInitialize(event) {
-				const dynamicPropertiesDefinition = new DynamicPropertiesDefinition();
-				playersObject.propertyStorage.forEach((identifier, { type, maxLength }) => {
-					switch (type) {
-						case 'number':
-							dynamicPropertiesDefinition.defineNumber(identifier);
-							break;
-						case 'string':
-							dynamicPropertiesDefinition.defineString(identifier, maxLength);
-							break;
-						case 'boolean':
-							dynamicPropertiesDefinition.defineBoolean(identifier, maxLength);
-							break;
-					}
-				});
-				event.propertyRegistry.registerEntityTypeDynamicProperties(dynamicPropertiesDefinition, MinecraftEntityTypes.player);
-				playersObject.registered = true;
 
-			},
+		eventBuilder.subscribe('end_players*API', {
 			tickAfterLoad: () => {
-				this.inventorys = {};
 			}
 		});
 
@@ -78,13 +102,13 @@ class Players {
 	/**
 	 * @method getLoadedPlayers
 	 * @param {EntityQueryOptions} EntityQueryOptions?
-	 * @returns {{[key: String]: Player}}
+	 * @returns {PlayerIterator}
 	 */
 	get(EntityQueryOptions) {
 		let worldPlayers;
 		if (EntityQueryOptions) worldPlayers = [...world.getPlayers(EntityQueryOptions)].map((({ id }) => id));
 		else worldPlayers = [...world.getPlayers()].map(({ id }) => id);
-		return this.loaded.filter((id) => worldPlayers.includes(id));
+		return new PlayerIterator(loads.players.filter((id) => worldPlayers.includes(id)));
 	}
 	getInventory(player) {
 		const { id } = player;

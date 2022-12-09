@@ -76,7 +76,7 @@ class PromptBuilder {
     */
     ask(sender) {
         const { message } = this[sender.getName()];
-        sender.runCommand(`tellraw @s {"rawtext":[{"text":"${message.replace('"', '\\"')}"}]}`);
+        sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${message.replace('"', '\\"')}"}]}`);
     }
     /**
     * @method ask Alll command.

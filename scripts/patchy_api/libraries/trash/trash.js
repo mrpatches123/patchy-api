@@ -14,11 +14,11 @@ world.events.beforeChat.subscribe(event => {
         // } 
         // else 
         if (message === 'dbs_reset') {
-            try { overworld.runCommand('event entity @e patches:kill'); } catch { }
+            try { overworld.runCommandAsync('event entity @e patches:kill'); } catch { }
             databases = new Databases();
 
         } else if (message === 'db_print') {
-            sender.runCommand(`tellraw @s {"rawtext":[{"text":"${JSON.stringify(databases).replaceAll('"', '\\"')}"}]}`);
+            sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${JSON.stringify(databases).replaceAll('"', '\\"')}"}]}`);
 
         } else if (message === 'db_tick') {
             tick = 0;
@@ -26,11 +26,11 @@ world.events.beforeChat.subscribe(event => {
             event.cancel = true;
             promptBuilder.add(sender, 'do you like pickles?', {
                 yes: (sender) => {
-                    sender.runCommand(`tellraw @s {"rawtext":[{"text":"you are dumb"}]}`);
+                    sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"you are dumb"}]}`);
                     promptBuilder.remove(sender);
                 },
                 no: (sender) => {
-                    sender.runCommand(`tellraw @s {"rawtext":[{"text":"you are cool"}]}`);
+                    sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"you are cool"}]}`);
                     promptBuilder.remove(sender);
                 }
             });
@@ -52,7 +52,7 @@ world.events.beforeChat.subscribe(event => {
 
         console.warn(event.cancel);
     } catch (error) {
-        overworld.runCommand(`say ${error},${error.stack}`);
+        overworld.runCommandAsync(`say ${error},${error.stack}`);
     }
 });
 
@@ -93,7 +93,7 @@ function beforeOnUseOne(object, player) {
     const { event } = usingItemOn ?? {};
     if (using) {
         eventBuilder.beforeItemOnUseOn.forEach((key, callback) => {
-            callback(event);;
+            callback(event);
         });
     } else {
         usingItemOn.used = false;

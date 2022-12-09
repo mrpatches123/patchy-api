@@ -1,11 +1,13 @@
-import { eventBuilder, requestBuilder, tagDatabases, time } from "../../patchy_api/modules.js";
+import { content, eventBuilder, requestBuilder, tagDatabases, time } from "../../patchy_api/modules.js";
 
 eventBuilder.subscribe('playerChange', {
 	playerJoined: ({ player }) => {
 		const { name, id } = player;
+		content.warn({ t: 'playerChange', name });
 		if (name.length > 32) player.kick('Name too long! turn off name spoof!');
 		const playerStorage = tagDatabases.get(player, 'playerStorage');
 		const savedName = playerStorage.get('savedName');
+		content.warn({ t: 38938383, savedName });
 		const friends = playerStorage.get('friends');
 		const { requests: { incoming = {}, outgoing = {} } = {}, mutal = {} } = friends ?? {};
 		if (savedName === name) return;

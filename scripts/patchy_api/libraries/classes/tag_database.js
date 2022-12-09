@@ -22,13 +22,13 @@ class TagDatabases {
 		time.start('TagDatabases');
 		const { id } = player;
 		const tags = player.getTags();
-		content.warn("hello", tags);
+		// content.warn("hello", tags);
 		// return;
 		const obfuscatedDatabases = tags.filter(tag => tag.startsWith('tagDB:')).map(tag => tag.slice(tagLength));
-		content.warn({ obfuscatedDatabases });
+		// content.warn({ obfuscatedDatabases });
 		if (!obfuscatedDatabases.length) return;
 		const rawDatabases = obfuscatedDatabases.map(text => deobfuscate255(text).match(/(.*):(\d+):(.*)/).splice(1));
-		content.warn({ rawDatabases, tags });
+		// content.warn({ rawDatabases, tags });
 		const objectDatabase = {};
 		rawDatabases.forEach(([databaseId, order, value]) => {
 			if (!objectDatabase.hasOwnProperty(databaseId)) objectDatabase[databaseId] = [];
@@ -36,14 +36,14 @@ class TagDatabases {
 		});
 		objectDatabase.forEach((databaseId, valueArray) => {
 			const test = valueArray.sort(([a], [b]) => Number(a) - Number(b));
-			content.warn({ test });
+			// content.warn({ test });
 			const fullrawDatabase = test.map(([order, text]) => text).join();
-			content.warn({ fullrawDatabase });
+			// content.warn({ fullrawDatabase });
 			if (!this.hasOwnProperty(databaseId)) this[databaseId] = {};
 			if (!this[databaseId].hasOwnProperty(id)) this[databaseId][id] = new Database(JSON.parse(fullrawDatabase));
-			content.warn({ this: this[databaseId][id] });
+			// content.warn({ this: this[databaseId][id] });
 		});
-		content.warn({ TagDatabases: time.end('TagDatabases') });
+		// content.warn({ TagDatabases: time.end('TagDatabases') });
 	}
 	initalizeAll() {
 		this.clear();
@@ -82,7 +82,7 @@ class TagDatabases {
 		if (!this.__queuedSaves.subscribed) {
 			eventBuilder.subscribe('end_tagSaveQueue*API', {
 				tickAfterLoad: () => {
-					if (!this.__queuedSaves.saves.length()) return eventBuilder.unsubscribeEvent('tickAfterLoad', 'end_tagSaveQueue*API');
+					if (!this.__queuedSaves.saves.length()) return eventBuilder.unsubscribe('end_tagSaveQueue*API', 'tickAfterLoad');
 					this.__queuedSaves.saves.forEach((key, value) => {
 						value.forEach((id, player) => {
 							this.save(key, player);

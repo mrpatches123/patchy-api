@@ -22,7 +22,7 @@ commandBuilder.register('echest', {
 		const items = Array.from(Array(27), (a, i) => {
 			const foundId = ItemIds.find(itemId => {
 				try {
-					sender.runCommand(`testfor @s[hasitem=[{slot=${i},location=slot.enderchest,item=${itemId}}]]`);
+					sender.runCommandAsync(`testfor @s[hasitem=[{slot=${i},location=slot.enderchest,item=${itemId}}]]`);
 					return itemId;
 				} catch (error) {
 					// console.warn('foundId', itemId, error, error.stack);
@@ -32,7 +32,7 @@ commandBuilder.register('echest', {
 			let current = 32;
 			for (let b = 0; b < 6; b++) {
 				try {
-					sender.runCommand(`testfor @s[hasitem=[{slot=${i},quantity=${current + 1}..,location=slot.enderchest,item=${foundId}}]]`);
+					sender.runCommandAsync(`testfor @s[hasitem=[{slot=${i},quantity=${current + 1}..,location=slot.enderchest,item=${foundId}}]]`);
 					current = current + 32 / 2 ** (b + 1);
 				} catch (error) {
 					// console.warn(error)
@@ -43,7 +43,7 @@ commandBuilder.register('echest', {
 			let data;
 			for (let d = 0; d < 100; d++) { //data in hasitem is broke
 				try {
-					sender.runCommand(`testfor @s[hasitem=[{slot=${i},location=slot.enderchest,item=${foundId},data=${d}}]]`);
+					sender.runCommandAsync(`testfor @s[hasitem=[{slot=${i},location=slot.enderchest,item=${foundId},data=${d}}]]`);
 					data = d;
 					break;
 				} catch (error) {
@@ -75,8 +75,8 @@ commandBuilder.register('echest', {
 // 		} else {
 // 			current = current - half / 2 ** (i + 1);
 // 		}
-// 		//console.log(num < mid, num, mid,current)
+// 		//// console.log(num < mid, num, mid,current)
 // 	}
 // 	return Math.round(current);
 // }
-// console.log(guessTheNumber(6723, 10000));
+// // console.log(guessTheNumber(6723, 10000));

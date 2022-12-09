@@ -9,7 +9,7 @@ text.match(/^.*?$/gm).forEach((match, i) => {
 
 			const name = match.match(/=.*/).toString().replace('=', '');
 			const array = match.replace(/=(?:\w+ *)+/, '').split('.');
-			console.log({ name, array });
+			// console.log({ name, array });
 			if (array.length > 3) {
 				if (!tile[array[1]]) {
 					tile[array[1]] = [];
@@ -20,7 +20,7 @@ text.match(/^.*?$/gm).forEach((match, i) => {
 			}
 		}
 	} catch (error) {
-		console.log(i, match, match.match(/=/));
+		// console.log(i, match, match.match(/=/));
 	}
 });
 

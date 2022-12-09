@@ -11,7 +11,7 @@ eventBuilder.subscribe('end_databaseSaveQueue*API', {
 		}
 		// [...world.getPlayers()].forEach(player => {
 		// 	content.warn(JSON.stringify(player.name));
-		// 	player.runCommand(`tp @s "${player.name}"`);
+		// 	player.runCommandAsync(`tp @s "${player.name}"`);
 		// });
 	}
 });

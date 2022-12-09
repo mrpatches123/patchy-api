@@ -11,7 +11,7 @@ formBuilder.create('friendsTest', {
 		const friends = playerStorage.get('friends');
 		const { mutal = {} } = friends ?? {};
 		const elementArray = [];
-		const onlineIds = Object.keys(players.get());
+		const onlineIds = players.get().ids();
 		const teleportRequests = requestBuilder.getMemoryTarget('friends', idReceiver, Object.keys(mutal), 'tpa');
 		world.say(JSON.stringify(teleportRequests));
 		mutal.forEach((id, { name, profilePictureId = 0 }) => elementArray.push({
@@ -239,31 +239,28 @@ formBuilder.create('friendsAdd', {
 		content.warn({ nameReceiver, friends });
 		const elementArray = [];
 		const incomingLength = incoming.length();
-		const playersA = players.get();
-		content.warn({ players: playersA.map((key, value) => value.name) });
-		playersA.filter((id, player) => {
-			console.warn({ id, name: player.name, outgoing });
-			return !outgoing.hasOwnProperty(id) && !incoming.hasOwnProperty(id) && !mutal.hasOwnProperty(id) && id !== idReceiver.toString();
-		}).forEach((id, player) => {
+		const playersA = players.get().array();
+		playersA.filter(({ id }) => !outgoing.hasOwnProperty(id) && !incoming.hasOwnProperty(id) && !mutal.hasOwnProperty(id) && id !== idReceiver.toString())
+			.forEach((player) => {
 
-			const { name, properties: { profilePictureId = 0 } } = player;
-			elementArray.push({
-				button: {
-					text: name,
-					iconPath: profilePictures[profilePictureId]
-				},
-				callback: () => {
-					requestBuilder.add('friends', idReceiver, id, 'add', { name: nameReceiver, profilePictureId: profilePictureIdReceiver, date: time.now() });
-					if (!friends.hasOwnProperty('requests')) friends.requests = {};
-					if (!friends.requests.hasOwnProperty('outgoing')) friends.requests.outgoing = {};
-					friends.requests.outgoing[id] = { name, profilePictureId };
-					playerStorage.set('friends', friends);
-					tagDatabases.queueSave(receiver, 'playerStorage');
-					receiver.tell(`You send a request to be ${name}'s friend!`);
-					player.tell(`${nameReceiver} sent a request to be your friend!`);
-				}
+				const { name, properties: { profilePictureId = 0 }, id } = player;
+				elementArray.push({
+					button: {
+						text: name,
+						iconPath: profilePictures[profilePictureId]
+					},
+					callback: () => {
+						requestBuilder.add('friends', idReceiver, id, 'add', { name: nameReceiver, profilePictureId: profilePictureIdReceiver, date: time.now() });
+						if (!friends.hasOwnProperty('requests')) friends.requests = {};
+						if (!friends.requests.hasOwnProperty('outgoing')) friends.requests.outgoing = {};
+						friends.requests.outgoing[id] = { name, profilePictureId };
+						playerStorage.set('friends', friends);
+						tagDatabases.queueSave(receiver, 'playerStorage');
+						receiver.tell(`You send a request to be ${name}'s friend!`);
+						player.tell(`${nameReceiver} sent a request to be your friend!`);
+					}
+				});
 			});
-		});
 		return [{
 			title: 'Add Friends',
 			body: 'Which player would you would like to add as a friend'
@@ -299,7 +296,7 @@ formBuilder.create('manageFreind', {
 		const teleportRequest = requestBuilder.getMemoryTarget('friends', idReceiver, Object.keys(mutal), 'tpa')[id];
 		content.warn({ id, name, profilePictureId });
 		const online = Object.keys(global.players).includes(id);
-		const player = players.get()[id];
+		const player = players.get().object[id];
 		content.warn({ id, name });
 		return ([
 			{
@@ -405,7 +402,7 @@ formBuilder.create('manageTpa', {
 		},
 		(receiver, i, id, name, profilePictureId) => {
 			const { id: idReceiver, name: nameReceiver } = receiver;
-			const requestee = players.get()[id];;
+			const requestee = players.get().object()[id];;
 			const { id: idRequestee } = requestee;
 			return ([
 				{

@@ -15,8 +15,9 @@ requestBuilder.watch('friends', (requesteeId, id, type, value) => {
 		const player = playersOnline[id];
 
 		// console.warn(player.name);
+		time.start('watchtest');
 		const playerStorage = tagDatabases.get(player, 'playerStorage');
-		content.warn({ name: player.name, playerStorage });
+		// content.warn({ watchejhetme: time.end('watchtest') });
 		const friends = playerStorage.get('friends') ?? {};
 		const { mutal = {}, requests: { incoming = {}, outgoing = {} } = {} } = friends;
 		switch (type) {
@@ -35,7 +36,7 @@ requestBuilder.watch('friends', (requesteeId, id, type, value) => {
 				if (incoming.hasOwnProperty(requesteeId)) friends.requests.incoming[requesteeId].profilePictureId = profilePictureId;
 				if (outgoing.hasOwnProperty(requesteeId)) friends.requests.outgoing[requesteeId].profilePictureId = profilePictureId;
 				playerStorage.set('friends', friends);
-				content.warn({ Tname: player.name, Rname: name, playerStorage });
+				// content.warn({ Tname: player.name, Rname: name, playerStorage });
 				tagDatabases.queueSave(player, 'playerStorage');
 				return true;
 			}
@@ -49,14 +50,14 @@ requestBuilder.watch('friends', (requesteeId, id, type, value) => {
 			}
 			case 'add': {
 				const { requests: { incoming, outgoing } = {} } = friends;
-				content.warn(friends, { bool: (incoming && incoming.hasOwnProperty(requesteeId)) || (outgoing && outgoing.hasOwnProperty(requesteeId)) });
+				// content.warn(friends, { bool: (incoming && incoming.hasOwnProperty(requesteeId)) || (outgoing && outgoing.hasOwnProperty(requesteeId)) });
 				if ((incoming && incoming.hasOwnProperty(requesteeId)) || (outgoing && outgoing.hasOwnProperty(requesteeId))) {
 
 					if (incoming) delete friends.requests.incoming[requesteeId];
 					if (outgoing) delete friends.requests.outgoing[requesteeId];
 					if (!friends.hasOwnProperty('mutal')) friends.mutal = {};
 					friends.mutal[requesteeId] = { name, profilePictureId };
-					content.warn(player.name, friends);
+					// content.warn(player.name, friends);
 					playerStorage.set('friends', friends);
 
 					tagDatabases.queueSave(player, 'playerStorage');

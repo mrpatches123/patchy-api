@@ -39,7 +39,7 @@ eventBuilder.subscribe('use32k', {
                     const enchantArray = enchantmentList.getArray();
                     enchantArray.forEach(({ level, type: { id: enchantId, maxLevel } }) => {
                         if (level > maxEnchantmentsPerItems.find(object => object.items.includes(id))?.enchants[enchantId] ?? maxLevel) {
-                            player.runCommand('say found32k');
+                            player.runCommandAsync('say found32k');
                         }
                     });
                 });
@@ -52,7 +52,7 @@ eventBuilder.subscribe('use32k', {
                 if (used32k) {
 
                     inventory.setItem(selectedSlot, Object.assign(item, { amount: 0 }));
-                    player.runCommand('say 32ker');
+                    player.runCommandAsync('say 32ker');
                     player.scoreSet('used32k');
                 }
                 player.removeTag('32KOFF');

@@ -63,14 +63,14 @@ eventBuilder.subscribe('kick', {
                             // console.warn(error,error.stack);
                         }
                     }
-                    // overworld.runCommand(`say ${ReasonsArray}`);
+                    // overworld.runCommandAsync(`say ${ReasonsArray}`);
                 }
             });
         } catch (error) {
             console.warn(error, error.stack);
         }
 
-        // overworld.runCommand(`say BD:${BanDateS} - BRD:${BanReleaseDateS} - BRL:${banReasons.length}`);
+        // overworld.runCommandAsync(`say BD:${BanDateS} - BRD:${BanReleaseDateS} - BRL:${banReasons.length}`);
 
 
     }

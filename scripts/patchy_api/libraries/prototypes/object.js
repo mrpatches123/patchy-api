@@ -1,3 +1,4 @@
+import { content } from "../utilities.js";
 import { stringFunctions } from "./string_number.js";
 const { isArray } = Array;
 const { assign } = Object;
@@ -13,8 +14,10 @@ const arrayObjectFunctions = {
 	 */
 	keys(ignoreFunctions) {
 		let keysArray = [];
+		const prototype = Object.getPrototypeOf({});
+		// content.warn(prototype);
 		for (let key in this) {
-			if (hasKey(key)) { continue; }
+			if (prototype.hasOwnProperty(key)) { continue; }
 			if (ignoreFunctions && typeof this[key] === 'function') { continue; }
 			keysArray.push(key);
 		}
@@ -51,9 +54,9 @@ const arrayObjectFunctions = {
 		if (typeof callback == "function") {
 			if (this.keys().length) {
 				let i = 0;
+				const prototype = Object.getPrototypeOf({});
 				for (const key in this) {
-					// console.warn(key, hasKey(key));
-					if (hasKey(key) || (typeof this[key] === 'function' && ignorefunctions)) { continue; }
+					if (prototype.hasOwnProperty(key) || (typeof this[key] === 'function' && ignorefunctions)) { continue; }
 					const call = callback(key, this[key], i++, initialValue);
 					if (initialValue && ((call === undefined || call === false || call === null) || !ignore) && typeof initialValue == 'object' && !isArray(initialValue)) {
 						assign(initialValue, call);
@@ -80,9 +83,10 @@ const arrayObjectFunctions = {
 			if (this.keys().length) {
 				const calls = [];
 				let i = 0;
+				const prototype = Object.getPrototypeOf({});
 				for (const key in this) {
 
-					if (hasKey(key) || (typeof this[key] === 'function' && ignorefunctions)) { continue; }
+					if (prototype.hasOwnProperty(key) || (typeof this[key] === 'function' && ignorefunctions)) { continue; }
 					calls.push(callback(key, this[key], i++));
 				}
 				return calls.every(call => call);
@@ -101,8 +105,9 @@ const arrayObjectFunctions = {
 			if (this.keys().length) {
 				const calls = [];
 				let i = 0;
+				const prototype = Object.getPrototypeOf({});
 				for (const key in this) {
-					if (hasKey(key) || (typeof this[key] === 'function' && ignorefunctions)) { continue; }
+					if (prototype.hasOwnProperty(key) || (typeof this[key] === 'function' && ignorefunctions)) { continue; }
 					calls.push(callback(key, this[key], i++));
 				}
 				return calls.some(call => call);
@@ -173,7 +178,7 @@ const arrayObjectFunctions = {
 	 * @returns Boolean
 	 */
 	equals(object) {
-		//console.log(keys(this).equals(keys(object)))
+		//// console.log(keys(this).equals(keys(object)))
 		if (typeof object === "object" && !isArray(object)) {
 			if (this.length() && this.length() === object.length()) {
 				return this.every((thiskKey, ThisValue) =>
@@ -199,8 +204,9 @@ const arrayObjectFunctions = {
 		if (typeof callback == "function") {
 			if (this.keys().length) {
 				let i = 0;
+				const prototype = Object.getPrototypeOf({});
 				for (const key in this) {
-					if (hasKey(key) || (typeof this[key] === 'function' && ignorefunctions)) { continue; }
+					if (prototype.hasOwnProperty(key) || (typeof this[key] === 'function' && ignorefunctions)) { continue; }
 					const call = callback(key, this[key], i++);
 					// content.warn({ call, i });
 					if (!(call === undefined || call === false || call === null)) {
@@ -261,16 +267,7 @@ const arrayObjectFunctions = {
 	}
 
 };
-/**
-	 * @method hasKey Checks if a key is in arrayObjectFunctions or stringFunctions
-	 * @param {String} key
-	 * @returns Boolean
-	 */
-export function hasKey(key) {
-	if (arrayObjectFunctions.hasOwnProperty(key) || stringFunctions.hasOwnProperty(key)) {
-		return true;
-	}
-}
+
 
 Object.assign(Object.prototype, arrayObjectFunctions);
 

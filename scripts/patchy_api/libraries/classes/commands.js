@@ -19,10 +19,8 @@ class CommandBuilder {
      * @returns {void}
      */
     invalidSyntax(command, sender, prefix, error) {
-        return sender.runCommands(
-            `playsound note.bass @s`,
-            `tellraw @s {"rawtext":[{"text":"§c"},{"translate":"commands.generic.syntax", "with": ["${prefix}${command} ","${error[0]}","${error.filter((item, i) => { if (i !== 0) return item; }).join(" ")}"]}]}`
-        );
+        sender.playSound('note.bass');
+        sender.tell({ "rawtext": [{ "text": "§c" }, { "translate": "commands.generic.syntax", "with": [`${prefix}${command} `, `${error[0]}`, `${error.filter((item, i) => { if (i !== 0) return item; }).join(" ")}`] }] });
     }
     getPrefixs() {
         return Object.keys(this).filter(key => !key.startsWith('__')) ?? [];
@@ -43,7 +41,7 @@ class CommandBuilder {
      */
     check(message, sender, prefix) {
 
-        const args = message.substring(prefix.length).replace(/@(?=\w{2})|@(?!s)/g, '').trim().replace(/ {2,}/g, ' ').match(/".*?"|[\S]+/g).map(item => item.replaceAll('"', '')) ?? [];
+        const args = message.substring(prefix.length).replace(/@(?=\w{2,})/g, '').trim().replace(/ {2,}/g, ' ').match(/".*?"|[\S]+/g).map(item => item.replaceAll('"', '')) ?? [];
         let command = args.shift();
 
         const argsLength = arguments.length;
@@ -54,10 +52,8 @@ class CommandBuilder {
             if (this.__aliasesObject[prefix][command]) {
                 command = this.__aliasesObject[prefix][command];
             } else {
-                sender.runCommands(
-                    `playsound note.bass @s`,
-                    `tellraw @s {"rawtext":[{"text":"§c"},{"translate":"commands.generic.unknown", "with": ["§f${command}§c"]}]}`
-                );
+                sender.playSound('note.bass');
+                sender.tell({ "rawtext": [{ "text": "§c" }, { "translate": "commands.generic.unknown", "with": [`§f${command}§c`] }] });
                 return true;
             }
         }
@@ -129,7 +125,7 @@ class CommandBuilder {
     /**
      * @method register Add command.
      * @param {String} command
-     * @param {{description: String, aliases: Array<String>, usages: Array<String>||{subCommand: Array<String>},requires:{score?:{objective: Number},tag?:{tag:boolean}},callback: Function}} data Command Data.
+     * @param {{description: String, aliases: Array<String>, usages: Array<String>||{subCommand: Array<String>},requires:{score?:{objective: Number},tag?:{tag:boolean}},callback: (sender: Player, args: Array<String>) => {}}} data Command Data.
     
      * @returns {void}
      */
@@ -250,7 +246,7 @@ class CommandBuilder {
                     usages.forEach((subCommand, { examples, subDescription }) => usagesArray.push(`\n - ${prefix}${command} ${subCommand}\n    - description: ${subDescription}\n    - examples: \n${examples.map(example => `      - ${prefix}${example}\n`).join('')}`));
                     console.warn(JSON.stringify(usagesArray));
 
-                    sender.runCommand('playsound note.hat @s');
+                    sender.runCommandAsync('playsound note.hat @s');
                     sender.tellraw(`§e${command}:\n${description}\n§fUsage:${usagesArray.join('')}`);
                 } else {
                     sender.runCommands(

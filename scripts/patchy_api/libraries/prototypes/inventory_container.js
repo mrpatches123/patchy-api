@@ -3,10 +3,10 @@ const inventoryContainerFunctions = {
 	removeItem(ItemStack) {
 		for (let i = this.size - 1; i >= 0; i--) {
 			const item = this.getItem(i) ?? {};
-			// overworld.runCommand(`say 'ItemStack', ${ItemStack.amount}, ${item.amount}`);
+			// overworld.runCommandAsync(`say 'ItemStack', ${ItemStack.amount}, ${item.amount}`);
 			if (item.id === ItemStack.id && item.data === ItemStack.data) {
 				const amount = item.amount - ItemStack.amount;
-				// overworld.runCommand(`say 'amount', ${amount}`);
+				// overworld.runCommandAsync(`say 'amount', ${amount}`);
 				this.setItem(i, Object.assign(ItemStack, { amount: (amount < 0) ? 0 : amount }));
 				break;
 			}

@@ -22,6 +22,7 @@ export function binaryConversion(n, base) {
 	}
 	return number;
 }
+
 export function charCodeOf(char) {
 	const test = char.charCodeAt() - 32;
 	if (test >= 0 || test < numberChars.length) {
