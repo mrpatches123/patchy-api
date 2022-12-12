@@ -156,7 +156,7 @@ const ileagalPlacementActions = {
 		 * @type {Block}
 		 */
 		const block = dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.hopper);
-		block.
+
 
 	}
 };

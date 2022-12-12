@@ -49,4 +49,3 @@ teleportBuilder.add({
 	}
 
 });
-;
