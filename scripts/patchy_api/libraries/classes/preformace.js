@@ -1,5 +1,9 @@
 import { world } from "@minecraft/server";
-import { content } from "../utilities";
+const content = {
+	warn(...messages) {
+		console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
+	}
+};
 import time from "./time.js";
 class Preformance {
 	constructor() {

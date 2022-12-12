@@ -20,7 +20,7 @@
 /**
  * if key in world.events then 
  */
-import { world, system, EntityEventOptions, BeforeChatEvent, BeforeDataDrivenEntityTriggerEvent, BeforeExplosionEvent, BeforeItemDefinitionTriggeredEvent, BeforeItemUseEvent, BeforeItemUseOnEvent, BeforePistonActivateEvent, BlockBreakEvent, BlockExplodeEvent, BlockPlaceEvent, ButtonPushEvent, ChatEvent, DataDrivenEntityTriggerEvent, EffectAddEvent, EntityCreateEvent, EntityHitEvent, EntityHurtEvent, ExplosionEvent, ItemCompleteChargeEvent, ItemDefinitionTriggeredEvent, ItemReleaseChargeEvent, ItemStartChargeEvent, ItemStartUseOnEvent, ItemStopChargeEvent, ItemStopUseOnEvent, ItemUseEvent, ItemUseOnEvent, LeverActionEvent, PistonActivateEvent, PlayerJoinEvent, PlayerLeaveEvent, ProjectileHitEvent, TickEvent, WeatherChangeEvent, WorldInitializeEvent, BeforeWatchdogTerminateEvent } from '@minecraft/server';
+import { world, Entity, system, EntityEventOptions, BeforeChatEvent, BeforeDataDrivenEntityTriggerEvent, BeforeExplosionEvent, BeforeItemDefinitionTriggeredEvent, BeforeItemUseEvent, BeforeItemUseOnEvent, BeforePistonActivateEvent, BlockBreakEvent, BlockExplodeEvent, BlockPlaceEvent, ButtonPushEvent, ChatEvent, DataDrivenEntityTriggerEvent, EffectAddEvent, EntityCreateEvent, EntityHitEvent, EntityHurtEvent, ExplosionEvent, ItemCompleteChargeEvent, ItemDefinitionTriggeredEvent, ItemReleaseChargeEvent, ItemStartChargeEvent, ItemStartUseOnEvent, ItemStopChargeEvent, ItemStopUseOnEvent, ItemUseEvent, ItemUseOnEvent, LeverActionEvent, PistonActivateEvent, PlayerJoinEvent, PlayerLeaveEvent, ProjectileHitEvent, TickEvent, WeatherChangeEvent, WorldInitializeEvent, BeforeWatchdogTerminateEvent, EntityDamageCause, Block } from '@minecraft/server';
 import { content, native } from '../utilities.js';
 import formBuilder from './form.js';
 import time from './time.js';
@@ -110,10 +110,14 @@ function arrayClone(array) {
  * @property {(arg: PlayerJoinEvent) => {}} playerJoined
  * @property {(arg: EntityHitEvent) => {}} playerHit
  * @property {(arg: EntityHurtEvent) => {}} playerHurt
+ * @property {(arg: { killer: Entity, player: Player, damage: Number, cause:  EntityDamageCause, projectile: Entity }) => {}} playerDeath
  * @property {(arg: {playerId: String, playerName: String}) => {}} playerLeft
+ * @property {(arg: {block: Block, player: Player}) => {}} stepOnBlock
+ * @property {(arg: { player: Player }) => { }} playerSpawned
  * @property {(arg: { id: String, key: String, target: String, type: String, value: any }) => {}} requestAdded
  * @property {() => {}} worldLoad
 */
+;
 
 
 /**
@@ -158,10 +162,15 @@ function arrayClone(array) {
  * @property {{function: (arg: PlayerJoinEvent) => {}, forceNative: Boolean}} playerJoined
  * @property {{function: (arg: EntityHitEvent) => {}, forceNative: Boolean}} playerHit
  * @property {{function: (arg: EntityHurtEvent) => {}, forceNative: Boolean}} playerHurt
+ * @property {{function: (arg: { killer: Entity, player: Player, damage: Number, cause:  EntityDamageCause, projectile: Entity }) => {}, forceNative: Boolean}} playerDeath
  * @property {{function: (arg: {playerId: String, playerName: String}) => {}, forceNative: Boolean}} playerLeft
  * @property {{function: (arg: { id: String, key: String, target: String, type: String, value: any }) => {}, forceNative: Boolean}} requestAdded
+ * @property {{function: (arg: {block: Block, player: Player}) => {}, forceNative: Boolean}} stepOnBlock
+ * @property {{function: (arg: {player: Player}) => {}, forceNative: Boolean}} playerSpawned
  * @property {{function: () => {}, forceNative: Boolean}} worldLoad
 */
+
+
 const eventTypeProperties = {
 	beforeChat: {
 		cancellable: true
@@ -282,6 +291,12 @@ const eventTypeProperties = {
 		custom: true
 	},
 	playerHurt: {
+		custom: true
+	},
+	playerDeath: {
+		custom: true
+	},
+	playerSpawned: {
 		custom: true
 	},
 	playerLeft: {
@@ -466,7 +481,7 @@ class EventBuilder {
 		let subscribedEventFunction;
 		if (eventTypeProperties[oldEventKey].cancellable) {
 			subscribedEventFunction = (event) => {
-				// if (oldEventKey === 'playerJoin') content.warn('playerJoin');
+				if (oldEventKey === 'playerJoin') content.warn('playerJoin');
 				let isCanceled = false;
 				time.start(`Events*API*${entityOptionsKey ?? oldEventKey}`);
 				Object.entries(this.subscriptions[entityOptionsKey ?? oldEventKey].keys).forEach(([key, { suppessed, callback }]) => {
@@ -495,6 +510,7 @@ class EventBuilder {
 			};
 		}
 		this.subscriptions[entityOptionsKey ?? oldEventKey].function = subscribedEventFunction;
+		// if (oldEventKey === 'entityHurt') content.warn(key, native.stringify(entityOptions));
 		if (entityOptions) worldSystemEvents[worldSystem].events[oldEventKey].subscribe(subscribedEventFunction, entityOptions);
 		else worldSystemEvents[worldSystem].events[oldEventKey].subscribe(subscribedEventFunction);
 

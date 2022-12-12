@@ -86,6 +86,8 @@ class Players {
 	constructor() {
 		this.propertyStorage = {};
 		this.properties = {};
+		this.memory = {};
+		const playersObject = this;
 		content.warn('wdlkwdwkdkwdkl', Math.random());
 		/**
 		 * @type {({[key: String]: Player})}
@@ -94,7 +96,24 @@ class Players {
 		this.registered = false;
 
 		eventBuilder.subscribe('end_players*API', {
-			tickAfterLoad: () => {
+			worldInitialize(event) {
+
+				const dynamicPropertiesDefinition = new DynamicPropertiesDefinition();
+				playersObject.propertyStorage.forEach((identifier, { type, maxLength }) => {
+					switch (type) {
+						case 'number':
+							dynamicPropertiesDefinition.defineNumber(identifier);
+							break;
+						case 'string':
+							dynamicPropertiesDefinition.defineString(identifier, maxLength);
+							break;
+						case 'boolean':
+							dynamicPropertiesDefinition.defineBoolean(identifier, maxLength);
+							break;
+					}
+				});
+				event.propertyRegistry.registerEntityTypeDynamicProperties(dynamicPropertiesDefinition, MinecraftEntityTypes.player);
+				playersObject.registered = true;
 			}
 		});
 

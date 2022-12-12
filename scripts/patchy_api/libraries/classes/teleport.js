@@ -113,40 +113,37 @@ class TeleportBuilder {
 	 * @param {Number} yMin 
 	 * @param {Number} minRadius 
 	 * @param {Number} maxRadius 
-	 * @param {Boolean} nonRecursive 
-	 * @returns {{safe: Boolean, location: Location}}
+	 * @returns {{blockFloor: Block, blockAbove: Block, location: Location}}
 	 */
-	getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius, nonRecursive) {
-		let { x: cx, z: cz, edge: { x: ex, z: ez } } = randomCoordsOutsideCircle(minRadius, maxRadius);
-		let { x, y, z } = location;
-		// content.warn({ ex: ex + x, ez: ez + z });
+	getRandomCoords(dimension, location, yMax, yMin, minRadius, maxRadius, nonRecursive) {
 		const yRange = yMax - yMin + 1;
+		const { x, z } = location;
+		let { x: cx, z: cz } = randomCoordsOutsideCircle(minRadius, maxRadius);
 		cx += x, cz += z;
 		cx = Math.floor(cx) + 0.5;
 		cz = Math.floor(cz) + 0.5;
 		location = new Location(cx, yMax, cz);
 		const blockFloor = dimension.getBlockFromRay(location, new Vector(0, -1, 0), { maxDistance: yRange, includeLiquidBlocks: true, includePassableBlocks: true });
-		const { x: bx, y: by, z: bz } = blockFloor.location;
-		// content.warn(by + 1);
-		const blockAboveFloor = dimension.getBlock(new BlockLocation(bx, by + 1, bz));
-		// let lastSafeBlock = blockFloor;
-		// content.warn({ x: Math.floor(cx), z: Math.floor(cz), id: blockFloor.typeId, bool: blockFloor.typeId.includes(unsafeBlocks), idAbove: blockAboveFloor.typeId, boolAbbove: blockAboveFloor.typeId.includes(unsafeBlocks) });
-		if (unsafeBlocks.includes(blockFloor.typeId) || blockAboveFloor.typeId !== MinecraftBlockTypes.air.id) {
-			if (nonRecursive) return { safe: false };
-			for (let i = 0; i < 100; i++) {
-				const { location: safeLocation, safe } = this.getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius, true);
-				// content.warn(safeLocation.y + 1);
-				if (!safe) continue;
-				location = safeLocation;
-				content.warn({ y: location.y + 1 });
-				break;
-			}
-		} else {
-			const { x: bx, y: by, z: bz } = blockAboveFloor;
-			location = { x: Math.floor(bx) + 0.5, y: by, z: Math.floor(bz) + 0.5 };
+		location = new Location(cx, blockFloor.location.y + 1, cz);
+		return { location, blockFloor, blockAbove: dimension.getBlock(blockFloor.location.offset(0, 1, 0)) };
+	}
+	/**
+	 * 
+	 * @param {Dimension} dimension 
+	 * @param {Vector3} location
+	 * @param {Number} yMax 
+	 * @param {Number} yMin 
+	 * @param {Number} minRadius 
+	 * @param {Number} maxRadius 
+	 * @param {Boolean} nonRecursive 
+	 * @returns {location: Location}}
+	 */
+	getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius) {
+		while (true) {
+			const { location: newLocation, blockFloor, blockAbove } = this.getRandomCoords(dimension, location, yMax, yMin, minRadius, maxRadius);
+			content.warn({ floorId: blockFloor.typeId, aboveId: blockAbove.typeId });
+			if (!unsafeBlocks.includes(blockFloor.typeId) && blockAbove.typeId === MinecraftBlockTypes.air.id) return newLocation;
 		}
-		const { x: nx, z: nz } = location;
-		return { location: new Location(nx, by, nz), safe: true };
 	}
 	/**
 	 * @method remove
@@ -157,7 +154,7 @@ class TeleportBuilder {
 		const { rotation: rotationPlayer } = player;
 		if (!this.hasOwnProperty(key)) { return new Error(`teleport: ${key}, does not exist`); }
 		let value;
-		if (this[key] instanceof Array) value = this[key][Math.floor(Math.random() * value.length)];
+		if (this[key] instanceof Array) value = this[key][Math.floor(Math.random() * this[key].length)];
 		else value = this[key];
 		let { location, facing, rotation, keepVelocity, dimension, random } = value;
 		if (keepVelocity && player instanceof Player) throw new Error(`You cannot keep velocity on players`);
@@ -173,10 +170,11 @@ class TeleportBuilder {
 			content.warn({ facing: { bool: facing instanceof BlockLocation, x: facing.x, y: facing.y, z: facing.z } });
 		}
 		const { minRadius = 0, maxRadius, type = 'circle', randomRotation = true, yMin, yMax } = random;
-		if (random.hasOwnProperty('maxRadius')) {
+		if (random instanceof Object) {
 			content.warn('-----generating--------------');
-			const { location: { x: randX, y: randY, z: randZ } } = this.getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius);
-			location = new Location(randX, randY + 1, randZ);
+			location = this.getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius);
+			const { x, y, z } = location;
+			content.warn({ location });
 			if (randomRotation) {
 				facing = undefined;
 				rotation = {};

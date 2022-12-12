@@ -565,18 +565,19 @@ class FormBuilder {
                     if (dependency === 'player') {
                         index = player.scoreTest(scoreboardName) ?? 0;
                         if (index < options.length) {
-                            index = player.scoreAdd(scoreboardName, 1);
+                            player.scoreSet(scoreboardName, ++index);
                         }
                     } else {
                         index = server.scoreTest(scoreboardName, 'world') ?? 0;
                         if (index < options.length) {
-                            index = server.scoreAdd(scoreboardName, 1);
+                            index = server.scoreSet(scoreboardName, ++index);
                         }
                     }
                 }
                 console.warn('index: ' + index);
                 if (index > options.length - 1) {
-                    index = player.scoreSet(scoreboardName);
+                    index = 0;
+                    player.scoreSet(scoreboardName);
                 }
                 console.warn('index: ' + index);
                 if (prefix) {
@@ -593,6 +594,7 @@ class FormBuilder {
                 }
 
                 if (postfix) {
+                    content.warn(index);
                     if (options[index].callback) {
                         options[index].callback(player, i, ...extraArguments);
                     } else if (options.callback) {

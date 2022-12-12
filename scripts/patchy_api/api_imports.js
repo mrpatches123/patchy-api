@@ -12,7 +12,6 @@ import './main.js';
 //events
 
 
-
 //plugins
 import './plugins/chat.js';
 import './plugins/database_queue.js';
@@ -36,3 +35,4 @@ import './commands/request.js';
 import './commands/players.js';
 import './commands/tps.js';
 import './commands/leaderboard.js';
+import './commands/teleport.js';

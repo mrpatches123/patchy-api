@@ -15,13 +15,26 @@ formBuilder.create('test', {
         },
         {
             toggle: {
-                scoreboardName: 'test',
                 reopen: true,
-                options: (player) => {
-                    const { testone = 2 } = player.scores;
-                    content.warn({ testone });
-                    return Array.from(Array(testone), (value, i) => ({ text: `${i}` }));
-                }
+                dependency: 'player',
+                scoreboardName: 'toggletest',
+                options: [
+                    {
+                        text: 'Toggle: ON',
+                        postfix: true,
+                        callback: (player) => {
+                            content.warn({ Toggle: player.id });
+                        }
+                    },
+                    {
+
+                        text: 'Toggle: OFF',
+                        postfix: true,
+                        callback: (player) => {
+                            content.warn({ Toggle: player.id });
+                        }
+                    }
+                ]
             }
         },
         {

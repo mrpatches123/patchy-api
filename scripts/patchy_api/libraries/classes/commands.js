@@ -1,6 +1,6 @@
 import { Player } from "@minecraft/server";
 import config from "../../config.js";
-import { content } from "../utilities.js";
+import { content, parseCommand } from "../utilities.js";
 import errorLogger from "./error.js";
 import global from "./global.js";
 const { commandPrefix } = config;
@@ -41,9 +41,8 @@ class CommandBuilder {
      */
     check(message, sender, prefix) {
 
-        const args = message.substring(prefix.length).replace(/@(?=\w{2,})/g, '').trim().replace(/ {2,}/g, ' ').match(/".*?"|[\S]+/g).map(item => item.replaceAll('"', '')) ?? [];
+        const args = parseCommand(message, prefix);
         let command = args.shift();
-
         const argsLength = arguments.length;
         if (argsLength !== 3) {
             throw new Error(`check got ${argsLength} arguments, but expected 3 arguments: command: {String}, sender: {player}, args: {Array<String>}`);
@@ -87,7 +86,6 @@ class CommandBuilder {
             return true;
         }
         return true;
-
     }
 
     /**
@@ -135,7 +133,6 @@ class CommandBuilder {
         if (argsLength !== 2) {
             throw new Error(`register got ${argsLength} arguments, but expected 2 arguments: command: {String}, data: {Object}`);
         }
-
         // console.warn(command, typeof usages, usages);
         if (typeof description !== 'string') throw new Error('Description must to be a string.');
         else if (requires !== false && typeof requires !== 'object' && !isArray(requires)) throw new Error('Requires must to be false or a object.');
@@ -283,3 +280,4 @@ class CommandBuilder {
 let commandBuilder = new CommandBuilder();
 
 export default commandBuilder;
+

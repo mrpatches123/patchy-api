@@ -271,6 +271,29 @@ const playerProperties = {
 			});
 
 		},
+	},
+	memory: {
+		get() {
+
+			const player = this;
+			const { id } = player;
+			return new Proxy({}, {
+				get(target, identifier) {
+					return players.memory?.[id]?.[identifier];
+				},
+				set(target, identifier, value) {
+					try {
+						if (!players.memory.hasOwnProperty(id)) players.memory[id] = {};
+						players.memory[id][identifier] = value;
+						return Reflect.set(...arguments);
+					} catch (error) {
+						errorLogger.log(error, error.stack, { key: 'PlayerDynamicProperties', event: 'N/A' });
+					}
+				}
+
+			});
+
+		},
 	}
 };
 

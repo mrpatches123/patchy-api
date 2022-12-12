@@ -1,9 +1,8 @@
 import eventBuilder from "../libraries/classes/events.js";
 import global from '../libraries/classes/global.js';
-import { EntityEventOptions, Player, world } from '@minecraft/server';
+import { EntityEventOptions, Player, world, EntityHurtEvent, system } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
 import errorLogger from "../libraries/classes/error.js";
-import { EntityHurtEvent } from '@minecraft/server';
 import time from '../libraries/classes/time.js';
 global.playerJoined = {};
 global.tickAfterLoadI = 0;
@@ -126,17 +125,31 @@ eventBuilder.register({
 		subscription: {
 
 			entityHurt: {
-				/**
-				 * @param {EntityHurtEvent} event
-				 */
-				function: event => {
-					eventBuilder.getEvent('playerDeath').iterate(event);
+				function: ({ damagingEntity: killer, hurtEntity: player, damage, cause, projectile }) => {
+					// content.warn(player.name, player.getComponent('health').current);
+					if (player.getComponent('health').current > 0) return;
+					eventBuilder.getEvent('playerDeath').iterate({ killer, player, damage, cause, projectile });
 				},
-
 				entityOptions: { entityTypes: ["minecraft:player"] }
 			}
 		}
 	},
+	playerSpawned: {
+		subscription: {
+			entityHurt: {
+				function: ({ hurtEntity: player }) => {
+					if (player.getComponent('health').current > 0) return;
+					const tick = () => {
+						if (player.getComponent('health').current <= 0) return system.run(tick);
+						eventBuilder.getEvent('playerSpawned').iterate({ player });
+					}; tick();
+
+				},
+				entityOptions: { entityTypes: ["minecraft:player"] }
+			}
+
+		}
+	}
 });
 
 // world.say(`123 - ${JSON.stringify(eventBuilder, null, 4)}`);
