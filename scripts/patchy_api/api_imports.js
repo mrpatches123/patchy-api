@@ -36,3 +36,5 @@ import './commands/players.js';
 import './commands/tps.js';
 import './commands/leaderboard.js';
 import './commands/teleport.js';
+import './commands/wait.js';
+import './commands/position.js';

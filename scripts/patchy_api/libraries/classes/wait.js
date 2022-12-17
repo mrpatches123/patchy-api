@@ -1,3 +1,4 @@
+import { world } from "@minecraft/server";
 import { content, native } from "../utilities.js";
 import eventBuilder from "./events.js";
 
@@ -23,10 +24,13 @@ class Wait {
 		const { afterLoad } = this.subscriptions[key];
 		eventBuilder.subscribe(`${key}*wait*APi`, {
 			[(afterLoad) ? 'tickAfterLoad' : 'tick']: () => {
-				if (!this.subscriptions[key]) return content.warn(`error 'Wait' at key: ${key}, why am I still running`, { this: this });
+				if (!this.subscriptions[key]) return; //content.warn(`error 'Wait' at key: ${key}, why am I still running`, { this: this });
 				const { checkCallback, thenCallback, once, remove } = this.subscriptions[key];
-				content.warn(key);
-				if (checkCallback()) {
+
+				const test = checkCallback();
+				// world.say(checkCallback.toString());
+				// content.warn({ key, test: (!test) ? 'false' : test });
+				if (test) {
 					thenCallback();
 					if (remove) {
 						this.remove(key);
@@ -42,8 +46,8 @@ class Wait {
 	end(key) {
 		if (!this.subscriptions.hasOwnProperty(key)) { return new Error(`Key: ${key}, for wait does not exist`); }
 		// content.warn({ test: Boolean(eventBuilder.events.tickAfterLoad.keysObject.hasOwnProperty(`${key}*wait*APi`) || eventBuilder.events.tick.keysObject.hasOwnProperty(`${key}*wait*APi`)) });
-		if (eventBuilder.events.tickAfterLoad.keysObject.hasOwnProperty(`${key}*wait*APi`) || eventBuilder.events.tick.keysObject.hasOwnProperty(`${key}*wait*APi`)) {
-			eventBuilder.unsubscribeAll(`${key}*wait*APi`);
+		if (eventBuilder.subscriptions.tickAfterLoad.keys.hasOwnProperty(`${key}*wait*APi`) || eventBuilder.events.tick.keysObject.hasOwnProperty(`${key}*wait*APi`)) {
+			eventBuilder.unsubscribe(`${key}*wait*APi`);
 		}
 		this.subscriptions[key].active = false;
 	}

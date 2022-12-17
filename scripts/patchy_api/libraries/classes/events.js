@@ -436,6 +436,7 @@ class EventBuilder {
 	 */
 	unsubscribe(key, eventKeys) {
 		let string = false;
+		const all = !eventKeys;
 		if (typeof key !== 'string') throw new Error(`key: ${key}, in params[0] is not of type: String!`);
 		if (!eventKeys) eventKeys = Object.keys(this.subscriptions);
 		if (typeof eventKeys !== 'string' && !(eventKeys instanceof Array)) throw new Error(`eventKeys: in params[1] is not of type: String or Array!`);
@@ -443,7 +444,8 @@ class EventBuilder {
 		eventKeys.forEach((eventKey, i) => {
 			if (typeof eventKey !== 'string') throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] is not of type: String!`);
 			if (!this.subscriptions.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] has no keys subscribed`);
-			if (!this.subscriptions[eventKey].keys.hasOwnProperty(key)) { if (eventKeys) throw new Error(`key: ${key}, in params[0] has not been subscribed`); else return; }
+			content.warn({ key, eventKey });
+			if (!this.subscriptions[eventKey].keys.hasOwnProperty(key)) { if (!all) throw new Error(`key: ${key}, in params[0] has not been subscribed`); else return; }
 			delete this.subscriptions[eventKey][key];
 			if (!(--this.subscriptions[eventKey].subscriptions)) {
 				const { native, function: subscriptionFunction, oldEventKey } = this.subscriptions[eventKey];

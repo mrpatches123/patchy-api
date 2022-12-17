@@ -49,6 +49,7 @@ class TeleportBuilder {
 		teleportObject.forEach((key, value) => {
 			const isArray = value instanceof Array;
 			if (!(isArray)) value = [value];
+
 			value.forEach((teleportObject, i) => {
 				let { location, dimension, face, keepVelocity = false, random } = teleportObject;
 				const { minRadius = 0, maxRadius, type = 'circle', randomRotation = true, yMax, yMin = -64 } = random ?? {};
@@ -57,6 +58,7 @@ class TeleportBuilder {
 				}
 				const rotation = (face instanceof BlockLocation || face instanceof Location) ? undefined : face;
 				const facing = (rotation) ? undefined : face;
+				content.warn(key, face instanceof BlockLocation || face instanceof Location);
 				if (isArray) {
 					if (!this.hasOwnProperty(key)) this[key] = Array(value.length);
 					this[key][i] = {

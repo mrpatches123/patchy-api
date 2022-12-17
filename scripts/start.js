@@ -1,10 +1,29 @@
 // import { world } from '@minecraft/server';
+
+
+// import { BlockLocation, world, BlockPermutation } from "@minecraft/server";
 // export const content = {
 // 	warn(...messages) {
 // 		console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
 // 	}
 // };
+// const overworld = world.getDimension('overworld');
 
+// function permutationClone(permutation) {
+// 	const permutationProperties = [];
+// 	/**
+// 	 * @type {BlockPermutation}
+// 	 */
+// 	const blockPermutation = permutation;
+// 	blockPermutation.getAllProperties().forEach(({ name, validValues, value }) => {
+// 		permutationProperties.push({ name, validValues, value });
+// 	});
+// 	return permutationProperties;
+// }
+// world.events.tick.subscribe(() => {
+// 	const block = overworld.getBlock(new BlockLocation(187, 105, 228));
+// 	content.warn(permutationClone(block.permutation));
+// });
 // const prefix = "!";
 // world.events.tick.subscribe((tickevent) => {
 

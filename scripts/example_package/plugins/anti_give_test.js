@@ -1,5 +1,191 @@
-import { world, Player, Location, InventoryComponentContainer, EnchantmentList, Enchantment, MinecraftBlockTypes, Block, BlockLocation } from '@minecraft/server';
-import { native, overworld, time, blockFaceToCoords, content, formBuilder } from '../../patchy_api/modules.js';
+import { MinecraftBlockTypes, Block } from '@minecraft/server';
+import { preformance, native, blockFaceToCoords, content, eventBuilder, players, time } from '../../patchy_api/modules.js';
+
+import {
+	MinecraftEnchantmentTypes,
+	InventoryComponentContainer,
+	EnchantmentList,
+	Enchantment,
+	world,
+	system
+} from "@minecraft/server";
+
+const byPassTag = "admin";
+
+system.run(function enchantCheck() {
+	world.getAllPlayers().forEach((player) => {
+		if (player.hasTag(byPassTag)) return;
+		/**
+		 * @type {{container: InventoryComponentContainer}}
+		 */
+		const { container } = player.getComponent("inventory");
+		if (container.size === container.emptySlotsCount) return;
+		for (let i = 0; i < container.size; i++) {
+			const item = container.getItem(i);
+			if (!item) continue;
+			/**
+			* @type {{enchantments: EnchantmentList}}
+			 */
+			const { enchantments } = item.getComponent("enchantments");
+			const enchantmentIterator = enchantments[Symbol.iterator]();
+			let set = false;
+			// for (const enchant of enchantments) {
+			for (let object = enchantmentIterator.next(); !object?.done; object = enchantmentIterator.next()) {
+				/**
+				 * @type {{value: Enchantment}}
+				 */
+				const { value: enchant } = object;
+				const { type: { id, maxLevel }, level } = enchant;
+				if (level <= maxLevel) continue;
+				enchantments.removeEnchantment(enchant.type);
+				item.getComponent("enchantments").enchantments = enchantments;
+				set = true;
+			}
+			if (!set) continue;
+			container.setItem(i, item);
+		}
+	});
+	system.run(enchantCheck);
+});
+// eventBuilder.subscribe('anti32k', {
+// 	playerJoined: ({ player }) => {
+// 		// players.get().iterate((player) => {
+// 		const { selectedSlot } = player;
+// 		content.warn({ selectedSlot });
+// 		/**
+// 		 * @type {{container: InventoryComponentContainer}}
+// 		 */
+// 		const { container } = player.getComponent('inventory');
+// 		const mainHand = container.getItem(selectedSlot);
+// 		if (!mainHand) return;
+// 		/**
+// 		 * @type {{enchantments: EnchantmentList}}
+// 		 */
+// 		const { enchantments } = mainHand.getComponent('enchantments');
+// 		const enchantmentIterator = enchantments[Symbol.iterator]();
+// 		preformance.print(preformance.test({
+// 			forOf: () => {
+// 				for (const enchantment of enchantments) {
+// 					enchantment;
+// 				}
+// 			},
+// 			for: () => {
+// 				for (let object = enchantmentIterator.next(); !object?.done; object = enchantmentIterator.next()) {
+// 					object.value;
+// 				}
+// 			},
+// 			while: () => {
+// 				let object;
+// 				while (!object?.done) {
+// 					object = enchantmentIterator.next();
+// 					object.value;
+// 				}
+// 			}
+// 		}, 1000, enchantmentIterator));
+
+// 		// });
+// 	}
+
+// });
+const exemptedBlocks = [
+	'minecraft:shulker_box',
+	'minecraft:undyed_shulker_box'
+];
+const ileagalPlacementActions = {
+	'minecraft:mob_spawner': true,
+	'spawn_egg': (id, dimension, blockLocation) => {
+		dimension.spawnEntity(id.replace('_spawn_egg'), blockLocation);
+	},
+	'minecraft:lava_bucket': (id, dimension, blockLocation) => {
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.lava);
+	},
+	'minecraft:water_bucket': (id, dimension, blockLocation) => {
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
+	},
+	'minecraft:cod_bucket': (id, dimension, blockLocation) => {
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
+		dimension.spawnEntity('minecraft:cod', blockLocation);
+	},
+	'minecraft:salmon_bucket': (id, dimension, blockLocation) => {
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
+		dimension.spawnEntity('minecraft:salmon', blockLocation);
+	},
+	'minecraft:pufferfish_bucket': (id, dimension, blockLocation) => {
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
+		dimension.spawnEntity('minecraft:pufferfish', blockLocation);
+	},
+	'minecraft:tropical_fish_bucket': (id, dimension, blockLocation) => {
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
+		dimension.spawnEntity('minecraft:tropical_fish', blockLocation);
+	},
+	'minecraft:axolotl_bucket': (id, dimension, blockLocation) => {
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
+		dimension.spawnEntity('minecraft:axolotl', blockLocation);
+	},
+	'minecraft:tadpole_bucket': (id, dimension, blockLocation) => {
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
+		dimension.spawnEntity('minecraft:tadpole', blockLocation);
+	},
+	'minecraft:hopper': (id, dimension, blockLocation) => {
+		/**
+		 * @type {Block}
+		 */
+		const block = dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.hopper);
+
+
+	}
+};
+const ileagalPlacements = Object.keys(ileagalPlacementActions);
+
+
+world.events.beforeItemUseOn.subscribe((event) => {
+	const { blockFace, blockLocation: blockLocationClickedOn, source, item } = event;
+	const { dimension } = source;
+	const placementId = ileagalPlacements.find(id => item.id.includes(id));
+	if (!placementId) return;
+	event.cancel = true;
+	const value = ileagalPlacementActions[placementId];
+	if (value instanceof Function) {
+		value(id, dimension, blockLocationClickedOn);
+	} else {
+		const blockLocation = blockFaceToCoords(blockFace, blockLocationClickedOn);
+		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.get(item.id));
+	}
+	content.warn({ id: item.id, placementId });
+});
+
+// const { block, dimension } = event;
+// 	const { type, location: BlockLocation, permutation } = block;
+// 	const { id: blockId } = type;
+// 	if (!exemptedBlocks.includes(blockId)) {
+// 		const block = dimension.getBlock(BlockLocation);
+// 		block.setType(MinecraftBlockTypes.air);
+// 		block.setType(type);
+// 		block.setPermutation(permutation);
+// 	}
+
+// world.events.beforeItemUse.subscribe(({ item, source }) => {
+// 	if (item.typeId !== 'minecraft:compass') return;
+// 	formBuilder.show(source, 'test', source.id);
+// });
+
+// world.events.beforeDataDrivenEntityTriggerEvent.subscribe(),
+
+// const chunkSize = 100;
+// eventBuilder.subscribe('chunktest', {
+// 	worldLoad: () => {
+// 		time.start('test');
+// 		const string = generateRandomString(1000000);
+// 		const genTime = time.end('test');
+// 		time.start('test');
+// 		chunkString(string, chunkSize);
+// 		const chunkStringTime = time.end('test');
+// 		time.start('test');
+// 		chunkStringRegex(string, chunkSize);
+// 		const chunkStringRegexTime = time.end('test');
+// 		content.warn({ t: 'chunkstring test in ms', chunkStringTime, chunkStringRegexTime, genTime, stringlength: string.length, chunkSize });
+// 	}
+// });
 // const global = {};
 // global.players = {};
 // const maxCord = 30000000;
@@ -110,104 +296,5 @@ import { native, overworld, time, blockFaceToCoords, content, formBuilder } from
 // 		} catch (error) {
 // 			console.warn(`${error} - ${entityId} is broke`);
 // 		}
-// 	}
-// });
-const exemptedBlocks = [
-	'minecraft:shulker_box',
-	'minecraft:undyed_shulker_box'
-];
-const ileagalPlacementActions = {
-	'minecraft:mob_spawner': true,
-	'spawn_egg': (id, dimension, blockLocation) => {
-		dimension.spawnEntity(id.replace('_spawn_egg'), blockLocation);
-	},
-	'minecraft:lava_bucket': (id, dimension, blockLocation) => {
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.lava);
-	},
-	'minecraft:water_bucket': (id, dimension, blockLocation) => {
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
-	},
-	'minecraft:cod_bucket': (id, dimension, blockLocation) => {
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
-		dimension.spawnEntity('minecraft:cod', blockLocation);
-	},
-	'minecraft:salmon_bucket': (id, dimension, blockLocation) => {
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
-		dimension.spawnEntity('minecraft:salmon', blockLocation);
-	},
-	'minecraft:pufferfish_bucket': (id, dimension, blockLocation) => {
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
-		dimension.spawnEntity('minecraft:pufferfish', blockLocation);
-	},
-	'minecraft:tropical_fish_bucket': (id, dimension, blockLocation) => {
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
-		dimension.spawnEntity('minecraft:tropical_fish', blockLocation);
-	},
-	'minecraft:axolotl_bucket': (id, dimension, blockLocation) => {
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
-		dimension.spawnEntity('minecraft:axolotl', blockLocation);
-	},
-	'minecraft:tadpole_bucket': (id, dimension, blockLocation) => {
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.water);
-		dimension.spawnEntity('minecraft:tadpole', blockLocation);
-	},
-	'minecraft:hopper': (id, dimension, blockLocation) => {
-		/**
-		 * @type {Block}
-		 */
-		const block = dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.hopper);
-
-
-	}
-};
-const ileagalPlacements = Object.keys(ileagalPlacementActions);
-
-
-world.events.beforeItemUseOn.subscribe((event) => {
-	const { blockFace, blockLocation: blockLocationClickedOn, source, item } = event;
-	const { dimension } = source;
-	const placementId = ileagalPlacements.find(id => item.id.includes(id));
-	if (!placementId) return;
-	event.cancel = true;
-	const value = ileagalPlacementActions[placementId];
-	if (value instanceof Function) {
-		value(id, dimension, blockLocationClickedOn);
-	} else {
-		const blockLocation = blockFaceToCoords(blockFace, blockLocationClickedOn);
-		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.get(item.id));
-	}
-	content.warn({ id: item.id, placementId });
-});
-
-// const { block, dimension } = event;
-// 	const { type, location: BlockLocation, permutation } = block;
-// 	const { id: blockId } = type;
-// 	if (!exemptedBlocks.includes(blockId)) {
-// 		const block = dimension.getBlock(BlockLocation);
-// 		block.setType(MinecraftBlockTypes.air);
-// 		block.setType(type);
-// 		block.setPermutation(permutation);
-// 	}
-
-// world.events.beforeItemUse.subscribe(({ item, source }) => {
-// 	if (item.typeId !== 'minecraft:compass') return;
-// 	formBuilder.show(source, 'test', source.id);
-// });
-
-// world.events.beforeDataDrivenEntityTriggerEvent.subscribe(),
-
-// const chunkSize = 100;
-// eventBuilder.subscribe('chunktest', {
-// 	worldLoad: () => {
-// 		time.start('test');
-// 		const string = generateRandomString(1000000);
-// 		const genTime = time.end('test');
-// 		time.start('test');
-// 		chunkString(string, chunkSize);
-// 		const chunkStringTime = time.end('test');
-// 		time.start('test');
-// 		chunkStringRegex(string, chunkSize);
-// 		const chunkStringRegexTime = time.end('test');
-// 		content.warn({ t: 'chunkstring test in ms', chunkStringTime, chunkStringRegexTime, genTime, stringlength: string.length, chunkSize });
 // 	}
 // });

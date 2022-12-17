@@ -108,7 +108,7 @@ class Players {
 							dynamicPropertiesDefinition.defineString(identifier, maxLength);
 							break;
 						case 'boolean':
-							dynamicPropertiesDefinition.defineBoolean(identifier, maxLength);
+							dynamicPropertiesDefinition.defineBoolean(identifier);
 							break;
 					}
 				});

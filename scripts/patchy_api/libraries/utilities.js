@@ -107,6 +107,8 @@ export function sortRange(array) {
     const z2 = (array[0][1] < array[1][1]) ? array[1][1] : array[0][1];
     return [[x1, z1], [x2, z2]];
 }
+
+
 export function sort3DRange(array) {
     const x1 = (array[0][0] < array[1][0]) ? array[0][0] : array[1][0];
     const y1 = (array[0][1] < array[1][1]) ? array[0][1] : array[1][1];
@@ -116,6 +118,7 @@ export function sort3DRange(array) {
     const z2 = (array[0][2] < array[1][2]) ? array[1][2] : array[0][2];
     return [[x1, y1, z1], [x2, y2, z2]];
 }
+const { floor } = Math;
 /**
  * @function sort3DVectors
  * @param {Vector3} vector1 
@@ -132,6 +135,20 @@ export function sort3DVectors(vector1, vector2) {
     const oy2 = (y1 < y2) ? y2 : y1;
     const oz2 = (z1 < z2) ? z2 : z1;
     return [{ x: ox1, y: oy1, z: oz1 }, { x: ox2, y: oy2, z: oz2 }];
+}
+
+/**
+ * 
+ * @param {Vector3} target 
+ * @param {Vector3} vector1 
+ * @param {Vector3} vector2 
+ * @returns 
+ */
+export function betweenVector3(target, vector1, vector2) {
+    const [{ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }]
+        = sort3DVectors(vector1, vector2);
+    let { x, y, z } = target;
+    return x >= x1 && x <= x2 && y >= y1 && y <= y2 && z >= z1 && z <= z2;
 }
 export function andArray(array = []) {
     let ReturnArray = [...array];
@@ -518,6 +535,7 @@ export function generateRandomString(length) {
  * @param {String} message 
  * @param {String} prefix 
  * @returns {String[]}
+ * @example parseCommand('!give @"bat is bob" iron_sword {"data":6, "enchantments": {"sharpness":3}}', '!'); //returns ['give','bat is bob','iron_sword','{"data":6,"enchantments":{"sharpness":3}}']
  */
 export function parseCommand(message, prefix) {
     message = message.substring(prefix.length);
@@ -536,7 +554,6 @@ export function parseCommand(message, prefix) {
             case '{':
                 switch (finding) {
                     case 'json':
-                        braceCount[0]++;
                         break;
                     default:
                         reset();
@@ -544,17 +561,19 @@ export function parseCommand(message, prefix) {
                         o++;
                         finding = 'json';
                         break;
+
                 }
                 output[o] += char;
+                braceCount[0]++;
                 break;
             case '}':
                 output[o] += char;
-                if (bracketCount[0] !== bracketCount[1] || braceCount[0] !== ++braceCount[1] || quoteCount & 1) break;
+                if (braceCount[0] !== ++braceCount[1] || bracketCount[0] !== bracketCount[1] || (quoteCount && quoteCount & 1)) break;
                 reset();
                 break;
             case ']':
                 output[o] += char;
-                if (++bracketCount[0] !== bracketCount[1] || braceCount[0] !== braceCount[1] || quoteCount & 1) break;
+                if (bracketCount[0] !== ++bracketCount[1] || braceCount[0] !== braceCount[1] || (quoteCount && quoteCount & 1)) break;
                 reset();
                 break;
             case '"':

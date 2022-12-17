@@ -13,7 +13,6 @@ class PositionBuilder {
 					this.forEach((key, { noLoop = false }) => {
 						// content.warn(key, noLoop);
 						if (noLoop) return;
-
 						this.check(player, key);
 					});
 				});
@@ -21,34 +20,37 @@ class PositionBuilder {
 		});
 	}
 	/**
+	 * @method test
+	 * @param {Player} player
+	 * @param {String} key
+	 */
+	test(player, key) {
+		const { location: { x, y, z } } = player;
+		const { location1, location2, callback } = this[key];
+		const { x: x1, y: y1, z: z1 } = location1;
+		if (!location2) {
+			return floor(x) === x1 && floor(y) === y1 && floor(z) === z1;
+		} else {
+			const { x: x2, y: y2, z: z2 } = location2;
+			return floor(x) >= x1 && floor(x) <= x2 && floor(y) >= y1 && floor(y) <= y2 && floor(z) >= z1 && floor(z) <= z2;
+		}
+	};
+	/**
 	 * @method check
-	 * @param {Player} player 
-	 * @param {Vector3} location1 
-	 * @param {Vector3} location2 
-	 * @param {(player: Player, location1: Vector3, location2: Vector3) => {}} callback 
+	 * @param {Player} player
+	 * @param {String} key
 	 */
 	check(player, key) {
 		const { location: { x, y, z } } = player;
 		const { location1, location2, callback } = this[key];
 		const { x: x1, y: y1, z: z1 } = location1;
-		if (!location2) {
-			if (floor(x) === x1 && floor(y) === y1 && floor(z) === z1) {
-				if (typeof callback === 'string') {
+		if (!this.test(player, key)) return;
+		if (typeof callback === 'string') {
 
-				} else {
-					callback(player, location1, location2);
-				}
-			}
 		} else {
-			const { x: x2, y: y2, z: z2 } = location2;
-			if (floor(x) >= x1 && floor(x) <= x2 && floor(y) >= y1 && floor(y) <= y2 && floor(z) >= z1 && floor(z) <= z2) {
-				if (typeof callback === 'string') {
-
-				} else {
-					callback(player, location1, location2);
-				}
-			}
+			callback(player, location1, location2);
 		}
+
 	}
 	/**
 	 * @typedef {Object} PostionObject
@@ -63,9 +65,9 @@ class PositionBuilder {
 	add(postionObject) {
 		postionObject.forEach((key, value) => {
 
-			let { callback, location1, location2, noLoop } = value;
-
-			if (!(callback instanceof Function)) {
+			let { callback, location1, location2, noLoop, testOnly } = value;
+			if (testOnly && typeof testOnly !== 'boolean') return new Error(`testOnly key of postionObject Key: ${key}, should be a boolean`);
+			if (!testOnly && !(callback instanceof Function)) {
 				return new Error(`function key of postionObject Key: ${key}, should be a function`);
 			}
 			if (!(location1 instanceof Location) && !(location1 instanceof BlockLocation)) {

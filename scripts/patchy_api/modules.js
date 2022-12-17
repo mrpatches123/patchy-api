@@ -20,7 +20,8 @@ import requestBuilder from './libraries/classes/request.js';
 import { texturePaths } from './libraries/texture_path.js';
 import { ModalForm } from './libraries/classes/forms_func.js';
 import preformance from './libraries/classes/preformace.js';
-export { preformance, players, ModalForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
+import fill from './libraries/classes/fill.js';
+export { fill, preformance, players, ModalForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
 
 
 

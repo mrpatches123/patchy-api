@@ -16,13 +16,13 @@ commandBuilder.register('teleport', {
 	},
 	aliases: ['tp'],
 	callback: (sender, args) => {
-		switch (args) {
+		switch (args[0]) {
 			case 'print':
-				sender.tell(JSON.stringify(teleportBuilder, (key, value) => (value instanceof Function) ? '<f>' : value));
+				sender.tell(JSON.stringify(teleportBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
 				break;
 			default:
-				if (!(teleportBuilder.hasOwnProperty(args[0]))) return player.tell(`teleport key: ${args[0]} at params[0] does not exist.`);
-				teleportBuilder.teleport(player, args[0]);
+				if (!(teleportBuilder.hasOwnProperty(args[0]))) return sender.tell(`teleport key: ${args[0]} at params[0] does not exist.`);
+				teleportBuilder.teleport(sender, args[0]);
 				break;
 		}
 	}

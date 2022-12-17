@@ -1,42 +1,60 @@
-import { world } from "@minecraft/server";
+import { world, InventoryComponentContainer, Enchantment } from "@minecraft/server";
 import { content, eventBuilder, players, preformance } from "../../patchy_api/modules.js";
 
 
-eventBuilder.subscribe('preformanceTest', {
-	playerJoined: () => {
-		world.getAllPlayers().forEach(player => {
-			const { location: { x, y, z } } = player;
-			content.chatFormat({ x, y, z });
-		});
-	}
-});
+// eventBuilder.subscribe('preformanceTest', {
+// 	playerJoined: ({ player }) => {
+// 		const { name,  } = player;
+// 		/**
+// 		 * @type {InventoryComponentContainer}
+// 		 */
+// 		const container = player.getComponent('inventory').container;
+
 // 		preformance.print(preformance.test({
-// 			map: (key1, value1, key2, value2, key3, value3) => {
-// 				const storage = new Map();
-// 				storage.set(key1, value1);
-// 				storage.set(key2, value2);
-// 				storage.set(key3, value3);
-// 				storage.delete(key3);
-// 				const value = storage.get(key1) / 2;
-// 				storage.set(key3, value);
-// 				storage.delete(key2);
-// 				storage.delete(key1);
-// 				storage.delete(key3);
-// 			},
-// 			object: (key1, value1, key2, value2, key3, value3) => {
-// 				const storage = {};
-// 				storage[key1] = value1;
-// 				storage[key2] = value2;
-// 				storage[key3] = value3;
-// 				delete storage[key3];
-// 				const value = storage[key1] / 2;
-// 				storage[key3] = value;
-// 				delete storage[key2];
-// 				delete storage[key1];
-// 				delete storage[key3];
+// 			getItem: () => {
+// 				const { emptySlotsCount } = container;
+// 				if (emptySlotsCount === container.size) return;
+// 				for (let i = 0; i < container.size; i++) {
+// 					const item = container.getItem(i);
+// 					if (!item) return;
+// 					item;
+// 				}
 // 			}
-// 		}, 10000, 'key1', 8938723732783873, 'key2', 'wdkjkjwdjwkjwdjk', 'key3', [27272, 33877823, 893893], 'key4', 28383872387, 'key5', 'iuhjkloijklqoiujkmdl;k', 'key6', '2398382389832989'));
+// 		}, 100));
 // 	}
+// });
+// < container.size; i++) {
+// 	const element = array[i];
+
+// }
+
+// content.warn({ typeId: item.typeId });
+preformance.print(preformance.test({
+	map: (key1, value1, key2, value2, key3, value3) => {
+		const storage = new Map();
+		storage.set(key1, value1);
+		storage.set(key2, value2);
+		storage.set(key3, value3);
+		storage.delete(key3);
+		const value = storage.get(key1) / 2;
+		storage.set(key3, value);
+		storage.delete(key2);
+		storage.delete(key1);
+		storage.delete(key3);
+	},
+	object: (key1, value1, key2, value2, key3, value3) => {
+		const storage = {};
+		storage[key1] = value1;
+		storage[key2] = value2;
+		storage[key3] = value3;
+		delete storage[key3];
+		const value = storage[key1] / 2;
+		storage[key3] = value;
+		delete storage[key2];
+		delete storage[key1];
+		delete storage[key3];
+	}
+}, 10000, 'key1', 8938723732783873, 'key2', 'wdkjkjwdjwkjwdjk', 'key3', [27272, 33877823, 893893], 'key4', 28383872387, 'key5', 'iuhjkloijklqoiujkmdl;k', 'key6', '2398382389832989'));
 // });
 
 // eventBuilder.subscribe('preformanceTest', {
@@ -119,3 +137,27 @@ eventBuilder.subscribe('preformanceTest', {
 // 		}, 10000, 8938723732783873, 'wdkjkjwdjwkjwdjk', [27272, 33877823, 893893], 28383872387, 'iuhjkloijklqoiujkmdl;k', '2398382389832989'));
 // 	}
 // });
+// import { http, HttpRequest, HttpRequestMethod, HttpResponse } from "@minecraft/server-net";
+// /**
+//  * @typedef {Object} FetchOptions
+//  * @property {string} body
+//  * @property {HttpRequestMethod} method
+//  * @property {Record<string, string>} headers
+//  * @property {number} timeout
+//  */
+// /**
+//  * @function fetch
+//  * @param {String} url
+//  * @param {FetchOptions} fetchOptions
+//  * @returns {Promise<HttpResponse>}
+//  */
+// function fetch(url, { body = "", method = HttpRequestMethod.GET, headers = {}, timeout = 5000 }) {
+// 	const request = new HttpRequest(url);
+// 	request.method = method;
+// 	request.setBody(body);
+// 	request.setTimeout(timeout);
+// 	for (const key in headers) {
+// 		request.addHeader(key, headers[key]);
+// 	}
+// 	return http.request(request);
+// }
