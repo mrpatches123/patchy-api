@@ -18,13 +18,10 @@
     "next": "13.0.7",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-jsx-parser": "^1.29.0",
     "typescript": "4.9.4"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.13",
-    "postcss": "^8.4.20",
-    "react-router-dom": "^6.5.0",
-    "tailwindcss": "^3.2.4"
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
   }
 }
