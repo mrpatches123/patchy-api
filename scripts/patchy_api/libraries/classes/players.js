@@ -54,7 +54,7 @@ class PlayerIterator {
 	}
 	/**
 	 * @method object
-	 * @returns {{[key: String]: Player}}
+	 * @returns {{[id: String]: Player}}
 	 */
 	object() {
 		return this.players;

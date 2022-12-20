@@ -17,8 +17,9 @@ export default function NavigationBar() {
 		<div className="flex flex-auto flex-col">
 			<button onClick={toggleNavigationBarVisibility} className=" text-white">{(showNavigationBar) ? 'close' : 'open'}</button>
 			<div className={`${showNavigationBar ? 'visible' : 'invisible'}`}>
+				<Link className=" text-white" href="/">API</Link><br />
 				{paths.map(({ text = 'null', path = '/' }) => {
-					return (<Link className=" text-white" href={path}>{text}</Link>);
+					return (<><Link className=" text-white" href={path}>{text}</Link><br /></>);
 				})}
 			</div>
 		</div>

@@ -1,10 +1,10 @@
 import NavigationBar from "./navigationbar";
-
+//https://www.viget.com/articles/host-build-and-deploy-next-js-projects-on-github-pages/
 export default function Home() {
   return (
     <div className="flex flex-auto flex-row">
       <NavigationBar />
-      <div className="flex flex-auto flex-col justify-center">
+      <div className="flex flex-col">
 
         <h1 className="text-3xl text-zinc-400">Patchy API</h1>
 
