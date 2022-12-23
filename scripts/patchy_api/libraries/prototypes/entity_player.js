@@ -260,7 +260,7 @@ const playerProperties = {
 				},
 				set(target, identifier, value) {
 					try {
-						content.warn(identifier, value);
+						// content.warn(identifier, value);
 						players.setProperty(player, identifier, value);
 						return Reflect.set(...arguments);
 					} catch (error) {

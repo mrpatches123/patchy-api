@@ -300,20 +300,15 @@ class FormBuilder {
      * @param {String} key 
      * @param  {...any} extraArguments
      */
-    showAwait(player, key, ...extraArguments) {
-        const { id } = player;
+    showAwait(receiver, key, ...extraArguments) {
+        const { id } = receiver;
         if (this.__awaitingPlayers[id] === false) return delete this.__awaitingPlayers[id];
-        if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) return player.tell('§cyou are already awaiting the same form!');
+        if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) return receiver.tell('§cyou are already awaiting the same form!');
         if (!this.__awaitingPlayers.hasOwnProperty(id)) this.__awaitingPlayers[id] = {};
         this.__awaitingPlayers[id][key] = 0;
-        player.tell('§l§eClose chat to open the Menu!');
-        const generatedForm = this.generateForm(player, key, ...extraArguments);
-        this.showForm(player, key, generatedForm, true, ...extraArguments)
-            .catch(error => console.warn(generatedForm.type, key, 'callback', error, error.stack));
-    }
-    showAwaitTest(player, key, ...extraArguments) {
-        const generatedForm = this.generateForm(player, key, ...extraArguments);
-        this.showForm(player, key, generatedForm, true, ...extraArguments)
+        receiver.tell('§l§eClose chat to open the Menu!');
+        const generatedForm = this.generateForm(receiver, key, ...extraArguments);
+        this.showForm(receiver, key, generatedForm, true, ...extraArguments)
             .catch(error => console.warn(generatedForm.type, key, 'callback', error, error.stack));
     }
     /**
@@ -322,9 +317,9 @@ class FormBuilder {
      * @param {String} key 
      * @param  {...any} extraArguments
      */
-    show(player, key, ...extraArguments) {
-        const generatedForm = this.generateForm(player, key, ...extraArguments);
-        this.showForm(player, key, generatedForm, false, ...extraArguments)
+    show(receiver, key, ...extraArguments) {
+        const generatedForm = this.generateForm(receiver, key, ...extraArguments);
+        this.showForm(receiver, key, generatedForm, false, ...extraArguments)
             .catch(error => console.warn(generatedForm.type, key, 'callback', error, error.stack));
     }
     /**
@@ -366,6 +361,7 @@ class FormBuilder {
      * @param {String} key 
      * @param  {...any} extraArguments 
      * @returns {GeneratedForm}
+     * @private
      */
     generateForm(player, key, ...extraArguments) {
         const { name, id } = player;
@@ -524,6 +520,7 @@ class FormBuilder {
      * @param {GeneratedForm} generatedForm return from formBuilder.generateForm
      * @param {Boolean} awaitShow 
      * @param  {...any} extraArguments 
+     * @private
      */
     async showForm(player, key, generatedForm, awaitShow, ...extraArguments) {
 

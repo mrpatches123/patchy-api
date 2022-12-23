@@ -38,3 +38,4 @@ import './commands/leaderboard.js';
 import './commands/teleport.js';
 import './commands/wait.js';
 import './commands/position.js';
+import './commands/kill.js';
