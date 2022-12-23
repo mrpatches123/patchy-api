@@ -1,6 +1,6 @@
 import { world, Player, Location, Vector } from '@minecraft/server';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message } from '@minecraft/server-ui';
-import { content, native, server, typeOf } from '../utilities.js';
+import { content, native, RemovableTree, server, typeOf } from '../utilities.js';
 import wait from './wait.js';
 import eventBuilder from './events.js';
 import global from './global.js';
@@ -66,13 +66,6 @@ const responses = {
  * @property {String | generationCallback} defaultValue
  */
 
-
-
-/**
- * @typedef {Object} ActionTypes
- * @property {String | generationCallback} body
- * @property {String | generationCallback} defaultValue
- */
 
 /**
  * @typedef {Object} ActionTypes
@@ -364,9 +357,7 @@ class FormBuilder {
      * @private
      */
     generateForm(player, key, ...extraArguments) {
-        const { name, id } = player;
-        // const { lastFormShown = { key, extraArguments } } = global.playerMap[id] = {};
-        // global.playerMap[id].lastFormShown = { key, extraArguments };
+        const { name, id, memory } = player;
         // if (!extraArguments.length) { extraArguments = []; }
         // content.warn({ extraArguments });
         if (!this[key]) {
@@ -524,12 +515,11 @@ class FormBuilder {
      */
     async showForm(player, key, generatedForm, awaitShow, ...extraArguments) {
 
-        const { id } = player;
-        if (!this.players.hasOwnProperty(id)) this.players[id] = {};
-        if (!this.players[id].hasOwnProperty('formTree')) this.players[id].formTree = [];
-        const index = this.players[id].formTree.findIndex(({ key: fkey }) => fkey === key);
-        if (index > -1) this.players[id].formTree[index] = { key, extraArguments };
-        else this.players[id].formTree.push({ key, extraArguments });
+        const { name, id, memory } = player;
+        if (!memory.hasOwnProperty('lastFormsShown')) memory.lastFormsShown = {};
+        if (!memory.hasOwnProperty('formTree')) memory.lastFormShown = new RemovableTree();
+        memory.lastFormsShown[key] = extraArguments ?? [];
+        memory.formTree.next(key);
         const { form, formArray, type } = generatedForm;
         // const response = await form.show(player);
         // const { canceled, cancelationReason } = response;
@@ -600,10 +590,12 @@ class FormBuilder {
                 }
 
             } else if (object?.back && form instanceof action) {
-                const { key, extraArguments } = lastFormShown;
-                formBuilder.show(player, key, ...extraArguments);
+                const { memory } = player;
+                const backKey = memory.formTree.beforeLast();
+                const backExtraArgs = memory.lastFormsShown[backKey];
+                this.show(player, backKey, ...backExtraArgs);
             } else if (object?.refresh && form instanceof action) {
-                formBuilder.show(player, key, ...extraArguments);
+                this.show(player, key, ...extraArguments);
             } else {
 
                 if (object?.button?.reopen) {

@@ -16,7 +16,32 @@ export function weightsRandom(...weights) {
     const test = [...sortedTestWeights, random].sort((a, b) => a - b);
     return weights.indexOf(sortedWeights[test.indexOf(random)]);
 }
+export class RemovableTree {
+    constructor(array = []) {
+        this.array = array;
+    }
+    next(key) {
+        const index = this.array.indexOf(key);
+        if (index === -1) {
+            this.array.push(key);
+            return this;
+        } else {
+            if (this.array.length <= 1) return;
+            this.array.splice(index + 1);
+            return this;
+        }
+    }
+    last() {
+        return this.array[this.array.length - 1];
+    }
+    beforeLast(lastIndex = 0) {
+        const value = this.array[this.array.length - lastIndex - 2];
+        if (!value) return;
+        this.next(value);
+        return value;
 
+    }
+}
 export function typeOf(value) {
     if (typeof value === 'function') {
         try {
