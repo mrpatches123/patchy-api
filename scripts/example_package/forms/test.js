@@ -8,9 +8,12 @@ formBuilder.create('test', {
         },
         {
             button: {
-                text: 'button',
+                text: 'testback',
                 iconPath: 'textures/forms/Main/Test',
                 reopen: true
+            },
+            callback: () => {
+                formBuilder.show(player, 'testBAck1');
             }
         },
         {

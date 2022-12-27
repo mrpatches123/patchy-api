@@ -66,7 +66,6 @@ const responses = {
  * @property {String | generationCallback} defaultValue
  */
 
-
 /**
  * @typedef {Object} ActionTypes
  * @property {String | generationCallback} body

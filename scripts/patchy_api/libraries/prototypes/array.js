@@ -69,6 +69,24 @@ const arrayFunctions = {
 		const object = {};
 		this.forEach(([key, value]) => object[key] = value);
 		return object;
+	},
+	shuffle() {
+		const array = [...this];
+		let currentIndex = this.length, randomIndex;
+
+		// While there remain elements to shuffle.
+		while (currentIndex != 0) {
+
+			// Pick a remaining element.
+			randomIndex = Math.floor(Math.random() * currentIndex);
+			currentIndex--;
+
+			// And swap it with the current element.
+			[array[currentIndex], array[randomIndex]] = [
+				array[randomIndex], array[currentIndex]];
+		}
+
+		return array;
 	}
 };
 Object.assign(Array.prototype, arrayFunctions);

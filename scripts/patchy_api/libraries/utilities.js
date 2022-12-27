@@ -383,9 +383,9 @@ export const server = {
         }
         return score;
     },
-    objectiveAdd(objective, display = '') {
+    objectiveAdd(objective, displayName) {
         try {
-            overworld.runCommandAsync(`scoreboard objectives add ${objective} dummy ${display}`);
+            (displayName) ? world.scoreboard.addObjective(objective, displayName) : world.scoreboard.addObjective(objective);;
             return true;
         } catch (error) {
             console.warn(error, error.stack);
@@ -394,7 +394,7 @@ export const server = {
     },
     objectiveRemove(objective) {
         try {
-            overworld.runCommandAsync(`scoreboard objectives remove ${objective}`);
+            world.scoreboard.removeObjective(objective);
             return true;
         } catch (error) {
             console.warn(error, error.stack);
@@ -403,7 +403,7 @@ export const server = {
     },
     scoreAdd(objective, name, amount = 0) {
         try {
-            return Number(overworld.runCommandAsync(`scoreboard players add ${name} ${objective} ${amount}`).statusMessage.match(/-?\d+(?=[^-\d]$)/));
+            overworld.runCommandAsync(`scoreboard players add ${name} ${objective} ${amount}`);
         } catch (error) {
             // console.warn(error, error.stack);
             return;
@@ -411,7 +411,7 @@ export const server = {
     },
     scoreSet(objective, name, amount = 0) {
         try {
-            return Number(overworld.runCommandAsync(`scoreboard players set ${name} ${objective} ${amount}`).statusMessage.match(/-?\d+(?=$)/));
+            overworld.runCommandAsync(`scoreboard players set ${name} ${objective} ${amount}`);
         } catch (error) {
             console.warn(error, error.stack);
             return;

@@ -59,20 +59,6 @@ const betaPlayerFunctions = {
 		// }
 		return score;
 	},
-	// /**
-	//  * @method — getScoresListed gets a players scores from a list or an array of objectiveIds
-	//  * @param player
-	//  * @param objectives — or argument Strings
-	//  * @returns — Object 
-	//  */
-	// getScoresListed(...objectives) {
-	// 	return playerScoreboard.getScoresListed(this, objectives);
-	// },
-	// scores: new Proxy({}, {
-	// 	get(target, prop) {
-
-	// 	}
-	// }),
 	/**
 	 * @method scoreTest adds to a player's Scoreboard Objective 
 	 * @param  {Boolean} objective Scoreboard Objective Id
@@ -81,7 +67,8 @@ const betaPlayerFunctions = {
 	 */
 	scoreAdd(objective, amount = 0) {
 		try {
-			return Number(this.runCommandAsync(`scoreboard players add @s ${objective} ${amount}`).statusMessage.match(/-?\d+(?=[^-\d]$)/));
+			this.runCommandAsync(`scoreboard players add @s ${objective} ${amount}`);
+			return this.scoreTest(objective);
 		} catch (error) {
 			console.warn(error, error.stack);
 			return;
@@ -89,7 +76,8 @@ const betaPlayerFunctions = {
 	},
 	scoreSet(objective, amount = 0) {
 		try {
-			return Number(this.runCommandAsync(`scoreboard players set @s ${objective} ${amount}`).statusMessage.match(/-?\d+(?=$)/));
+			this.runCommandAsync(`scoreboard players set @s ${objective} ${amount}`);
+			return amount;
 		} catch (error) {
 			console.warn(error, error.stack);
 			return;
@@ -97,7 +85,6 @@ const betaPlayerFunctions = {
 	},
 	gamemode(index, selector = '') {
 		try {
-			content.warn({ test: this.runCommandAsync(`testfor ${selector}`).statusMessage, selector });
 			this.runCommandAsync(`gamemode ${index} ${selector}`);
 		} catch { }
 	},
@@ -241,7 +228,7 @@ const playerProperties = {
 					return player.scoreTest(objectiveId);
 				},
 				set(target, objectiveId, value) {
-					player.scoreSet(objectiveId, value);
+					return player.scoreSet(objectiveId, value);
 				}
 			});
 		},

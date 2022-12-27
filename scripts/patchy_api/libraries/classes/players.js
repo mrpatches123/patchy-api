@@ -1,4 +1,4 @@
-import { Player, EntityQueryOptions, DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, PlayerInventoryComponentContainer } from "@minecraft/server";
+import { Player, EntityQueryOptions, DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, PlayerInventoryComponentContainer, system } from "@minecraft/server";
 import { content, native } from "../utilities.js";
 import global from "./global.js";
 import eventBuilder from "./events.js";
@@ -165,7 +165,7 @@ class Players {
 		if (!this.propertyStorage.hasOwnProperty(identifier)) throw new Error(`DynamicProperty: ${identifier}, does not exist! `);
 		if (!this.properties.hasOwnProperty(id)) this.properties[id] = {};
 		if (!this.properties[id].hasOwnProperty(identifier)) this.properties[id][identifier] = {};
-		let { value, gotten } = this.properties[id];
+		let { value, gotten } = this.properties[id][identifier];
 		if (forceDisk || !gotten) {
 			value = player.getDynamicProperty(identifier);
 			this.properties[id][identifier].value = value;
@@ -188,7 +188,10 @@ class Players {
 		if (!this.properties.hasOwnProperty(id)) this.properties[id] = {};
 		if (!this.properties[id].hasOwnProperty(identifier)) this.properties[id][identifier] = {};
 		player.setDynamicProperty(identifier, value);
+		// content.warn(1, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) });
 		this.properties[id][identifier].value = value;
+		// content.warn(2, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) });
+		// system.run(() => content.warn(3, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) }));
 		this.properties[id][identifier].gotten = true;
 	};
 	/**
@@ -211,7 +214,7 @@ class Players {
 		if (!(options instanceof Object)) throw new Error(`options at param[1] is not a object!`);
 		const { type, maxLength } = options;
 		if (!types.includes(type)) throw new Error(`type, ${type}, in options at param[1] is not 'string', 'number', or 'boolean'!`);
-		content.warn({ type, maxLength, });
+		// content.warn({ type, maxLength, });
 		if (type === 'string' && !isDefined(maxLength)) throw new Error(`maxLength, in options at param[1] should not be defined since type is not 'string'!`);
 		if (type === 'string' && !Number.isInteger(maxLength) || maxLength <= 0) throw new Error(`maxLength, in options at param[1] is not a integer greater than 0!`);
 		this.propertyStorage[identifier] = options;
