@@ -1,33 +1,24 @@
 import { Player, EntityQueryOptions, DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, PlayerInventoryComponentContainer, system } from "@minecraft/server";
-import { content, native } from "../utilities.js";
-import global from "./global.js";
-import eventBuilder from "./events.js";
-import loads from "./load.js";
+import { content, native } from "../../utilities.js";
+import global from "../global.js";
+import loads from "../load.js";
 const typeDefinitionFunctions = { number: 'defineNumber', string: 'defineString', boolean: 'defineBoolean' };
 const types = Object.keys(typeDefinitionFunctions);
 function isDefined(input) {
-	return (input !== null && input !== undefined);
+	return (input !== null && input !== undefined && !Number.isNaN(input));
 }
 class Inventory {
-	/**
-	 * 
-	 * @param {Array<ItemStack>} array 
-	 * @param {PlayerInventoryComponentContainer} inventory 
-	 */
 	constructor(array, inventory) {
 		this.array = array;
-		this.inventory = inventory;
+		this.container = inventory;
 	}
-	/**
-	 * @param {(item: ItemStack, i) => {}} callback return changes the item
-	 */
-	loop(callback) {
+	iterate(callback) {
 		if (!(callback instanceof Function)) throw new Error('Not a function at args[0]');
 		this.array.forEach((item, i) => {
 			const newItem = callback(item);
 			if (!(newItem instanceof ItemStack)) return;
 			this.array[i] = newItem;
-			this.inventory.setItem(i, newItem);
+			this.container.setItem(i, newItem);
 		});
 	};
 }
@@ -35,41 +26,25 @@ class PlayerIterator {
 	constructor(players) {
 		this.players = players;
 		this.playerArray = Object.values(players);
+		this.playerLength = this.playerArray.length;
 	}
-	/**
-	 * @method iterate
-	 * @param {(player: Player, i) => {}} callback 
-	 */
+	get count() {
+		return this.playerLength;
+	}
 	iterate(callback) {
 		this.playerArray.forEach((player, i) => {
 			callback(player, i);
 		});
 	}
-	/**
-	 * @method array
-	 * @returns {Player[]}
-	 */
 	array() {
 		return this.playerArray;
 	}
-	/**
-	 * @method object
-	 * @returns {{[id: String]: Player}}
-	 */
 	object() {
 		return this.players;
 	}
-	/**
-	 * @method ids
-	 * @returns {String[]}
-	 */
 	ids() {
 		return this.playerArray.map(({ id }) => id);
 	}
-	/**
-	 * @method namess
-	 * @returns {String[]}
-	 */
 	names() {
 		return this.playerArray.map(({ name }) => name);
 	}
@@ -82,71 +57,83 @@ class PlayerIterator {
 	};
 
 }
-class Players {
+export class Players {
 	constructor() {
 		this.propertyStorage = {};
 		this.properties = {};
 		this.memory = {};
 		const playersObject = this;
+		this.ranGarbage = false;
+		this.basePlayerIterator;
+		this.playerQueryIterators = {};
+
 		content.warn('wdlkwdwkdkwdkl', Math.random());
 		/**
 		 * @type {({[key: String]: Player})}
 		 */
 		this.inventorys = {};
 		this.registered = false;
-
-		eventBuilder.subscribe('end_players*API', {
-			worldInitialize(event) {
-
-				const dynamicPropertiesDefinition = new DynamicPropertiesDefinition();
-				playersObject.propertyStorage.forEach((identifier, { type, maxLength }) => {
-					switch (type) {
-						case 'number':
-							dynamicPropertiesDefinition.defineNumber(identifier);
-							break;
-						case 'string':
-							dynamicPropertiesDefinition.defineString(identifier, maxLength);
-							break;
-						case 'boolean':
-							dynamicPropertiesDefinition.defineBoolean(identifier);
-							break;
-					}
-				});
-				event.propertyRegistry.registerEntityTypeDynamicProperties(dynamicPropertiesDefinition, MinecraftEntityTypes.player);
-				playersObject.registered = true;
-			}
+		this.ran = false;
+		world.events.worldInitialize.subscribe((event) => {
+			const dynamicPropertiesDefinition = new DynamicPropertiesDefinition();
+			playersObject.propertyStorage.forEach((identifier, { type, maxLength }) => {
+				switch (type) {
+					case 'number':
+						dynamicPropertiesDefinition.defineNumber(identifier);
+						break;
+					case 'string':
+						dynamicPropertiesDefinition.defineString(identifier, maxLength);
+						break;
+					case 'boolean':
+						dynamicPropertiesDefinition.defineBoolean(identifier);
+						break;
+				}
+			});
+			event.propertyRegistry.registerEntityTypeDynamicProperties(dynamicPropertiesDefinition, MinecraftEntityTypes.player);
+			playersObject.registered = true;
 		});
-
+		world.events.tick.subscribe(() => {
+			if (!global.refreshBasePlayerIterator) return;
+			this.refreshBasePlayerIterator();
+			global.refreshBasePlayerIterator = false;
+		});
 	}
-	/**
-	 * @method getLoadedPlayers
-	 * @param {EntityQueryOptions} EntityQueryOptions?
-	 * @returns {PlayerIterator}
-	 */
-	get(EntityQueryOptions) {
+	refreshBasePlayerIterator() {
+		this.basePlayerIterator = new PlayerIterator(loads.players);
+		content.warn({ t: 8938923832, basePlayerIterator: this.basePlayerIterator });
+	}
+	get(EntityQueryOptions, cache = true) {
 		let worldPlayers;
-		if (EntityQueryOptions) worldPlayers = [...world.getPlayers(EntityQueryOptions)].map((({ id }) => id));
-		else worldPlayers = [...world.getPlayers()].map(({ id }) => id);
-		return new PlayerIterator(loads.players.filter((id) => worldPlayers.includes(id)));
+		if (!EntityQueryOptions) return this.basePlayerIterator;//this.basePlayerIterator;
+		if (!cache) {
+			worldPlayers = [...world.getPlayers(EntityQueryOptions)].map((({ id }) => id));
+			return new PlayerIterator(loads.players.filter((id) => worldPlayers.includes(id)));
+		}
+		const key = JSON.stringify(EntityQueryOptions);
+		if (this.playerQueryIterators.hasOwnProperty(key)) return this.playerQueryIterators[key];
+		worldPlayers = [...world.getPlayers(EntityQueryOptions)].map((({ id }) => id));
+		const playerIterator = new PlayerIterator(loads.players.filter((id) => worldPlayers.includes(id)));
+		this.playerQueryIterators[key] = playerIterator;
+		const playerObject = this;
+		if (!this.ranGarbage) this.ranGarbage = true, system.run(() => (playerObject.ranGarbage = false, playerObject.playerQueryIterators = {}));
+		return playerIterator;
 	}
 	getInventory(player) {
 		const { id } = player;
-		if (!(id in this.inventorys)) {
-			const inventory = player.getComponent('inventory').container;
-			const container = [];
-			const { size } = inventory;
-			for (let i = 0; i < size; i++) {
-				const item = inventory.getItem();
-				container.push(item);
-			}
-			this[id].container = new Inventory(container, inventory);
+		if (this.inventorys.hasOwnProperty(id)) return this.inventorys[id].container;;
+		this.inventorys[id] = {};
+		const inventory = player.getComponent('inventory').container;
+		const container = [];
+		const { size } = inventory;
+		for (let i = 0; i < size; i++) {
+			const item = inventory.getItem(i);
+			container.push(item);
 		}
-		return this[id].container;
+		this.inventorys[id].container = new Inventory(container, inventory);
+		const playersObject = this;
+		if (!this.ran) this.ran = true, system.run(() => (playersObject.inventorys = {}, playersObject.ran = false));
+		return this.inventorys[id].container;
 	};
-	/**
-	 * @method getRandomPlayer
-	 * @param {EntityQueryOptions} EntityQueryOptions?
-	 */
 	getRandomPlayer(EntityQueryOptions) {
 		const foundPlayers = this.get(EntityQueryOptions);
 		if (!foundPlayers) return;
@@ -154,11 +141,6 @@ class Players {
 		const id = ids[Math.floor(Math.random() * ids.length)];
 		return ({ id: foundPlayers[id] });
 	}
-	/**
-	 * 
-	 * @param {Player} player 
-	 * @param {String} identifier 
-	 */
 	getProperty(player, identifier, forceDisk = false) {
 		const { id } = player;
 		if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player! `);
@@ -173,14 +155,9 @@ class Players {
 		}
 		return value;
 	};
-	/**
-	 * 
-	 * @param {Player} player 
-	 * @param {String} identifier 
-	 * @param {String | Number | Boolean | undefined | null } value
-	 */
 	setProperty(player, identifier, value) {
 		const { id } = player;
+		content.warn({ constructor: player.constructor.name, bool: player instanceof Player });
 		if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player! `);
 		if (!this.propertyStorage.hasOwnProperty(identifier)) throw new Error(`DynamicProperty: ${identifier}, does not exist! `);
 		const { type } = this.propertyStorage[identifier];
@@ -194,20 +171,20 @@ class Players {
 		// system.run(() => content.warn(3, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) }));
 		this.properties[id][identifier].gotten = true;
 	};
-	/**
-	 * @typedef {Object} propertyOptionsString
-	 * @property {Number} maxLength
-	 * @property {'string'} type
-	 */
-	/**
-	 * @typedef {Object} propertyOptionsNumberBoolean
-	 * @property {'boolean' | 'number'} type
-	 */
-	/**
-	 * 
-	 * @param {String} identifier 
-	 * @param {propertyOptionsString | propertyOptionsNumberBoolean} options 
-	 */
+	resetProperty(player, identifier) {
+		content.warn(player.name, identifier);
+		const { id } = player;
+		if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player! `);
+		if (!this.propertyStorage.hasOwnProperty(identifier)) throw new Error(`DynamicProperty: ${identifier}, does not exist! `);
+		if (!this.properties.hasOwnProperty(id)) this.properties[id] = {};
+		if (!this.properties[id].hasOwnProperty(identifier)) this.properties[id][identifier] = {};
+		player.removeDynamicProperty(identifier);
+		// content.warn(1, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) });
+		this.properties[id][identifier].value = undefined;
+		// content.warn(2, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) });
+		// system.run(() => content.warn(3, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) }));
+		this.properties[id][identifier].gotten = true;
+	}
 	registerProperty(identifier, options) {
 		if (this.registered) throw new Error(`Register Property: ${identifier} in before all scripts load`);
 		if (typeof identifier !== 'string') throw new Error(`identifier, ${identifier}, at param[0] is not a string!`);
@@ -220,6 +197,4 @@ class Players {
 		this.propertyStorage[identifier] = options;
 	};
 }
-const players = new Players;
-export default players;
 

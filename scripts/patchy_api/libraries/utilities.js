@@ -1,6 +1,23 @@
 import { world, Items, BlockLocation, Player, Entity, XYRotation, Vector3 } from '@minecraft/server';
 import errorLogger from './classes/error.js';
-
+export function isVector3(target) {
+    // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
+    return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
+}
+export function isDefined(input) {
+    return (input !== null && input !== undefined && !Number.isNaN(input));
+}
+export function permutationClone(permutation) {
+    const permutationProperties = [];
+    /**
+     * @type {BlockPermutation}
+     */
+    const blockPermutation = permutation;
+    blockPermutation.getAllProperties().forEach(({ name, validValues, value }) => {
+        permutationProperties.push({ name, validValues, value });
+    });
+    return permutationProperties;
+}
 /**
  * @function weightsRandom returns the index of the weight that was selected
  * @param  {...Number} weights 
@@ -176,11 +193,34 @@ export function betweenVector3(target, vector1, vector2) {
     return x >= x1 && x <= x2 && y >= y1 && y <= y2 && z >= z1 && z <= z2;
 }
 export function andArray(array = []) {
-    let ReturnArray = [...array];
-    if (ReturnArray.length > 1) ReturnArray.splice(ReturnArray.length - 1, 0, 'and');
-    if (ReturnArray.length > 3) { return ReturnArray.join(', ').replace(/(?<=and),/, ''); }
-    else if (ReturnArray.length === 2) { return ReturnArray.join(', ').replace(/,(?=\sand)|(?<=and),/g, ''); }
-    return ReturnArray;
+    const copy = [...array];
+    switch (array.length) {
+        case 0:
+            return '';
+        case 1:
+            return array[0].toString();
+        case 2:
+            copy.splice(array.length - 1, null, 'and');
+            return copy.join(' ');
+        default:
+            copy.splice(array.length - 1, 1, 'and');
+            return `${copy.join(', ')} ${array[array.length - 1]}`;
+    }
+}
+export function orArray(array = []) {
+    const copy = [...array];
+    switch (array.length) {
+        case 0:
+            return '';
+        case 1:
+            return array[0].toString();
+        case 2:
+            copy.splice(array.length - 1, null, 'or');
+            return copy.join(' ');
+        default:
+            copy.splice(array.length - 1, 1, 'or');
+            return `${copy.join(', ')} ${array[array.length - 1]}`;
+    }
 }
 const blockFaceToNumber = {
     "down": 0,
@@ -383,9 +423,9 @@ export const server = {
         }
         return score;
     },
-    objectiveAdd(objective, displayName) {
+    objectiveAdd(objective, displayName = objective) {
         try {
-            (displayName) ? world.scoreboard.addObjective(objective, displayName) : world.scoreboard.addObjective(objective);;
+            world.scoreboard.addObjective(objective, displayName);
             return true;
         } catch (error) {
             console.warn(error, error.stack);

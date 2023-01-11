@@ -7,7 +7,7 @@
 		"version": [
 			1,
 			0,
-			0
+			1
 		],
 		"min_engine_version": [
 			1,
@@ -46,5 +46,12 @@
 	],
 	"capabilities": [
 		"script_eval"
-	]
+	],
+	"metadata": {
+		"generated_with": {
+			"bridge": [
+				"1.8.4"
+			]
+		}
+	}
 }

@@ -2,7 +2,7 @@ import { world, EntityQueryOptions } from '@minecraft/server';
 import { overworld } from "../../../patchy_api/libraries/utilities.js";
 import databases from '../../../patchy_api/libraries/classes/database.js';
 import global from '../../../patchy_api/libraries/classes/global.js';
-import eventBuilder from '../../../patchy_api/libraries/classes/events.js';
+import eventBuilder from '../../../patchy_api/libraries/classes/events/export_instance.js';
 import { content } from '../../../patchy_api/libraries/utilities.js';
 
 eventBuilder.subscribe('speed', {

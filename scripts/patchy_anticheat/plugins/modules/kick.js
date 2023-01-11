@@ -1,17 +1,11 @@
-import { content, overworld, andArray } from '../../../patchy_api/libraries/utilities.js';
-import databases from '../../../patchy_api/libraries/classes/database.js';
-import global from '../../../patchy_api/libraries/classes/global.js';
-import eventBuilder from '../../../patchy_api/libraries/classes/events.js';
-
+import { databases, global, eventBuilder, andArray, players } from '../../../patchy_api/modules.js';
 eventBuilder.subscribe('kick', {
     tickAfterLoad: () => {
         try {
             let anticheat = databases.get('anticheat') ?? databases.add('anticheat');
-            global.players.forEach((id, player) => {
-                const name = player.getName();
-                const nameTag = player.getNameTag();
-                const { playerId } = global.scoreObject[name] ?? {};
-                const { kicks = [] } = global.playerMap[name] ?? {};
+            players.get().iterate(player => {
+                const { name, nameTag, id: playerId, memory } = player;
+                const { kicks = [] } = memory;
                 let playerAC = anticheat.get(playerId) ?? {};
                 const { bans = [], name: nameAC, nameTag: nameTagAC } = playerAC;
                 if (!kicks.length && !bans.length) return;

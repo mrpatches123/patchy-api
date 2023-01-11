@@ -6,7 +6,6 @@ import commandBuilder from "../../patchy_api/libraries/classes/commands.js";
 import databases from '../../patchy_api/libraries/classes/database.js';
 
 import { andArray, staff } from '../../patchy_api/libraries/utilities.js';
-
 const { commandPrefix: prefix } = config;
 commandBuilder.register('toggles', {
     description: "used to set or remove a toggle",

@@ -12,6 +12,7 @@ propertyBuilder.register({
 			itemChangeLog: 'boolean',
 			// use32k: 'boolean',
 			crasher: 'boolean',
+			nbt: 'boolean',
 			// nameSpoof: 'boolean',
 		},
 		flagsKick: {
@@ -22,6 +23,7 @@ propertyBuilder.register({
 			nuker: 'number',
 			cbe: 'number',
 			crasher: 'number',
+			nbt: 'number',
 		},
 		survival: 'boolean',
 		creative: 'boolean',

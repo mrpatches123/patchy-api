@@ -1,7 +1,7 @@
 import { world, DynamicPropertiesDefinition, Trigger } from "@minecraft/server";
 import { content, native, overworld, server, typeOf, assignToPath } from "../utilities.js";
 import errorLogger from "./error.js";
-import global from "./global.js";
+import eventBuilder from "./events/export_instance.js";
 
 class PropertyBuilder {
   constructor() {
@@ -9,6 +9,7 @@ class PropertyBuilder {
     this.booleans = [];
     this.strings = {};
     this.rand = Math.random();
+    this.subscribed = false;
   }
   getObjectFromKey(key) {
     try {
@@ -31,6 +32,15 @@ class PropertyBuilder {
     } catch (error) {
       errorLogger.log(error, error.stack, { event: 'worldInitialize', key: 'PropertyGetObjectFromKey' });
     }
+  }
+  registerSubsciption() {
+    if (this.subscribed) return;
+    eventBuilder.subscribe('propertyBuilder*World*API', {
+      worldInitialize: (event) => {
+        this.registerEvent(event);
+      }
+    });
+    this.subscribed = true;
   }
   registerEvent(event) {
     try {
@@ -56,7 +66,8 @@ class PropertyBuilder {
     * @returns {Database} this[name]
   */
   register(registryObject, currentKeySet) {
-    content.warn({ registryObject, currentKeySet, });
+    this.registerSubsciption();
+    // content.warn({ registryObject, currentKeySet, });
     registryObject.forEach((identifier, args) => {
       const key = `${(currentKeySet) ? `${currentKeySet}.` : ''}${identifier}`;
       // content.warn({ key });
@@ -92,7 +103,6 @@ class PropertyBuilder {
   }
   setInitialValues(setObject, currentKeySet) {
     try {
-
       setObject.forEach((identifier, value) => {
         const key = `${(currentKeySet) ? `${currentKeySet}.` : ''}${identifier}`;
         if (typeOf(value) === 'Object') {
@@ -125,18 +135,21 @@ class PropertyBuilder {
     }
   }
   registerNumber(identifier) {
-    content.warn({ bool: this.numbers.includes(identifier), identifier, bools: this.numbers });
+    this.registerSubsciption();
+    // content.warn({ bool: this.numbers.includes(identifier), identifier, bools: this.numbers });
     if (!this.numbers.includes(identifier)) {
       this.numbers.push(identifier);
     }
   }
   registerBoolean(identifier) {
-    content.warn({ bool: this.booleans.includes(identifier), identifier, bools: this.booleans });
+    this.registerSubsciption();
+    // content.warn({ bool: this.booleans.includes(identifier), identifier, bools: this.booleans });
     if (!this.booleans.includes(identifier)) {
       this.booleans.push(identifier);
     }
   }
   registerString(identifier, maxLength) {
+    this.registerSubsciption();
     this.strings[identifier] = maxLength;
   }
 }

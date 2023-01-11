@@ -270,7 +270,3 @@ const arrayObjectFunctions = {
 
 
 Object.assign(Object.prototype, arrayObjectFunctions);
-
-const object = { wjkdjd: 9 };
-
-object.forEach();

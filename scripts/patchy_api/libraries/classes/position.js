@@ -1,7 +1,7 @@
-import eventBuilder from "./events.js";
+import eventBuilder from "./events/export_instance.js";
 import { content, sort3DRange, sort3DVectors } from '../utilities.js';
 import global from "./global.js";
-import players from "./players.js";
+import players from "./players/export_instance.js";
 import { Vector3, Player, BlockLocation, Location } from "@minecraft/server";
 const { floor } = Math;
 class PositionBuilder {

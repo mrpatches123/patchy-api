@@ -1,4 +1,4 @@
-import eventBuilder from "../libraries/classes/events.js";
+import eventBuilder from "../libraries/classes/events/export_instance.js";
 import promptBuilder from "../libraries/classes/prompt.js";
 import commandBuilder from '../libraries/classes/commands.js';
 import { overworld, content } from "../libraries/utilities.js";

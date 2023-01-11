@@ -1,7 +1,7 @@
 import { content, combine, overworld, server } from "../../../patchy_api/libraries/utilities.js";
 import databases from '../../../patchy_api/libraries/classes/database.js';
 import global from '../../../patchy_api/libraries/classes/global.js';
-import eventBuilder from '../../../patchy_api/libraries/classes/events.js';
+import eventBuilder from '../../../patchy_api/libraries/classes/events/export_instance.js';
 
 
 

@@ -1,6 +1,6 @@
-import eventBuilder from '../libraries/classes/events.js';
+import eventBuilder from '../libraries/classes/events/export_instance.js';
 import { BlockLocation, Location, Vector, world } from '@minecraft/server';
-import players from '../libraries/classes/players.js';
+import players from '../libraries/classes/players/export_instance.js';
 import time from '../libraries/classes/time.js';
 import global from '../libraries/classes/global.js';
 import errorLogger from '../libraries/classes/error.js';

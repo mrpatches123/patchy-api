@@ -1,9 +1,11 @@
 
 
 
-import './libraries/classes/load.js';
 import './libraries/prototypes/native_imports.js';
 import './events/events_first.js';
+
+import './libraries/classes/load.js';
+
 import './events/events_second.js';
 //import custom events above here
 import './libraries/prototypes/minecraft_imports.js';
@@ -20,7 +22,7 @@ import './plugins/player_joined.js';
 import './plugins/world_load.js';
 import './plugins/update_test.js';
 //commands;
-
+import './commands/plot.js';
 import './commands/error.js';
 import './commands/global.js';
 import './commands/property.js';

@@ -142,7 +142,7 @@ export class Databases {
             }
 
         });
-        // content.warn({ this: this });
+        content.warn({ this: this });
         // content.warn(this.get('requestsAPI'));
     }
     /**

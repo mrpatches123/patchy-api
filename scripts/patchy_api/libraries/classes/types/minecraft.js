@@ -22,7 +22,7 @@ export const Events = {
 	 * triggered event. Note that this event is only fired for
 	 * custom data-driven items.
 	 */
-	'beforeItemDefinitionEvent': 'BeforeItemDefinitionEvent',
+	'beforeItemDefinitionEvent': 'BeforeItemDefinitionTriggeredEvent',
 	/**
 	 * This event fires before an item is used by an entity or
 	 * player.
@@ -98,7 +98,7 @@ export const Events = {
 	 * Note that this event is only fired for custom data-driven
 	 * items.
 	 */
-	'itemDefinitionEvent': 'ItemDefinitionEvent',
+	'itemDefinitionEvent': 'ItemDefinitionTriggeredEvent',
 	/**
 	 * This event fires when a chargeable item is released from
 	 * charging.

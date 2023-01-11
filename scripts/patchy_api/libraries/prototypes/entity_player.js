@@ -1,4 +1,4 @@
-import { world, Player, Entity, ItemStack, Items, Location, MolangVariableMap, Vector } from '@minecraft/server';
+import { world, Player, Entity, ItemStack, Items, Location, MolangVariableMap, Vector, PlayerInventoryComponentContainer } from '@minecraft/server';
 import errorLogger from '../classes/error.js';
 
 const { isInteger } = Number;
@@ -201,7 +201,7 @@ Object.assign(Player.prototype, betaPlayerFunctions);
 Object.assign(Entity.prototype, betaPlayerFunctions);
 
 
-import players from '../classes/players.js';
+import players from '../classes/players/export_instance.js';
 import loads from '../classes/load.js';
 
 const playerProperties = {
@@ -213,6 +213,45 @@ const playerProperties = {
 		get() {
 			const { id } = this;
 			return loads.loads.hasOwnProperty(id);
+		}
+	},
+	mainHand: {
+		get() {
+			const { selectedSlot } = this.player;
+			/**
+			 * @type {PlayerInventoryComponentContainer}
+			 */
+			const container = this.getComponent('inventory').container;
+			return new Proxy({}, {
+				set(object, key, value) {
+					const item = container.getItem(selectedSlot);
+					if (!item) return Reflect.set(...arguments);
+					container.setItem(selectedSlot, Object.assign(item, { [key]: value }));
+					return Reflect.set(...arguments);
+				},
+				get(target, key, receiver) {
+					return container.getItem(selectedSlot)?.[key];
+				}
+			});
+		},
+		set() {
+			const { selectedSlot } = this;
+			const player = this;
+			/**
+			 * @type {PlayerInventoryComponentContainer}
+			 */
+			const container = this.getComponent('inventory').container;
+		}
+	},
+	container: {
+		get() {
+			return this.getComponent('inventory').container;
+		}
+	},
+	inventory: {
+		get() {
+			return players.getInventory(this);
+
 		}
 	},
 	/**
@@ -228,7 +267,8 @@ const playerProperties = {
 					return player.scoreTest(objectiveId);
 				},
 				set(target, objectiveId, value) {
-					return player.scoreSet(objectiveId, value);
+					player.scoreSet(objectiveId, value);
+					return Reflect.set(...arguments);
 				}
 			});
 		},
@@ -277,7 +317,6 @@ const playerProperties = {
 						errorLogger.log(error, error.stack, { key: 'PlayerDynamicProperties', event: 'N/A' });
 					}
 				}
-
 			});
 
 		},

@@ -87,6 +87,12 @@ const arrayFunctions = {
 		}
 
 		return array;
+	},
+	indexsOf(val) {
+		let indexs = [];
+		for (let i = 0; i < this.length; i++) {
+			if (val == this[i]) { indexs.push(i); }
+		} return indexs;
 	}
 };
 Object.assign(Array.prototype, arrayFunctions);

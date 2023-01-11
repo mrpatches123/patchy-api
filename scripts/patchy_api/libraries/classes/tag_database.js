@@ -2,7 +2,7 @@
 import { content, obfuscate255, deobfuscate255 } from '../utilities.js';
 import { Database } from './database.js';
 import global from './global.js';
-import eventBuilder from './events.js';
+import eventBuilder from './events/export_instance.js';
 import { Player, world } from '@minecraft/server';
 import time from './time.js';
 const tagLength = 'tagDB:'.length;

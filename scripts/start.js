@@ -73,7 +73,6 @@ function startwodjopwpwdjwwpodjdwo() {
 }
 startwodjopwpwdjwwpodjdwo();
 
-
 // const object = { help: 8, heloo: 9, hejkekj: 8 };
 // Object.entries(object).forEach(([key, value]) => {
 // 	console.warn(JSON.stringify({ [key]: value }));

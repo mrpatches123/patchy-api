@@ -1,5 +1,5 @@
 import { Location, BlockLocation, Block, Vector3, Dimension, XYRotation, Player, MinecraftBlockTypes, Vector } from '@minecraft/server';
-import { content, randomCoordsOutsideCircle } from '../utilities';
+import { content, randomCoordsOutsideCircle } from '../utilities.js';
 const unsafeBlocks = [
 	MinecraftBlockTypes.lava.id,
 	MinecraftBlockTypes.flowingLava.id,
@@ -15,12 +15,10 @@ const unsafeBlocks = [
 	MinecraftBlockTypes.flowingWater.id,
 	MinecraftBlockTypes.soulSand.id,
 	MinecraftBlockTypes.soulSoil.id
-
 ];
 content.warn({ unsafeBlocks });
 class TeleportBuilder {
 	constructor() {
-
 	}
 	/**
 	 * @typedef {Object} RandomOptions

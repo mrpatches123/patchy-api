@@ -21,10 +21,10 @@
  * if key in world.events then 
  */
 import { world, Entity, system, EntityEventOptions, BeforeChatEvent, BeforeDataDrivenEntityTriggerEvent, BeforeExplosionEvent, BeforeItemDefinitionTriggeredEvent, BeforeItemUseEvent, BeforeItemUseOnEvent, BeforePistonActivateEvent, BlockBreakEvent, BlockExplodeEvent, BlockPlaceEvent, ButtonPushEvent, ChatEvent, DataDrivenEntityTriggerEvent, EffectAddEvent, EntityCreateEvent, EntityHitEvent, EntityHurtEvent, ExplosionEvent, ItemCompleteChargeEvent, ItemDefinitionTriggeredEvent, ItemReleaseChargeEvent, ItemStartChargeEvent, ItemStartUseOnEvent, ItemStopChargeEvent, ItemStopUseOnEvent, ItemUseEvent, ItemUseOnEvent, LeverActionEvent, PistonActivateEvent, PlayerJoinEvent, PlayerLeaveEvent, ProjectileHitEvent, TickEvent, WeatherChangeEvent, WorldInitializeEvent, BeforeWatchdogTerminateEvent, EntityDamageCause, Block } from '@minecraft/server';
-import { content, native } from '../utilities.js';
-import formBuilder from './form.js';
-import time from './time.js';
-import errorLogger from './error.js';
+import { content, native } from '../../utilities.js';
+import time from '../time.js';
+import { setProptotype } from '../player/class.js';
+import { CustomEvent } from '../custom_event/class.js';
 function objectEquals(source, object) {
 	//// console.log(keys(this).equals(keys(object)))
 	if (!(source instanceof Object)) return false;
@@ -68,128 +68,41 @@ function arrayClone(array) {
 	}
 	return newArray;
 }
-/**
- * @typedef {Object} ObjectEventSubscribe
- * @property {(arg: CallbackAddtions extends BeforeChatEvent) => {}} beforeChat
- * @property {(arg: BeforeDataDrivenEntityTriggerEvent) => {}} beforeDataDrivenEntityTriggerEvent
- * @property {(arg: BeforeExplosionEvent) => {}} beforeExplosion
- * @property {(arg: BeforeItemDefinitionTriggeredEvent) => {}} beforeItemDefinitionEvent
- * @property {(arg: BeforeItemUseEvent) => {}} beforeItemUse
- * @property {(arg: BeforeItemUseOnEvent) => {}} beforeItemUseOn
- * @property {(arg: BeforePistonActivateEvent) => {}} beforePistonActivate
- * @property {(arg: BeforeWatchdogTerminateEvent) => {}} beforeWatchdogTerminate
- * @property {(arg: BlockBreakEvent) => {}} blockBreak
- * @property {(arg: BlockExplodeEvent) => {}} blockExplode
- * @property {(arg: BlockPlaceEvent) => {}} blockPlace
- * @property {(arg: ButtonPushEvent) => {}} buttonPush
- * @property {(arg: ChatEvent) => {}} chat
- * @property {(arg: DataDrivenEntityTriggerEvent) => {}} dataDrivenEntityTriggerEvent
- * @property {(arg: EffectAddEvent) => {}} effectAdd
- * @property {(arg: EntityCreateEvent) => {}} entityCreate
- * @property {(arg: EntityHitEvent) => {}} entityHit
- * @property {(arg: EntityHurtEvent) => {}} entityHurt
- * @property {(arg: ExplosionEvent) => {}} explosion
- * @property {(arg: ItemCompleteChargeEvent) => {}} itemCompleteCharge
- * @property {(arg: ItemDefinitionTriggeredEvent) => {}} itemDefinitionEvent
- * @property {(arg: ItemReleaseChargeEvent) => {}} itemReleaseCharge
- * @property {(arg: ItemStartChargeEvent) => {}} itemStartCharge
- * @property {(arg: ItemStartUseOnEvent) => {}} itemStartUseOn
- * @property {(arg: ItemStopChargeEvent) => {}} itemStopCharge
- * @property {(arg: ItemStopUseOnEvent) => {}} itemStopUseOn
- * @property {(arg: ItemUseEvent) => {}} itemUse
- * @property {(arg: ItemUseOnEvent) => {}} itemUseOn
- * @property {(arg: LeverActionEvent) => {}} leverActivate
- * @property {(arg: PistonActivateEvent) => {}} pistonActivate
- * @property {(arg: PlayerJoinEvent) => {}} playerJoin
- * @property {(arg: PlayerLeaveEvent) => {}} playerLeave
- * @property {(arg: ProjectileHitEvent) => {}} projectileHit
- * @property {(arg: TickEvent) => {}} tick
- * @property {(arg: WeatherChangeEvent) => {}} weatherChange
- * @property {(arg: WorldInitializeEvent) => {}} worldInitialize
- * @property {(arg: TickEvent) => {}} tickAfterLoad
- * @property {(arg: PlayerJoinEvent) => {}} playerJoined
- * @property {(arg: EntityHitEvent) => {}} playerHit
- * @property {(arg: EntityHurtEvent) => {}} playerHurt
- * @property {(arg: { killer: Entity, player: Player, damage: Number, cause:  EntityDamageCause, projectile: Entity }) => {}} playerDeath
- * @property {(arg: {playerId: String, playerName: String}) => {}} playerLeft
- * @property {(arg: {block: Block, player: Player}) => {}} stepOnBlock
- * @property {(arg: { player: Player }) => { }} playerSpawned
- * @property {(arg: { id: String, key: String, target: String, type: String, value: any }) => {}} requestAdded
- * @property {() => {}} worldLoad
-*/
-;
-
 
 /**
- * @typedef {Object} ObjectEventAddSubscription
- * @property {{function:(arg: BeforeChatEvent) => {}, forceNative: Boolean}} beforeChat
- * @property {{function:(arg: BeforeDataDrivenEntityTriggerEvent) => {}, entityOptions: Boolean, forceNative: Boolean}} beforeDataDrivenEntityTriggerEvent
- * @property {{function: (arg: BeforeExplosionEvent) => {}, forceNative: Boolean}} beforeExplosion
- * @property {{function: (arg: BeforeWatchdogTerminateEvent) => {}, forceNative: Boolean}} beforeWatchdogTerminate
- * @property {{function: (arg: BeforeItemDefinitionTriggeredEvent) => {}, forceNative: Boolean}} beforeItemDefinitionEvent
- * @property {{function: (arg: BeforeItemUseEvent) => {}, forceNative: Boolean}} beforeItemUse
- * @property {{function: (arg: BeforeItemUseOnEvent) => {}, forceNative: Boolean}} beforeItemUseOn
- * @property {{function: (arg: BeforePistonActivateEvent) => {}, forceNative: Boolean}} beforePistonActivate
- * @property {{function: (arg: BlockBreakEvent) => {}, forceNative: Boolean}} blockBreak
- * @property {{function: (arg: BlockExplodeEvent) => {}, forceNative: Boolean}} blockExplode
- * @property {{function: (arg: BlockPlaceEvent) => {}, forceNative: Boolean}} blockPlace
- * @property {{function: (arg: ButtonPushEvent) => {}, forceNative: Boolean}} buttonPush
- * @property {{function: (arg: ChatEvent) => {}, forceNative: Boolean}} chat
- * @property {{function: (arg: DataDrivenEntityTriggerEvent) => {}, entityOptions: Boolean, forceNative: Boolean}} dataDrivenEntityTriggerEvent
- * @property {{function: (arg: EffectAddEvent) => {}, entityOptions: Boolean, forceNative: Boolean}} effectAdd
- * @property {{function: (arg: EntityCreateEvent) => {}, entityOptions: Boolean, forceNative: Boolean}} entityCreate
- * @property {{function: (arg: EntityHitEvent) => {}, entityOptions: Boolean, forceNative: Boolean}} entityHit
- * @property {{function: (arg: EntityHurtEvent) => {}, entityOptions: Boolean, forceNative: Boolean}} entityHurt
- * @property {{function: (arg: ExplosionEvent) => {}, forceNative: Boolean}} explosion
- * @property {{function: (arg: ItemCompleteChargeEvent) => {}, forceNative: Boolean}} itemCompleteCharge
- * @property {{function: (arg: ItemDefinitionTriggeredEvent) => {}, forceNative: Boolean}} itemDefinitionEvent
- * @property {{function: (arg: ItemReleaseChargeEvent) => {}, forceNative: Boolean}} itemReleaseCharge
- * @property {{function: (arg: ItemStartChargeEvent) => {}, forceNative: Boolean}} itemStartCharge
- * @property {{function: (arg: ItemStartUseOnEvent) => {}, forceNative: Boolean}} itemStartUseOn
- * @property {{function: (arg: ItemStopChargeEvent) => {}, forceNative: Boolean}} itemStopCharge
- * @property {{function: (arg: ItemStopUseOnEvent) => {}, forceNative: Boolean}} itemStopUseOn
- * @property {{function: (arg: ItemUseEvent) => {}, forceNative: Boolean}} itemUse
- * @property {{function: (arg: ItemUseOnEvent) => {}, forceNative: Boolean}} itemUseOn
- * @property {{function: (arg: LeverActionEvent) => {}, forceNative: Boolean}} leverActivate
- * @property {{function: (arg: PistonActivateEvent) => {}, forceNative: Boolean}} pistonActivate
- * @property {{function: (arg: PlayerJoinEvent) => {}, forceNative: Boolean}} playerJoin
- * @property {{function: (arg: PlayerLeaveEvent) => {}, forceNative: Boolean}} playerLeave
- * @property {{function: (arg: ProjectileHitEvent) => {}, entityOptions: Boolean,  forceNative: Boolean}} projectileHit
- * @property {{function: (arg: TickEvent) => {}, forceNative: Boolean}} tick
- * @property {{function: (arg: WeatherChangeEvent) => {}, forceNative: Boolean}} weatherChange
- * @property {{function: (arg: WorldInitializeEvent) => {}, forceNative: Boolean}} worldInitialize
- * @property {{function: (arg: TickEvent) => {}, forceNative: Boolean}} tickAfterLoad
- * @property {{function: (arg: PlayerJoinEvent) => {}, forceNative: Boolean}} playerJoined
- * @property {{function: (arg: EntityHitEvent) => {}, forceNative: Boolean}} playerHit
- * @property {{function: (arg: EntityHurtEvent) => {}, forceNative: Boolean}} playerHurt
- * @property {{function: (arg: { killer: Entity, player: Player, damage: Number, cause:  EntityDamageCause, projectile: Entity }) => {}, forceNative: Boolean}} playerDeath
- * @property {{function: (arg: {playerId: String, playerName: String}) => {}, forceNative: Boolean}} playerLeft
- * @property {{function: (arg: { id: String, key: String, target: String, type: String, value: any }) => {}, forceNative: Boolean}} requestAdded
- * @property {{function: (arg: {block: Block, player: Player}) => {}, forceNative: Boolean}} stepOnBlock
- * @property {{function: (arg: {player: Player}) => {}, forceNative: Boolean}} playerSpawned
- * @property {{function: () => {}, forceNative: Boolean}} worldLoad
-*/
-
-
+ * @type {{[key: string]: {cancellable?: boolean,entityEvent?: boolean, playerKey?: 'sender' | 'source' | 'player' | 'entity', playerOnly?: boolean, custom?: boolean}}}
+ */
 const eventTypeProperties = {
 	beforeChat: {
-		cancellable: true
+		cancellable: true,
+		playerKey: 'sender',
+		playerOnly: true
 	},
 	beforeDataDrivenEntityTriggerEvent: {
 		entityEvent: true,
-		cancellable: true
+		cancellable: true,
+		playerKey: 'entity',
+		playerOnly: false
 	},
 	beforeExplosion: {
-		cancellable: true
+		cancellable: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	beforeItemDefinitionEvent: {
-		cancellable: true
+		cancellable: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	beforeItemUse: {
-		cancellable: true
+		cancellable: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	beforeItemUseOn: {
-		cancellable: true
+		cancellable: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	beforePistonActivate: {
 		cancellable: true
@@ -198,76 +111,105 @@ const eventTypeProperties = {
 		cancellable: true
 	},
 	blockBreak: {
-
+		playerKey: 'player',
+		playerOnly: true
 	},
 	blockExplode: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	blockPlace: {
-
+		playerKey: 'player',
+		playerOnly: true
 	},
 	buttonPush: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	chat: {
-
+		playerKey: 'sender',
+		playerOnly: true
 	},
 	dataDrivenEntityTriggerEvent: {
-		entityEvent: true
+		entityEvent: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	effectAdd: {
-		entityEvent: true
+		entityEvent: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	entityCreate: {
-		entityEvent: true
+		entityEvent: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	entityHit: {
-		entityEvent: true
+		entityEvent: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	entityHurt: {
-		entityEvent: true
+		entityEvent: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	explosion: {
-		entityEvent: true
+		entityEvent: true,
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemCompleteCharge: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemDefinitionEvent: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemReleaseCharge: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemStartCharge: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemStartUseOn: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemStopCharge: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemStopUseOn: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemUse: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	itemUseOn: {
-
+		playerKey: 'source',
+		playerOnly: false
 	},
 	leverActivate: {
-
+		playerKey: 'player',
+		playerOnly: true
 	},
 	pistonActivate: {
 
 	},
 	playerJoin: {
-
+		playerKey: 'player',
+		playerOnly: true
 	},
 	playerLeave: {
-
+		playerKey: 'player',
+		playerOnly: true
 	},
 	projectileHit: {
 		entityEvent: true
@@ -285,29 +227,41 @@ const eventTypeProperties = {
 		custom: true
 	},
 	playerJoined: {
-		custom: true
+		custom: true,
+		playerKey: 'player',
+		playerOnly: true
 	},
 	playerHit: {
-		custom: true
+		custom: true,
+		playerKey: 'player',
+		playerOnly: true
 	},
 	playerHurt: {
-		custom: true
+		custom: true,
+		playerKey: 'player',
+		playerOnly: true
 	},
 	playerDeath: {
-		custom: true
+		custom: true,
+		playerKey: 'player',
+		playerOnly: true
 	},
 	playerSpawned: {
-		custom: true
+		custom: true,
+		playerKey: 'player',
+		playerOnly: true
 	},
 	playerLeft: {
-		custom: true
+		custom: true,
+		playerKey: 'player',
+		playerOnly: true
 	},
 	requestAdded: {
 		custom: true
 	},
 	worldLoad: {
 		custom: true
-	},
+	}
 
 };
 const worldSystemEvents = {
@@ -315,7 +269,7 @@ const worldSystemEvents = {
 	system
 };
 
-class EventBuilder {
+export class EventBuilder {
 	constructor() {
 		this.subscriptions = {};
 		this.registry = {};
@@ -323,20 +277,12 @@ class EventBuilder {
 		content.warn(`eventBuilder - ${this.classId}`);
 	}
 	queueNextTick(callback, ticksToSkip = 0) {
-		const queueCallback = (event) => {
-			if (ticksToSkip-- <= 0) return callback(event);
+		const queueCallback = () => {
+			if (ticksToSkip-- <= 0) return callback();
 			system.run(queueCallback);
 		};
 		system.run(queueCallback);
 	};
-
-	/**
-	 * @typedef {Object} EventAddProperties
-	 * @property {ObjectEventAddSubscription} subscription 
-	 */
-	/**
-	 * @param {Object.<string, EventAddProperties>} eventAddObject
-	 */
 	register(eventAddObject) {
 		Object.entries(eventAddObject).forEach(([newEventKey, properties]) => {
 			if (!(properties instanceof Object)) throw new Error(`key: ${newEventKey}, does have a value with the type: Object!`);
@@ -365,15 +311,11 @@ class EventBuilder {
 		});
 
 	}
-	/**
-	 * @method subscribe
-	 * @param {String} key 
-	 * @param {ObjectEventSubscribe} subscribeObject 
-	 */
 	subscribe(key, subscribeObject) {
 		if (typeof key !== "string") throw new Error(`key: ${key}, at params[0] is not of type: String!`);
 		if (!(subscribeObject instanceof Object)) throw new Error(`subscribeObject at params[0] is not of type: Object!`);
 		//Object.entries(subscribeObject).forEach(([eventKey, callback])
+		// content.warn({ ObjectQ: subscribeObject instanceof Object, proto: Object.getPrototypeOf(subscribeObject) });
 		subscribeObject.forEach((eventKey, callback) => {
 			// content.warn({ key, eventKey, call: callback instanceof Function });
 			if (typeof eventKey !== "string") throw new Error(`key: ${eventKey}, in params[1] is not of type: String!`);
@@ -408,32 +350,30 @@ class EventBuilder {
 	};
 	suppress(key, eventKeys) {
 		if (typeof key !== 'string') throw new Error(`key: ${key}, in params[0] is not of type: String!`);
+		const eventKeysDefined = Boolean(eventKeys);
 		if (!eventKeys) eventKeys = Object.keys(this.subscriptions);
 		if (typeof eventKeys !== 'string' && !(eventKeys instanceof Array) && eventKeys) throw new Error(`eventKeys: in params[1] is not of type: String or Array!`);
 		if (!(eventKeys instanceof Array)) eventKeys = [eventKeys], string = true;
 		eventKeys.forEach((eventKey, i) => {
 			if (typeof eventKey !== 'string') throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] is not of type: String!`);
 			if (!this.subscriptions.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] has no keys subscribed`);
-			if (!this.subscriptions[eventKey].hasOwnProperty(key)) { if (eventKeys) throw new Error(`key: ${eventKey}, in params[0] has not been subscribed`); else return; }
+			if (!this.subscriptions[eventKey].hasOwnProperty(key)) { if (eventKeysDefined) throw new Error(`key: ${eventKey}, in params[0] has not been subscribed`); else return; }
 			this.subscriptions[eventKey][key].suppressed = true;
 		});
 	}
 	unsuppress(key, eventKeys) {
 		if (typeof key !== 'string') throw new Error(`key: ${key}, in params[0] is not of type: String!`);
+		const eventKeysDefined = Boolean(eventKeys);
 		if (!eventKeys) eventKeys = Object.keys(this.subscriptions);
 		if (typeof eventKeys !== 'string' && !(eventKeys instanceof Array) && eventKeys) throw new Error(`eventKeys: in params[1] is not of type: String or Array!`);
 		if (!(eventKeys instanceof Array)) eventKeys = [eventKeys], string = true;
 		eventKeys.forEach((eventKey, i) => {
 			if (typeof eventKey !== 'string') throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] is not of type: String!`);
 			if (!this.subscriptions.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] has no keys subscribed`);
-			if (!this.subscriptions[eventKey].hasOwnProperty(key)) { if (eventKeys) throw new Error(`key: ${eventKey}, in params[0] has not been subscribed`); else return; }
+			if (!this.subscriptions[eventKey].hasOwnProperty(key)) { if (eventKeysDefined) throw new Error(`key: ${eventKey}, in params[0] has not been subscribed`); else return; }
 			this.subscriptions[eventKey][key].suppressed = false;
 		});
 	}
-	/**
-	 * @param {String} key 
-	 * @param {String[] | String} eventKeys optional?
-	 */
 	unsubscribe(key, eventKeys) {
 		let string = false;
 		const all = !eventKeys;
@@ -481,30 +421,59 @@ class EventBuilder {
 		this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key] = { suppessed: false, callback, native: true, oldEventKey };
 		this.subscriptions[entityOptionsKey ?? oldEventKey].subscriptions++;
 		let subscribedEventFunction;
+
 		if (eventTypeProperties[oldEventKey].cancellable) {
 			subscribedEventFunction = (event) => {
-				if (oldEventKey === 'playerJoin') content.warn('playerJoin');
+				if (oldEventKey === 'beforeItemUseOn') content.warn({ key });
 				let isCanceled = false;
 				time.start(`Events*API*${entityOptionsKey ?? oldEventKey}`);
+				const { playerKey, playerOnly } = eventTypeProperties[oldEventKey];
+				let eventClone = {};
+				if (playerKey) {
+					const player = event[playerKey];
+					const prototype = Object.getPrototypeOf({});
+					for (const key in event) {
+						if (prototype.hasOwnProperty(key)) continue;
+						if (key === playerKey) { eventClone[key] = setProptotype(player); continue; }
+						eventClone[key] = event[key];
+					}
+				}
 				Object.entries(this.subscriptions[entityOptionsKey ?? oldEventKey].keys).forEach(([key, { suppessed, callback }]) => {
 					if (!suppessed) {
 						time.start(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
-						isCanceled = callback(event);
+						callback(eventClone);
+						if (eventClone.cancel) {
+							eventClone.cancel = false;
+							isCanceled = true;
+						}
 						this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
 					}
 				});
 				this.subscriptions[oldEventKey].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}`);
+				content.warn({ isCanceled });
 				if (isCanceled) event.cancel = true;
 			};
 		} else {
 			subscribedEventFunction = (event) => {
-
+				if (oldEventKey === 'beforeItemUseOn') content.warn('ehy');
 				time.start(`Events*API*${entityOptionsKey ?? oldEventKey}`);
+				const { playerKey, playerOnly } = eventTypeProperties[oldEventKey];
+				let eventClone = {};
+				if (playerKey) {
+					const player = event[playerKey];
+					const prototype = Object.getPrototypeOf({});
+					for (const key in event) {
+						if (prototype.hasOwnProperty(key)) continue;
+						if (key === playerKey) { eventClone[key] = setProptotype(player); continue; }
+						eventClone[key] = event[key];
+					}
+				};
+
 				Object.entries(this.subscriptions[entityOptionsKey ?? oldEventKey].keys).forEach(([key, { suppessed, callback }]) => {
 					if (!suppessed) {
 						time.start(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
 						// if (!(callback instanceof Function)) content.warn(oldEventKey, key);
-						callback(event);
+						callback(eventClone);
 						this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
 					}
 				});
@@ -517,76 +486,16 @@ class EventBuilder {
 		else worldSystemEvents[worldSystem].events[oldEventKey].subscribe(subscribedEventFunction);
 
 	}
-	/**
-	 * @method getEvent for adding custom events and wraps performance monitoring and event key suppression
-	 * @param {String} eventKey 
-	 * @returns {CustomEvent}
-	 */
 	getEvent(eventKey) {
 		if (!this.registry.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, in params[0] is not a custom, system, or world event!`);
 		return new CustomEvent(eventKey);
 	}
 
 }
-const eventBuilder = new EventBuilder();
 
-class CustomEvent {
-	constructor(eventKey) {
-		this.eventKey = eventKey;
-		this.subscriptions = eventBuilder.subscriptions[eventKey];
-	};
-	// [Symbol.iterator]() {
-	// 	let index = 0;
-	// 	const subscriptionKeys = Object.keys(this.subscriptions);
-	// 	time.start(`Events*API*${this.eventKey}`);
-	// 	const data = this.playerArray;
-	// 	return {
-	// 		next: () => {
-	// 			const key = subscriptionKeys[index];
-	// 			const { suppessed, callback: callbackForKey } = this.subscriptions[key];
 
-	// 			try {
-	// 				if (suppessed) return;
-	// 				time.start(`Events*API*${this.eventKey}*${key}`);
-	// 				if (callbackForKey instanceof Function) 
-	// 				(...params) => {
-	// 					callbackForKey(...params);
-	// 					this.subscriptions.keys[key].time = time.end(`Events*API*${this.eventKey}*${key}`);
-	// 				};
-
-	// 			} catch (error) {
-	// 				errorLogger.log(error, error.stack, { event: this.eventKey, key });
-	// 			}
-	// 			({ value: subscriptionKeys[index], done: !(index in data) });
-	// 		}
-	// 	};
-	// };
-	/**
-	 * @method iterate
-	 * @param {any} eventResponse optional?
-	 * @param {(key:string, eventResponse: any, i: Number) => {}} callback optional? 
-	 */
-	iterate(eventResponse, callback) {
-		time.start(`Events*API*${this.eventKey}`);
-		// if (this.eventKey === 'tickAfterLoad') content.chatFormat(this.subscriptions);
-		Object.entries(this.subscriptions.keys).forEach(([key, { suppessed, callback: callbackForKey }], i) => {
-			try {
-				if (suppessed) return;
-				time.start(`Events*API*${this.eventKey}*${key}`);
-				// if (this.eventKey === 'tickAfterLoad' && key === 'position*API') content.warn({ key, bool2: callback instanceof Function, bool: callbackForKey instanceof Function });
-				if (callback instanceof Function) callback(key, callbackForKey, i);
-				else callbackForKey(eventResponse);
-				this.subscriptions.keys[key].time = time.end(`Events*API*${this.eventKey}*${key}`);
-			} catch (error) {
-				errorLogger.log(error, error.stack, { event: this.eventKey, key });
-			}
-		});
-		this.subscriptions.time = time.end(`Events*API*${this.eventKey}`);
-	};
-
-}
 // world.events.beforeChat.subscribe(() => {
 // 	world.say(JSON.stringify(eventBuilder, (key, value) => (value instanceof Function) ? '() => {}' : value, 4));
 // });
-export default eventBuilder
+
 

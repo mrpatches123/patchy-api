@@ -3,7 +3,7 @@
 import { content, native } from '../utilities.js';
 import global from './global.js';
 import databases from './database.js';
-import eventBuilder from './events.js';
+import eventBuilder from './events/export_instance.js';
 
 class RequestBuilder {
 	constructor() {

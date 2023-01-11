@@ -21,5 +21,8 @@ import './plugins/example.js';
 import './plugins/request_watch_test.js';
 import './plugins/player_change.js';
 import './plugins/test.js';
-import './plugins/anti_give_test.js'
+// import './plugins/anti_give_test.js'
 //import this file in scripts/patchy_api/plugins/module_import.js
+
+//plots
+import './plots/builder_battle.js';

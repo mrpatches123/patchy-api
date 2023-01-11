@@ -1,6 +1,6 @@
-import eventBuilder from "../libraries/classes/events.js";
+import eventBuilder from "../libraries/classes/events/export_instance.js";
 import global from '../libraries/classes/global.js';
-import { EntityEventOptions, Player, world, EntityHurtEvent, system } from '@minecraft/server';
+import { EntityEventOptions, world, EntityHurtEvent, system } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
 import errorLogger from "../libraries/classes/error.js";
 import time from '../libraries/classes/time.js';
@@ -105,7 +105,8 @@ eventBuilder.register({
 		subscription: {
 			entityHit: {
 				function: event => {
-					eventBuilder.getEvent('playerHit').iterate(event);
+					const { entity, hitBlock, hitEntity } = event;
+					eventBuilder.getEvent('playerHit').iterate({ player: entity, hitBlock, hitEntity });
 				},
 				options: { entityTypes: ["minecraft:player"] }
 			}
@@ -115,7 +116,8 @@ eventBuilder.register({
 		subscription: {
 			entityHurt: {
 				function: event => {
-					eventBuilder.getEvent('playerHurt').iterate(event);
+					const { hurtEntity, damagingEntity, cause, damage, projectile } = event;
+					eventBuilder.getEvent('playerHurt').iterate({ player: hurtEntity, damagingEntity, cause, damage, projectile });
 				},
 				options: { entityTypes: ["minecraft:player"] }
 			}

@@ -7,9 +7,8 @@ import databases from '../../patchy_api/libraries/classes/database.js';
 import { Player } from '@minecraft/server';
 import { content, andArray, overworld, staff } from '../../patchy_api/libraries/utilities.js';
 import { world, BlockLocation } from '@minecraft/server';
-import eventBuilder from '../../patchy_api/libraries/classes/events.js';
+import eventBuilder from '../../patchy_api/libraries/classes/events/export_instance.js';
 import formBuilder from '../../patchy_api/libraries/classes/form.js';
-import toDo from '../../patchy_api/libraries/classes/toDo.js';
 const { floor } = Math;
 const { isInteger } = Number;
 const prefix = '$';
@@ -27,15 +26,7 @@ commandBuilder.register('inventory', {
         }
     },
     callback: (sender, args) => {
-        sender.tellraw(`§l§f[§9PAC§f] §aMove your camera and close chat to open the Menu!`);
-        let VVector = sender.viewVector;
-        toDo.waitFor((e) => {
-            console.warn('Now');
-            formBuilder.show(sender, 'showInv');
-
-        }, (e) => {
-            return !e.sender.viewVector.equals(e.viewVector);
-        }, { sender: sender, viewVector: VVector });
+        formBuilder.showAwait(sender, 'showInv');
     }
 });
 eventBuilder.subscribe('invSeeCheck', {

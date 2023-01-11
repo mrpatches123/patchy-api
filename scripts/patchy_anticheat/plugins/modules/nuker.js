@@ -1,21 +1,14 @@
 
 import { world, EntityQueryOptions, MinecraftBlockTypes } from '@minecraft/server';
-import { overworld, content, staff, native } from "../../../patchy_api/libraries/utilities.js";
-import databases from '../../../patchy_api/libraries/classes/database.js';
 import global from '../../../patchy_api/libraries/classes/global.js';
-import eventBuilder from '../../../patchy_api/libraries/classes/events.js';
 import discipline from '../../libraries/discipline.js';
-
+import { databases, eventBuilder, players, overworld, content, staff, native } from '../../../patchy_api/modules.js';
 eventBuilder.subscribe('nuker', {
     tickAfterLoad: ({ deltaTime }) => {
-        let anticheat = databases.get('anticheat') ?? databases.add('anticheat');
-        const { toggles } = global;
         const allowedBlockBreaks = (deltaTime / 0.05).ceil() + 2;
-        global.nonStaffPlayers.forEach((id, player) => {
-            const name = player.getName();
-            const { blockBreaks = [] } = global.playerMap[name] ?? {};
-            // content.warn({ blockBreaks: blockBreaks.length, allowedBlockBreaks });
-            const { playerId } = global.scoreObject[name] ?? {};
+        players.get(/*{ scoreOptions: [{ exclude: true, maxScore: 1, minScore: 1, objective: 'staff' }] }*/).iterate(player => {
+            const { memory } = player;
+            const { blockBreaks = [] } = memory;
             if (blockBreaks.length > allowedBlockBreaks) {
                 // content.warn({ breaks: blockBreaks.map(({ block: { location } }) => native.stringify(location)), Range: blockBreaks.map(({ block: { location } }) => location).getRange() });
                 let [{ x: nx, z: nz }, { x: px, z: pz }] = blockBreaks.map(({ block: { location } }) => location).getRange();
@@ -35,13 +28,14 @@ eventBuilder.subscribe('nuker', {
                 });
                 discipline.check(player, `§4failed §1Nuker §fwith §1${blockBreaks.length} §4blocks broke §fin a tickAfterLoad`, 'nuker');
             };
-            global.playerMap[name].blockBreaks = [];
+            memory.blockBreaks = [];
         });
     },
     blockBreak: ({ block, brokenBlockPermutation, dimension, player }) => {
-        const { name } = player;
-        if (!global.scoreObject[name].staff) {
-            global.playerMap[name].blockBreaks.push({ block, brokenBlockPermutation, dimension, player });
+        const { name, memory, scores } = player;
+        const { staff } = scores;
+        if (!staff) {
+            memory.blockBreaks.push({ block, brokenBlockPermutation, dimension, player });
         }
     }
 });

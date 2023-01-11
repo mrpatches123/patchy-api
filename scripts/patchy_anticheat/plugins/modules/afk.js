@@ -4,7 +4,7 @@ import { Location } from '@minecraft/server';
 
 import global from '../../../patchy_api/libraries/classes/global.js';
 import { content } from '../../../patchy_api/libraries/utilities.js';
-import eventBuilder from '../../../patchy_api/libraries/classes/events.js';
+import eventBuilder from '../../../patchy_api/libraries/classes/events/export_instance.js';
 // Array.prototype.accumulate = function (callback, initialValue, ignore = true) {
 //     if (typeof callback == "function") {
 //         this.forEach((value, i) => {

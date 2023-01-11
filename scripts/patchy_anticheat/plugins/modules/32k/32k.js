@@ -3,7 +3,7 @@ import { overworld, andArray, toProperCase } from "../../../../patchy_api/librar
 import databases from '../../../../patchy_api/libraries/classes/database.js';
 import global from '../../../../patchy_api/libraries/classes/global.js';
 import { content, native } from '../../../../patchy_api/libraries/utilities.js';
-import eventBuilder from '../../../../patchy_api/libraries/classes/events.js';
+import eventBuilder from '../../../../patchy_api/libraries/classes/events/export_instance.js';
 import { exemptedItems, maxEnchantmentsPerItems } from './exempted_items.js';
 import { MinecraftEnchantmentTypes, EnchantmentList } from '@minecraft/server';
 eventBuilder.subscribe('use32k', {

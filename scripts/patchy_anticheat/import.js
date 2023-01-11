@@ -16,6 +16,7 @@ import './plugins/modules/crasher.js';
 import './plugins/modules/toggles.js';
 import './plugins/modules/32k/32k.js';
 import './plugins/modules/kick.js';
+import './plugins/modules/nbt/nbt.js';
 
 //commands
 import './commands/reset.js';

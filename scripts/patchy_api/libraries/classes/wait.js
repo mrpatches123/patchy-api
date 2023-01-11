@@ -1,6 +1,6 @@
 import { world } from "@minecraft/server";
 import { content, native } from "../utilities.js";
-import eventBuilder from "./events.js";
+import eventBuilder from "./events/export_instance.js";
 
 class Wait {
 	constructor() {

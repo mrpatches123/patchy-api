@@ -1,6 +1,5 @@
 import { BlockLocation, BlockType, Vector3, BlockPermutation, system, BlockAreaSize } from "@minecraft/server";
-import { content, overworld, sort3DVectors } from "../utilities";
-import errorLogger from "./error";
+import { content, overworld, sort3DVectors } from "../utilities.js";
 /**
  * @typedef {Object} BlockOptions
  * @property {BlockType} type
@@ -22,7 +21,10 @@ function isVector3(target) {
 }
 class Fill {
 	constructor() {
-
+		this.queue = [];
+	}
+	queuefill(fillOptions) {
+		getGenerator();
 	}
 	/**
 	 * @method check
@@ -30,7 +32,7 @@ class Fill {
 	 * @private
 	 */
 	check(fillOptions) {
-		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 8191 } = fillOptions;
+		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 512 } = fillOptions;
 		if (!(fillOptions instanceof Object)) throw new Error('fillOptions at params[0] is not of type: Object!');
 
 		if (!isVector3(location1)) throw new Error('location1 in fillOptions at params[0] is not of type: Vector3!');
@@ -60,7 +62,7 @@ class Fill {
 	 * @private
 	 */
 	getGenerator(fillOptions, type) {
-		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 8191 } = fillOptions;
+		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048 } = fillOptions;
 		const { x: x1, y: y1, z: z1 } = location1, { x: x2, y: y2, z: z2 } = location2;
 		const length = x2 - x1 + 1, height = y2 - y1 + 1, width = z2 - z1 + 1;
 		const area = width * length;

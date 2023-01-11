@@ -3,7 +3,7 @@
 import { Player, PlayerJoinEvent, world } from "@minecraft/server";
 import { content, native, parseList, server } from '../utilities.js';
 // import time from "./time.js";
-import eventBuilder from "./events.js";
+import eventBuilder from "./events/export_instance.js";
 
 
 class PlayersScoreboard {

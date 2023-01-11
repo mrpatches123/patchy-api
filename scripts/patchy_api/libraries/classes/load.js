@@ -1,5 +1,6 @@
 import { world } from "@minecraft/server";
-
+import { Player } from './player/class.js';
+import global from "./global.js";
 const content = {
 	warn(...messages) {
 		console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
@@ -9,6 +10,7 @@ const content = {
 class Loads {
 	constructor() {
 		this.loads = {};
+		this.loaded = false;
 		world.events.playerJoin.subscribe(({ player, playerId }) => {
 			if (!player) player = world.getAllPlayers().find(({ id }) => id === playerId);
 
@@ -28,6 +30,9 @@ class Loads {
 			leftIds.forEach(id => delete this.loads[id]);
 		});
 	}
+	/**
+	 * @param {Player} player 
+	 */
 	async awaitLoad(player) {
 		try {
 
@@ -38,10 +43,11 @@ class Loads {
 			while (true) {
 				let bool = true;
 				await player.runCommandAsync("testfor @s").catch(() => bool = false);
-				content.warn({ name, bool, sec: ((new Date()).getTime() - date) / 1000 });
 				if (bool) break;
 			}
-			this.loads[id] = player;
+			this.loaded = true;
+			global.refreshBasePlayerIterator = true;
+			this.loads[id] = new Player(player);
 		} catch (error) {
 			console.warn(error, error.stack);
 		}

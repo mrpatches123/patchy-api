@@ -1,4 +1,4 @@
-import { databases, global, eventBuilder, propertyBuilder, overworld } from '../../../patchy_api/modules.js';
+import { databases, global, eventBuilder, propertyBuilder, overworld, server, content } from '../../../patchy_api/modules.js';
 export const scoreboardsNames = {
     give: 'giveFlags',
     stack: 'stackFlags',
@@ -7,6 +7,7 @@ export const scoreboardsNames = {
     crasher: 'crasherFlags',
     nameSpoof: 'nameSpoofFlags',
     use32k: 'use32kFlags',
+    nbt: 'nbtFlags',
     kicks: 'kicks'
     //     GiveFlagsS: 0,
     // StackFlagsS: 0,
@@ -20,32 +21,28 @@ export const scoreboardsNames = {
 };
 
 function initializeServer() {
-    try { overworld.runCommandAsync('scoreboard objectives add Toggles dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add initializedpac dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add playerId dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add staff dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add gmother dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add ALLNotifications dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add Notifications dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add InvNotifications dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add boots_prot dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add leggings_prot dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add chestplate_prot dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add helmet_prot dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add RandKillId dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add dead dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add Killed dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add KillsS dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add KillsT dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add DeathsS dummy'); } catch { }
-    try { overworld.runCommandAsync('scoreboard objectives add used32k dummy'); } catch { }
+    server.objectiveAdd('Toggles');
+    server.objectiveAdd('initializedpac');
+    server.objectiveAdd('staff');
+    server.objectiveAdd('gmother');
+    server.objectiveAdd('ALLNotifications');
+    server.objectiveAdd('Notifications');
+    server.objectiveAdd('InvNotifications');
+    server.objectiveAdd('boots_prot');
+    server.objectiveAdd('leggings_prot');
+    server.objectiveAdd('chestplate_prot');
+    server.objectiveAdd('helmet_prot');
+    server.objectiveAdd('RandKillId');
+    server.objectiveAdd('dead');
+    server.objectiveAdd('Killed');
+    server.objectiveAdd('kills');
+    server.objectiveAdd('killStreak');
+    server.objectiveAdd('deaths');
+    server.objectiveAdd('used32k');
     scoreboardsNames.forEach((key, objective) => {
-        try { overworld.runCommandAsync(`scoreboard objectives add ${objective} dummy`); } catch { }
+        try { server.objectiveAdd('objective'); } catch { }
     });
-    if (!global.playerMap) {
-        global.playerMap = {};
-    }
-    let anticheat = databases.get('anticheat') ?? databases.add('anticheat');
+    databases.get('anticheat') ?? databases.add('anticheat');
     propertyBuilder.setInitialValues({
         anticheat: {
             modules: {
@@ -56,6 +53,7 @@ function initializeServer() {
                 cbe: true,
                 stacker: true,
                 itemChangeLog: true,
+                nbt: true,
                 // use32k: true,
                 crasher: true,
                 // nameSpoof: true,
@@ -64,6 +62,7 @@ function initializeServer() {
                 nameSpoof: 0,
                 give: 3,
                 stack: 3,
+                nbt: 3,
                 gamemode: 3,
                 nuker: 0,
                 cbe: 0,
@@ -77,57 +76,38 @@ function initializeServer() {
     });
     // content.warn(propertyBuilder.getObjectFromKey(anticheat));
 }
-function initializePlayer(scoreboards, player) {
-    const name = player.getName();
-    if (!global.playerMap[name]) {
-        global.playerMap[name] = {};
-    }
-    if (!global.playerMap[name].kicks) {
-        global.playerMap[name].kicks = [];
-    }
-    let { initializedpac = 0, playerId = 0 } = scoreboards ?? {};
+function initializePlayer(player) {
+    const { memory, id, scores } = player;
+    memory.kicks = [];
+    let { initializedpac = 0 } = scores;
     // content.warn({name,scoreboards})
 
     if (!initializedpac) {
         scoreboardsNames.forEach((key, objective) => {
-            player.scoreAdd(objective);
+            content.warn(objective);
+            scores[objective] = 0;
         });
-        player.scoreAdd('staff');
-        player.scoreAdd('gmother');
-        player.scoreAdd('ALLNotifications');
-        player.scoreAdd('Notifications');
-        player.scoreAdd('InvNotifications');
-        player.scoreAdd('RandKillId');
-        player.scoreAdd('dead');
-        player.scoreAdd('Killed');
-        player.scoreAdd('KillsS');
-        player.scoreAdd('KillsT');
-        player.scoreAdd('DeathsS');
-        player.scoreAdd('used32k');
-        if (!playerId) {
-            let server = databases.get('server') ?? databases.add('server');
-            let lastPlayerId = server.get('lastPlayerId') ?? 2147483647;
-            playerId = player.scoreSet('playerId', --lastPlayerId);
-            server.set('lastPlayerId', lastPlayerId);
-            databases.save('server');
-            console.warn(initialized, playerId, lastPlayerId);
-        }
-        player.scoreSet('initializedpac', 1);
+        scores.staff = 0;
+        scores.gmother = 0;
+        scores.ALLNotifications = 0;
+        scores.Notifications = 0;
+        scores.InvNotifications = 0;
+        scores.RandKillId = 0;
+        scores.dead = 0;
+        scores.Killed = 0;
+        scores.kills = 0;
+        scores.killStreak = 0;
+        scores.deaths = 0;
+        scores.used32k = 0;
+        scores.initializedpac = 1;
     }
-
-
 }
 
 eventBuilder.subscribe('initializeAC', {
-    tickAfterLoad: () => {
-        if (!global.initializeAC) {
-            initializeServer();
-            global.initializeAC = true;
-        }
-        global.players.forEach((id, player) => {
-            const name = player.getName();
-            const scoreboards = global.scoreObject[name];
-            initializePlayer(scoreboards, player);
-        });
+    worldLoad: () => {
+        initializeServer();
+    },
+    playerJoined: ({ player }) => {
+        initializePlayer(player);
     }
 });

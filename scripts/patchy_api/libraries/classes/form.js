@@ -2,7 +2,7 @@ import { world, Player, Location, Vector } from '@minecraft/server';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message } from '@minecraft/server-ui';
 import { content, native, RemovableTree, server, typeOf } from '../utilities.js';
 import wait from './wait.js';
-import eventBuilder from './events.js';
+import eventBuilder from './events/export_instance.js';
 import global from './global.js';
 import time from './time.js';
 import errorLogger from './error.js';
@@ -14,7 +14,7 @@ const responses = {
     modal: 'formValues',
     message: 'selection'
 };
-
+[];
 /**
  * @typedef {Object} ObjectForm
  * @property {Array<ModalTypes | ((player: Player, i: Number, ...extraArguments: Array<any>) => {})>} modal
