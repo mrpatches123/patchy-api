@@ -63,7 +63,17 @@ formBuilder.create('test', {
             callback: (player) => {
                 formBuilder.showConformation(player, 'Is js Cool?', (player) => player.tell('You are Cool!'), (player) => player.tell('You are lame!'));
             }
+        },
+        (player) => {
+            const { testForm } = player.scores;
+            if (testForm) {
+                return {
+                    button: {
+                        text: "hi"
+                    }
+                };
+            }
         }
+
     ]
 });
-
