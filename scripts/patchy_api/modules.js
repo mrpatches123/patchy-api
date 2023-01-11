@@ -10,6 +10,7 @@ import errorLogger from './libraries/classes/error.js';
 import formBuilder from './libraries/classes/form.js';
 import global from './libraries/classes/global.js';
 import plotBuilder, { PlotsVector3, BlockVector3 } from './libraries/classes/plot/export_instance.js';
+import { Player } from './libraries/classes/player/class.js';
 //import inventoryBuilder from './libraries/classes/inventory.js';
 import positionBuilder from './libraries/classes/position.js';
 import promptBuilder from './libraries/classes/prompt.js';
@@ -23,7 +24,7 @@ import { ModalForm } from './libraries/classes/forms_func.js';
 import preformance from './libraries/classes/preformace.js';
 import propertyBuilder from './libraries/classes/property.js';
 import fill from './libraries/classes/fill.js';
-export { PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
+export { Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
 
 
 
