@@ -41,7 +41,7 @@ export class PlotBuilder {
 			if (!(start instanceof PlotsVector3) && !(start instanceof BlockVector3)) throw new Error(`start at ruleSets[${i}] in rules at param[1] is not of type: BlockVector3 or PlotVector3  `);
 			if (count && typeof count !== 'number') throw new Error(`count at ruleSets[${i}] in rules at param[1] is not of type: number`);
 			if (!directions.includes(direction)) throw new Error(`direction, ${direction} at ruleSets[${i}] in rules at param[1] is not one of the following: ${orArray(directions)}`);
-			if (offset && !isVector3(offset)) throw new Error(`offset, at ruleSets[${i}] in rules at param[1] is not of type: Vector3)}`);
+			if (offset && !isVector3(offset)) throw new Error(`offset, at ruleSets[${i}] in rules at param[1] is not of type: {x: number, y: number, z: number})}`);
 		});
 		const generatedRuleSets = ruleSets.reduce((sumation, ruleSet, i) => {
 			const { count, start: startRuleSet, direction, size: sizeRuleSet } = ruleSet;

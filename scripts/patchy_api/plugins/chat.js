@@ -37,22 +37,21 @@ formBuilder.create('testtogglesystem', {
 });
 
 eventBuilder.subscribe('commands*API', {
-    beforeChat: ({ message, sender }) => {
-
+    beforeChat: (event) => {
+        const { message, sender } = event;
         const { name } = sender;
-        content.warn({ commandBuilderKeys: Object.keys(commandBuilder['!']), staff: sender.scoreTest('staff') });
         const prefix = commandBuilder.getPrefix(message);
-        content.warn({ prefix });
+        // content.warn({ prefix });
+        event.sendToTargets = true;
+        event.targets = [];
         if (prefix) {
             commandBuilder.check(message, sender, prefix);
-            return true;
+
         } else {
             if (!promptBuilder.check(sender, message)) {
                 // const nameTag = getChatNameTag(sender);
                 world.say(`[§e${name}§r]: ${message}`);
-                return true;
-            } else {
-                return true;
+
             }
 
         }

@@ -1,4 +1,4 @@
-import { EntityQueryOptions, ItemStack, PlayerInventoryComponentContainer } from "@minecraft/server";
+import { ItemStack, PlayerInventoryComponentContainer } from "@minecraft/server";
 import { Player } from "../player/class";
 class Inventory {
 	constructor(array: ItemStack[], inventory: PlayerInventoryComponentContainer);
@@ -27,7 +27,7 @@ export class Players {
 	/**
 	 * gets players that are loaded meaning they can have commands ran them and caches entity querys by default per tick for perfornace
 	 */
-	get(EntityQueryOptions: EntityQueryOptions, cache = true): PlayerIterator;
+	get(entityQueryOptions: EntityQueryOptions, cache = true): PlayerIterator;
 	/**
 	 * gets the inventory of the player
 	 */

@@ -1,4 +1,4 @@
-import { Vector3, BlockAreaSize, Vector, Direction } from '@minecraft/server';
+import { BlockAreaSize, Vector, Direction } from '@minecraft/server';
 import { Player } from '../player/class.js';
 export class PlotsVector3 extends Vector {
 	constructor(x: number, y: number, z: number);
@@ -9,13 +9,13 @@ export class BlockVector3 extends Vector {
 interface PlotRuleSet {
 	count?: number;
 	size?: BlockAreaSize;
-	start: Vector3 | PlotsVector3;
-	offset?: Vector3;
+	start: { x: number, y: number, z: number; } | PlotsVector3;
+	offset?: { x: number, y: number, z: number; };
 	direction: 'x' | '-x' | 'z' | '-z';
 }
 interface PlotRules<key extends string> {
 	size?: BlockAreaSize;
-	start: Vector3;
+	start: { x: number, y: number, z: number; };
 	ruleSets?: PlotRuleSet[];
 	property: boolean;
 	plotNumberIdentifier?: key;

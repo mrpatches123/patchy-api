@@ -1,4 +1,4 @@
-import { world, Items, BlockLocation, Player, Entity, XYRotation, Vector3 } from '@minecraft/server';
+import { world, Items, BlockLocation, Player, Entity, XYRotation, } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function isVector3(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
@@ -163,9 +163,9 @@ export function sort3DRange(array) {
 const { floor } = Math;
 /**
  * @function sort3DVectors
- * @param {Vector3} vector1 
- * @param {Vector3} vector2 
- * @returns {[Vector3, Vector3]}
+ * @param {{x: number, y: number, z: number}} vector1 
+ * @param {{x: number, y: number, z: number}} vector2 
+ * @returns {[{x: number, y: number, z: number}, {x: number, y: number, z: number}]}
  */
 export function sort3DVectors(vector1, vector2) {
     const { x: x1, y: y1, z: z1 } = vector1;
@@ -181,9 +181,9 @@ export function sort3DVectors(vector1, vector2) {
 
 /**
  * 
- * @param {Vector3} target 
- * @param {Vector3} vector1 
- * @param {Vector3} vector2 
+ * @param {{x: number, y: number, z: number}} target 
+ * @param {{x: number, y: number, z: number}} vector1 
+ * @param {{x: number, y: number, z: number}} vector2 
  * @returns 
  */
 export function betweenVector3(target, vector1, vector2) {
@@ -470,7 +470,7 @@ export const content = {
 
 /**
  * 
- * @param {Vector3} vector 
+ * @param {{x: number, y: number, z: number}} vector 
  * @returns {XYRotation}
  */
 export function vector3ToRotation(vector) {
@@ -478,7 +478,7 @@ export function vector3ToRotation(vector) {
 }
 /**
  * @param {XYRotation} rotation 
- * @returns {Vector3}
+ * @returns {{x: number, y: number, z: number}}
  */
 export function rotationToVector3(rotation) {
     const { x: rx, y: ry } = rotation;

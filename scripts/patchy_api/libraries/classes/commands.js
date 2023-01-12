@@ -1,4 +1,4 @@
-import { Player } from "@minecraft/server";
+import { Player } from "./player/class.js";
 import config from "../../config.js";
 import { content, parseCommand } from "../utilities.js";
 import errorLogger from "./error.js";
@@ -34,6 +34,36 @@ class CommandBuilder {
         };
     }
     /**
+     * 
+     * @param {String} prefix
+     * @param {Player} sender 
+     * @returns { String }
+     */
+    listCommands(prefix, sender) {
+        const commandList = this[prefix].filter((command, { requires, callback }) => {
+            const { score, tag } = requires ?? {};
+            if (requires) {
+                let notPermissions;
+                if (score) {
+                    score.forEach((objective, value) => {
+                        // content.warn({ value, objective, score: sender.scores[objective] ?? 'undefined' });
+                        if (sender.scores[objective] !== value) { notPermissions = true; }
+                    });
+                }
+                if (tag) {
+                    const tags = sender.getTags();
+                    tag.forEach((tag) => { if (tags.includes(tag)) { notPermissions = true; } });
+                }
+                if (notPermissions) {
+                    sender.tell(`§cyou do not have permission to use this command!`);
+                    return false;
+                }
+            }
+            return true;
+        }).map((command, { description }) => `\n §r§f- §a§l${prefix}§r§a${command} | ${description}`).join('');
+        return `§l§e---------------\n§r§eCommands List:${commandList} \n§l§e---------------`;
+    }
+    /**
      * @method check Checks if command exists if it does runs the command. Returns error message to the command executor.
      * @param {String} command Command name.
      * @param {Player} sender player Class.
@@ -58,7 +88,6 @@ class CommandBuilder {
         }
         const { requires, callback } = this[prefix][command];
         const { score, tag } = requires ?? {};
-        const name = sender.getName();
         content.warn(this[prefix][command]);
         if (requires) {
             let notPermissions;
@@ -73,7 +102,7 @@ class CommandBuilder {
                 tag.forEach((tag) => { if (tags.includes(tag)) { notPermissions = true; } });
             }
             if (notPermissions) {
-                sender.tellraw(`§cyou do not have permission to use this command!`);
+                sender.tell(`§cyou do not have permission to use this command!`);
                 return true;
             }
         }
@@ -110,7 +139,7 @@ class CommandBuilder {
     //                 tag.forEach((objective, value) => { if (global.scoreObject[name][objective] !== value) { notPermissions = true; } });
     //             }
     //             if (notPermissions) {
-    //                 sender.tellraw(`§cyou do not have permission to use view this command!`);
+    //                 sender.tell(`§cyou do not have permission to use view this command!`);
     //             }
     //         }
     //         if (!notPermissions) {
@@ -123,8 +152,8 @@ class CommandBuilder {
     /**
      * @method register Add command.
      * @param {String} command
-     * @param {{description: String, aliases: Array<String>, usages: Array<String>||{subCommand: Array<String>},requires:{score?:{objective: Number},tag?:{tag:boolean}},callback: (sender: Player, args: Array<String>) => {}}} data Command Data.
-    
+     * @param {{description: String, aliases: Array<String>, usages: Array<String>|{subCommand: Array<String>},requires:{score?:{objective: Number},tag?:{tag:boolean}},callback: (sender: Player, args: Array<String>) => {}}} data Command Data.
+     
      * @returns {void}
      */
     register(command, { description = '', aliases = [], usages = {}, requires = false, prefix = config.commandPrefix, callback }) {
@@ -226,16 +255,16 @@ class CommandBuilder {
                     tag.forEach((tag) => { if (tags.includes(tag)) { notPermissions = true; } });
                 }
                 if (notPermissions && permissions) {
-                    sender.tellraw(`§cyou do not have permission to use view this command!`);
+                    sender.tell(`§cyou do not have permission to use view this command!`);
                     return;
                 }
             }
             if (subCommand && typeof usages === 'object' && !isArray(usages)) {
                 const { examples, subDescription } = this[prefix][command].usages[subCommand];
-                sender.runCommands(
-                    'playsound note.hat @s',
-                    `tellraw @s {"rawtext":[{"text":"§e${command}:\n${description}\n§fUsage:${usages.map((item, i) => `\n - ${prefix}${command} ${usages[i]}`).join("")}"}]}`
-                );
+                sender.playSound('note.bass');
+                sender.tell(`§e${command}:\n${description}\n§fUsage:${usages.map((item, i) => `\n - ${prefix}${command} ${usages[i]}`).join("")}`);
+
+
 
             } else {
                 if (!isArray(usages)) {
@@ -244,12 +273,10 @@ class CommandBuilder {
                     console.warn(JSON.stringify(usagesArray));
 
                     sender.runCommandAsync('playsound note.hat @s');
-                    sender.tellraw(`§e${command}:\n${description}\n§fUsage:${usagesArray.join('')}`);
+                    sender.tell(`§e${command}:\n${description}\n§fUsage:${usagesArray.join('')}`);
                 } else {
-                    sender.runCommands(
-                        'playsound note.hat @s',
-                        `tellraw @s {"rawtext":[{"text":"§e${command}:\n${description}\n§fUsage:${usages.map((item, i) => `\n - ${prefix}${command} ${usages[i]}`).join("")}"}]}`
-                    );
+                    sender.tell(`§e${command}:\n${description}\n§fUsage:${usages.map((item, i) => `\n - ${prefix}${command} ${usages[i]}`).join("")}`);
+                    sender.runCommandAsync('playsound note.hat @s');
 
                 }
 

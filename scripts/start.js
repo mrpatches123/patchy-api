@@ -1,4 +1,12 @@
-// import { world } from '@minecraft/server';
+import { system } from '@minecraft/server';
+function startwodjopwpwdjwwpodjdwo() {
+	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
+}
+startwodjopwpwdjwwpodjdwo();
+system.events.beforeWatchdogTerminate.subscribe((event) => {
+	event.cancel = true;
+});
+
 
 
 // import { BlockLocation, world, BlockPermutation } from "@minecraft/server";
@@ -68,10 +76,7 @@
 // import { system, Player, world, MinecraftBlockTypes, BlockLocation, Block, BlockPermutation } from '@minecraft/server';
 
 
-function startwodjopwpwdjwwpodjdwo() {
-	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
-}
-startwodjopwpwdjwwpodjdwo();
+
 
 // const object = { help: 8, heloo: 9, hejkekj: 8 };
 // Object.entries(object).forEach(([key, value]) => {

@@ -1,4 +1,4 @@
-import { Player, EntityQueryOptions, DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, PlayerInventoryComponentContainer, system } from "@minecraft/server";
+import { Player, DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, PlayerInventoryComponentContainer, system } from "@minecraft/server";
 import { content, native } from "../../utilities.js";
 import global from "../global.js";
 import loads from "../load.js";
@@ -102,16 +102,16 @@ export class Players {
 		this.basePlayerIterator = new PlayerIterator(loads.players);
 		content.warn({ t: 8938923832, basePlayerIterator: this.basePlayerIterator });
 	}
-	get(EntityQueryOptions, cache = true) {
+	get(entityQueryOptions, cache = true) {
 		let worldPlayers;
-		if (!EntityQueryOptions) return this.basePlayerIterator;//this.basePlayerIterator;
+		if (!entityQueryOptions) return this.basePlayerIterator;//this.basePlayerIterator;
 		if (!cache) {
-			worldPlayers = [...world.getPlayers(EntityQueryOptions)].map((({ id }) => id));
+			worldPlayers = [...world.getPlayers(entityQueryOptions)].map((({ id }) => id));
 			return new PlayerIterator(loads.players.filter((id) => worldPlayers.includes(id)));
 		}
-		const key = JSON.stringify(EntityQueryOptions);
+		const key = JSON.stringify(entityQueryOptions);
 		if (this.playerQueryIterators.hasOwnProperty(key)) return this.playerQueryIterators[key];
-		worldPlayers = [...world.getPlayers(EntityQueryOptions)].map((({ id }) => id));
+		worldPlayers = [...world.getPlayers(entityQueryOptions)].map((({ id }) => id));
 		const playerIterator = new PlayerIterator(loads.players.filter((id) => worldPlayers.includes(id)));
 		this.playerQueryIterators[key] = playerIterator;
 		const playerObject = this;
@@ -134,8 +134,8 @@ export class Players {
 		if (!this.ran) this.ran = true, system.run(() => (playersObject.inventorys = {}, playersObject.ran = false));
 		return this.inventorys[id].container;
 	};
-	getRandomPlayer(EntityQueryOptions) {
-		const foundPlayers = this.get(EntityQueryOptions);
+	getRandomPlayer(entityQueryOptions) {
+		const foundPlayers = this.get(entityQueryOptions);
 		if (!foundPlayers) return;
 		const ids = Object.keys(foundPlayers);
 		const id = ids[Math.floor(Math.random() * ids.length)];

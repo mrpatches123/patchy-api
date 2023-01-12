@@ -10,7 +10,7 @@ import { Dimension, world, BlockLocation, Location } from '@minecraft/server';
 // 	return keys;
 // };
 /**
- * @typedef {Object} Vector3
+ * @typedef {Object} {x: number, y: number, z: number}
  * @property {Number} x
  * @property {Number} y
  * @property {Number} z
@@ -94,7 +94,7 @@ class LeaderboardBuilder {
 	}
 	/**
 	 * @method addOffine
-	 * @param {Vector3} position
+	 * @param {{x: number, y: number, z: number}} position
 	 * @param {String} objective
 	 * @param {Number} maxLength
 	 * @param {String} title
@@ -106,7 +106,7 @@ class LeaderboardBuilder {
 	}
 	/**
 	 * @method addOnline
-	 * @param {Vector3} position
+	 * @param {{x: number, y: number, z: number}} position
 	 * @param {String} objective
 	 * @param {Number} maxLength
 	 * @param {String} title
@@ -124,10 +124,10 @@ class LeaderboardBuilder {
 
 
 			// if (!(dimension instanceof Dimension)) return new Error('dimension at params[0] is not of type: Dimension!');
-			if (!(position instanceof Object)) return new Error('postion at params[1] is not of type: Vector3!');
+			if (!(position instanceof Object)) return new Error('postion at params[1] is not of type: {x: number, y: number, z: number}!');
 
 			if (typeof objective !== 'string') return new Error('objective at params[0] is not of type: String!');
-			if (!('x' in position) && !('y' in position) && !('z' in position)) return new Error('postion at params[1] is not of type: Vector3!');
+			if (!('x' in position) && !('y' in position) && !('z' in position)) return new Error('postion at params[1] is not of type: {x: number, y: number, z: number}!');
 			// content.warn({ maxLength });
 			if (maxLength < 1) return new Error('maxLength at params[2] is not of type: Whole Number!');
 
@@ -150,7 +150,7 @@ class LeaderboardBuilder {
 	/**
 	 * @method update
 	 * @param {Boolean} isOnline
-	 * @param {Vector3} position
+	 * @param {{x: number, y: number, z: number}} position
 	 * @param {String} objective
 	 * @param {Number} maxLength
 	 * @param {String} title
@@ -162,7 +162,7 @@ class LeaderboardBuilder {
 	};
 	/**
 	 * @method delete
-	 * @param {Vector3} position
+	 * @param {{x: number, y: number, z: number}} position
 	 */
 	delete(position) {
 		const { x, y, z } = position;

@@ -4,7 +4,7 @@ for (let key in console) {
     array.push(key);
 }
 console.warn(JSON.stringify(array));
-import { world, Player, BlockLocation, EntityQueryOptions, EntityQueryScoreOptions, Trigger, EntityEventOptions, DynamicPropertiesDefinition, MinecraftEntityTypes, BeforeItemDefinitionTriggeredEvent, System, system } from "@minecraft/server";
+import { world, Player, BlockLocation, , EntityQueryScoreOptions, Trigger, EntityEventOptions, DynamicPropertiesDefinition, MinecraftEntityTypes, BeforeItemDefinitionTriggeredEvent, System, system } from "@minecraft/server";
 
 import { ModalFormData } from '@minecraft/server-ui';
 // world.getDimension('overworld').runCommandAsync('script debugger connect localhost 19144')

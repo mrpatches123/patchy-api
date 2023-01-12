@@ -1,4 +1,4 @@
-import { BlockLocation, Location, Vector3 } from "@minecraft/server";
+import { BlockLocation, Location, } from "@minecraft/server";
 const { hypot } = Math;
 const locationTypes = {
 	Location,

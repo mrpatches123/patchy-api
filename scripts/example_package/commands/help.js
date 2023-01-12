@@ -1,7 +1,7 @@
 import config from '../config.js';
 
 import { commandBuilder } from '../../patchy_api/modules.js';
-const { commandPrefix: prefix } = config;
+const { prefix } = config;
 commandBuilder.register('help', {
     description: "Used to get all available commands or infomation about a specific command.",
     usages: [
@@ -12,14 +12,11 @@ commandBuilder.register('help', {
         `help faction create`
     ],
     prefix,
-    callback: (sender, args, command, prefix) => {
-        console.warn('args', args.length, sender.getName());
+    callback: (sender, args) => {
         switch (args.length) {
             case 0:
-                sender.runCommands(
-                    `playsound note.hat @s`,
-                    `tellraw @s {"rawtext":[{"text":"§l§e---------------\n§r§eCommands List:${commandBuilder[prefix].map((command, { description }) => `\n §r§f- §a§l${prefix}§r§a${command} | ${description}`).join('')} \n§l§e---------------"}]}`
-                );
+                sender.tell(commandBuilder.listCommands(prefix, sender));
+                sender.playSound('note.hat');
                 break;
             case 1:
             case 2:

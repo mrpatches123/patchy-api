@@ -1,5 +1,5 @@
 import { ItemStack, Player as PlayerType } from '@minecraft/server';
-import { PlayerInventoryComponentContainer, Entity, Block, Dimension, SoundOptions, Location, Vector3, ScreenDisplay, XYRotation, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions } from '@minecraft/server';
+import { PlayerInventoryComponentContainer, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, XYRotation, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions } from '@minecraft/server';
 import { EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
 import { Inventory } from '../inventory.js';
 interface PlayerEntity {
@@ -186,7 +186,7 @@ export declare class Player extends Entity {
 	 * Current location of the player.
 	 * @throws This property can throw when used.
 	 */
-	readonly location: Vector3;
+	readonly location: { x: number, y: number, z: number; };
 	/**
 	 * Name of the player.
 	 * @throws This property can throw when used.
@@ -422,7 +422,7 @@ export declare class Player extends Entity {
 	 * X/Y/Z components of the velocity.
 	 * @throws This function can throw errors.
 	 */
-	setVelocity(velocity: Vector3): void;
+	setVelocity(velocity: { x: number, y: number, z: number; }): void;
 	/**
 	 * @remarks
 	 * Sets the item cooldown time for a particular cooldown
@@ -450,7 +450,7 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	teleport(
-		location: Vector3,
+		location: { x: number, y: number, z: number; },
 		dimension: Dimension,
 		xRotation: number,
 		yRotation: number,
@@ -469,7 +469,7 @@ export declare class Player extends Entity {
 	 * @param keepVelocity
 	 * @throws This function can throw errors.
 	 */
-	teleportFacing(location: Vector3, dimension: Dimension, facingLocation: Vector3, keepVelocity?: boolean): void;
+	teleportFacing(location: { x: number, y: number, z: number; }, dimension: Dimension, facingLocation: { x: number, y: number, z: number; }, keepVelocity?: boolean): void;
 	/**
 	 * @remarks
 	 * Sends a message that is displayed on the connected client

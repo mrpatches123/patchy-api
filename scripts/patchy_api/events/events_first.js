@@ -29,7 +29,7 @@ eventBuilder.register({
 					const { loaded, loadedPlayers } = global;
 					// content.warn({ bool: loaded && loadedPlayers });
 					if (loaded && loadedPlayers) {
-						eventBuilder.getEvent('tickAfterLoad').iterate(event);
+						eventBuilder.getEvent('tickAfterLoad').iterate(event);;
 					}
 					// else if ((loading && (!loaded && !loadedPlayers)) || global.tickAfterLoadI++ > 100) {
 					// 	global.loaded = true;

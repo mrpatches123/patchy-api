@@ -1,4 +1,4 @@
-import { Location, BlockLocation, Block, Vector3, Dimension, XYRotation, Player, MinecraftBlockTypes, Vector } from '@minecraft/server';
+import { Location, BlockLocation, Block, Dimension, XYRotation, Player, MinecraftBlockTypes, Vector } from '@minecraft/server';
 import { content, randomCoordsOutsideCircle } from '../utilities.js';
 const unsafeBlocks = [
 	MinecraftBlockTypes.lava.id,
@@ -31,10 +31,10 @@ class TeleportBuilder {
 	*/
 	/**
 	 * @typedef {Object} TeleportOptions
-	 * @property {Vector3} location
+	 * @property {{x: number, y: number, z: number}} location
 	 * @property {Dimension} dimension
 	 * @property {XYRotation} rotation
-	 * @property {Vector3} facing
+	 * @property {{x: number, y: number, z: number}} facing
 	 * @property {Boolean} keepVelocity
 	 * @property {RandomOptions} random
 	 */
@@ -108,7 +108,7 @@ class TeleportBuilder {
 	/**
 	 * 
 	 * @param {Dimension} dimension 
-	 * @param {Vector3} location
+	 * @param {{x: number, y: number, z: number}} location
 	 * @param {Number} yMax 
 	 * @param {Number} yMin 
 	 * @param {Number} minRadius 
@@ -130,7 +130,7 @@ class TeleportBuilder {
 	/**
 	 * 
 	 * @param {Dimension} dimension 
-	 * @param {Vector3} location
+	 * @param {{x: number, y: number, z: number}} location
 	 * @param {Number} yMax 
 	 * @param {Number} yMin 
 	 * @param {Number} minRadius 
