@@ -1,6 +1,7 @@
 import { Player } from "../player/class.js";
 import { Entity, DefinitionModifier, Dimension, BlockLocation, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, Location, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
+
 export class BeforeChatEvent {
 	cancel: boolean;
 	message: string;

@@ -187,10 +187,16 @@ export function sort3DVectors(vector1, vector2) {
  * @returns 
  */
 export function betweenVector3(target, vector1, vector2) {
-    const [{ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }]
-        = sort3DVectors(vector1, vector2);
+    const { x: x1, y: y1, z: z1 } = vector1;
+    const { x: x2, y: y2, z: z2 } = vector2;
+    const ox1 = (x1 < x2) ? x1 : x2;
+    const oy1 = (y1 < y2) ? y1 : y2;
+    const oz1 = (z1 < z2) ? z1 : z2;
+    const ox2 = (x1 < x2) ? x2 : x1;
+    const oy2 = (y1 < y2) ? y2 : y1;
+    const oz2 = (z1 < z2) ? z2 : z1;
     let { x, y, z } = target;
-    return x >= x1 && x <= x2 && y >= y1 && y <= y2 && z >= z1 && z <= z2;
+    return x >= ox1 && x <= ox2 && y >= oy1 && y <= oy2 && z >= oz1 && z <= oz2;
 }
 export function andArray(array = []) {
     const copy = [...array];
@@ -603,17 +609,13 @@ export function generateRandomString(length) {
  * @example parseCommand('!give @"bat is bob" iron_sword {"data":6, "enchantments": {"sharpness":3}}', '!'); //returns ['give','bat is bob','iron_sword','{"data":6,"enchantments":{"sharpness":3}}']
  */
 export function parseCommand(message, prefix) {
-    message = message.substring(prefix.length);
     const messageLength = message.length;
     let finding = false;
     let braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0;
-    const reset = () => {
-        braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
-    };
     let started = false;
     let o = 0;
     const output = [];
-    for (let i = 0; i < messageLength; i++) {
+    for (let i = prefix.length; i < messageLength; i++) {
         const char = message[i];
         switch (char) {
             case '{':
@@ -621,7 +623,7 @@ export function parseCommand(message, prefix) {
                     case 'json':
                         break;
                     default:
-                        reset();
+                        braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
                         output.push('');
                         o++;
                         finding = 'json';
@@ -634,12 +636,12 @@ export function parseCommand(message, prefix) {
             case '}':
                 output[o] += char;
                 if (braceCount[0] !== ++braceCount[1] || bracketCount[0] !== bracketCount[1] || (quoteCount && quoteCount & 1)) break;
-                reset();
+                braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
                 break;
             case ']':
                 output[o] += char;
                 if (bracketCount[0] !== ++bracketCount[1] || braceCount[0] !== braceCount[1] || (quoteCount && quoteCount & 1)) break;
-                reset();
+                braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
                 break;
             case '"':
                 switch (finding) {
@@ -647,7 +649,7 @@ export function parseCommand(message, prefix) {
                         output[o] += char;
                         break;
                     default:
-                        reset();
+                        braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
                         finding = 'string';
                     case 'string':
                         if (!(++quoteCount & 1)) { finding = false; break; };
@@ -712,6 +714,7 @@ export function parseCommand(message, prefix) {
                                 const afterNextChar = message?.[i + 2];
                                 switch (afterNextChar) {
                                     case '[':
+                                        finding = 'json';
                                         output[o] += char;
                                         break;
                                 }

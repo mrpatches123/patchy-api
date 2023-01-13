@@ -57,12 +57,12 @@ export class Player {
 		const player = this.player;
 		return new Proxy({}, {
 			get(target, identifier) {
-				console.warn('38943783487847387', identifier);
+				// console.warn('38943783487847387', identifier);
 				return players.getProperty(player, identifier);
 			},
 			set(target, identifier, value) {
 				try {
-					console.warn('38943783487847387', identifier, value, value === undefined || value === null || Number.isNaN(value));
+					// console.warn('38943783487847387', identifier, value, value === undefined || value === null || Number.isNaN(value));
 					if (value === undefined || value === null || Number.isNaN(value)) players.resetProperty(player, identifier);
 					else players.setProperty(player, identifier, value);
 					return Reflect.set(...arguments);

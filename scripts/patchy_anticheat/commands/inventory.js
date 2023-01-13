@@ -52,7 +52,7 @@ eventBuilder.subscribe('invSeeCheck', {
     players.forEach((player, i) => {
         const playerName = player.getName();
         playersObject[i] = () => {
-            sender.tellraw(`§l§f[§9PAC§f] §7you §fcan now §cView §7the §1Inventory§f of §7${playerName}!`);
+            sender.tell(`§l§f[§9PAC§f] §7you §fcan now §cView §7the §1Inventory§f of §7${playerName}!`);
             staff.tellraw(`§l§f[§9PAC§f] §7${name} §cViewed §7the §1Inventory§f of §7${playerName}!`, sender);
             const entity = sender.dimension.spawnEntity('patches:inventory', sender.headLocation);
             entity.nameTag = 'invsee';
@@ -78,7 +78,7 @@ eventBuilder.subscribe('invSeeCheck', {
     promptBuilder.add(sender, `§l§f[§9PAC§f] §7§cWhich §7player's §1inventory §cwould §fyou like to §cview§7?\n§r§o§7type a the number to select or §ccancel to quit§7.\n${players.map(({ name: playerName }, i) => `§f${i}: §7${playerName}`)}`, Object.assign(playersObject, {
         cancel: () => {
             promptBuilder.remove(sender);
-            sender.tellraw('you canceled the menu');
+            sender.tell('you canceled the menu');
         }
     }));
     promptBuilder.ask(sender);

@@ -1,6 +1,8 @@
 import { rainbowWeight } from "../utilities.js";
 import databases from "./database.js";
 import global from "./global.js";
+import players from "./players/export_instance.js";
+import { Player } from "./player/class.js";
 // import { getChatNameTag } from '../../../factions/plugins/player/name_tag.js';
 const ranks = ['§7Low§f', '§6High§f', '§3Master§f'];
 class PromptBuilder {
@@ -30,7 +32,7 @@ class PromptBuilder {
             throw new Error(`anwsers, args 2, must be a object`);
         } else {
             anwsers.forEach((key, value) => { if (typeof value !== 'function') throw new Error(`the callback for ${key} must be a function`); });
-            this[sender.getName()] = { message, anwsers };
+            this[id] = { message, anwsers };
             console.warn(message);
             // console.warn('add', message, JSON.stringify({ message, anwsers }));
         }
@@ -40,7 +42,7 @@ class PromptBuilder {
     * @returns {void}
     */
     remove(sender) {
-        delete this[sender.getName()];
+        delete this[id];
     }
     /**
     * @method check Add command.
@@ -49,15 +51,15 @@ class PromptBuilder {
     * @returns {void}
     */
     check(sender, message) {
-        if (this[sender.getName()]) {
-            const { name } = sender;
-            const { anwsers } = this[name];
+        const { name, id } = sender;
+        if (this[id]) {
+            const { anwsers } = this[id];
             if (anwsers) {
                 let bool = false;
                 anwsers.forEach((key, value) => {
                     if (key.toLowerCase() === message.toLowerCase() || key.toLowerCase() === '%any%') {
                         // const nameTag = getChatNameTag(sender);
-                        sender.tellraw(`${name}: ${message}`);
+                        sender.tell(`${name}: ${message}`);
                         value(sender, message);
                         bool = true;
                     }
@@ -75,8 +77,8 @@ class PromptBuilder {
     * @returns {void}
     */
     ask(sender) {
-        const { message } = this[sender.getName()];
-        sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${message.replace('"', '\\"')}"}]}`);
+        const { message } = this[id];
+        sender.tell(message);
     }
     /**
     * @method ask Alll command.
@@ -84,8 +86,7 @@ class PromptBuilder {
     * @returns {void}
     */
     askAll() {
-        [...world.getsenders()].filter(sender =>
-            Object.keys(this).some(name => name === sender.getName())).forEach(sender => this.ask(sender));
+        players.get().iterate(sender => this.ask(sender));
     }
 }
 

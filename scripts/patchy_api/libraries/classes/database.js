@@ -10,6 +10,7 @@ export class Database {
     constructor(json = {}) {
         Object.assign(this, json);
         this.__db_properties = json.__db_properties ?? {};
+        content.warn({ json, __db_properties: this.__db_properties });
     }
     /**
      * @method set set a keys for its value in the Database
@@ -26,7 +27,9 @@ export class Database {
         } else if (key === '__db_properties') {
             throw new Error('Key must not be "__db_properties"');
         } else {
+
             this[key] = value;
+            content.warn({ t: 'DatabaseSet', [key]: value, databases });
             return this;
         }
 
@@ -98,7 +101,6 @@ const coords256 = Array.from(Array(256), (item, i) => ({ x: i % 16, z: Math.floo
 const databasesArea = new BlockAreaSize(16, 1, 16);
 export class Databases {
     constructor() {
-
         this.__queuedSaves = [];
     }
     /**
@@ -106,6 +108,7 @@ export class Databases {
      * @returns {void}
      */
     initialize() {
+
         const entityArray = [];
         /**
          * @type Array<Entity>
@@ -130,6 +133,7 @@ export class Databases {
             const json = [];
             if (entities) {
                 const name = entities[0].getTags().find(tag => tag.includes('dbName:')).replace('dbName:', '');
+                content.warn({ dbNmae: name });
                 entities.forEach(entity => {
                     const order = entity.getTags().find(tag => tag.includes('dbOrder:')).replace('dbOrder:', '');
                     json.push([order, entity.nameTag]);
@@ -167,9 +171,9 @@ export class Databases {
             throw new Error(`Database: ${name}, exists`);
         } else {
             const propertiesObject = this.getPropertiesObject();
-            overworld.runCommandAsync(`say 'prop', ${JSON.stringify(propertiesObject)}`);
-            this[name] = new Database();
-            Object.assign(this[name].__db_properties, propertiesObject);
+            content.chatFormat('prop', propertiesObject);
+            this[name] = new Database({ __db_properties: propertiesObject });
+
             // overworld.runCommandAsync(`say db ${JSON.stringify(this[name])}`);
             return this[name];
         }
@@ -263,7 +267,7 @@ export class Databases {
             time.start('test37763');
             const stringifiedDatabase = (JSON.stringify(this[name]));
             const stringify = time.end('test37763');
-            // content.warn({ length: stringifiedDatabase.length, stringifiedDatabase });
+            content.warn({ name, length: stringifiedDatabase.length, stringifiedDatabase });
             let size = (stringifiedDatabase.length / chunkSize) | 0;
             const database = Array(++size);
             time.start('test37763');
@@ -331,7 +335,7 @@ export class Databases {
 
 
 }
-let databases = new Databases();
+const databases = new Databases();
 export default databases;
 
 

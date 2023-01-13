@@ -18,17 +18,17 @@ commandBuilder.register('players', {
         switch (args[0]) {
             case 'all': {
                 const crap = native.stringify(players.get(), null, 4);
-                sender.tellraw(crap);
+                sender.tell(crap);
                 console.warn(crap);
                 break;
             }
             default: {
                 const crap = native.stringify(players, null, 4);
-                sender.tellraw(crap);
+                sender.tell(crap);
                 console.warn(crap);
                 break;
             }
         }
-        // sender.tellraw(JSON.stringify(eventBuilder));
+        // sender.tell(JSON.stringify(eventBuilder));
     }
 });

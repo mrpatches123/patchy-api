@@ -25,14 +25,14 @@ commandBuilder.register('property', {
                 const object = assignToPath(args[0].split('.'), {}, value);
                 sender.tellrawStringify(object);
             } catch {
-                sender.tellraw(`property: ${args[0]}, does not exist`);
+                sender.tell(`property: ${args[0]}, does not exist`);
             }
         } else {
             const object = propertyBuilder.getObjectFromKey(args[0]);
             if (object) {
                 sender.tellrawStringify(object);
             } else {
-                sender.tellraw('errpr');
+                sender.tell('errpr');
             }
         }
     }

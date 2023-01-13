@@ -100,7 +100,7 @@ export class Players {
 	}
 	refreshBasePlayerIterator() {
 		this.basePlayerIterator = new PlayerIterator(loads.players);
-		content.warn({ t: 8938923832, basePlayerIterator: this.basePlayerIterator });
+		// content.warn({ t: 8938923832, basePlayerIterator: this.basePlayerIterator });
 	}
 	get(entityQueryOptions, cache = true) {
 		let worldPlayers;

@@ -39,27 +39,27 @@ commandBuilder.register('toggles', {
             case 'reset':
             case 'r':
                 if (args[1] === undefined) {
-                    sender.tellraw('§l§f[§9PAC§f] §cYou must input a toggle at §1Args[1]§c!');
+                    sender.tell('§l§f[§9PAC§f] §cYou must input a toggle at §1Args[1]§c!');
                 } else if (toggles[args[1]] !== undefined) {
                     delete toggles[args[1]];
                     global.toggles = toggles;
                     anticheat.set('toggles', toggles);
                     databases.queueSave('anticheat');
-                    sender.tellraw(`§l§f[§9PAC§f] §7You §4removed §7${args[1]} §ffrom §1Toggles§7!`);
+                    sender.tell(`§l§f[§9PAC§f] §7You §4removed §7${args[1]} §ffrom §1Toggles§7!`);
                     staff.tellraw(`§l§f[§9PAC§f] §7${name} §4removed §7${args[1]} §ffrom §1Toggles§7!`, sender);
                 } else {
-                    sender.tellraw(`§l§f[§9PAC§f] §fThe §1toggle: §7${args[1]}, §cdoes not exist`);
+                    sender.tell(`§l§f[§9PAC§f] §fThe §1toggle: §7${args[1]}, §cdoes not exist`);
                 }
 
                 break;
             case 'set':
             case 's':
                 if (typeof args[1] !== 'string') {
-                    sender.tellraw(`\u00A7cexpected a string at argument 1 but instead got ${args[1]}`);
+                    sender.tell(`\u00A7cexpected a string at argument 1 but instead got ${args[1]}`);
                 } else if (!Number.isInteger(Number(args[2])) && typeof args[2] !== 'string') {
-                    sender.tellraw(`\u00A7cexpected a integer at argument 2 but instead got ${args[3]}`);
+                    sender.tell(`\u00A7cexpected a integer at argument 2 but instead got ${args[3]}`);
                 } else if (args.length < 3 && args.length > 4) {
-                    sender.tellraw(`\u00A7cexpected 3 or 4 arguments but instead got ${args.length}`);
+                    sender.tell(`\u00A7cexpected 3 or 4 arguments but instead got ${args.length}`);
                 } else {
                     if (args.length === 4) {
                         if (toggles[args[1]][args[2]] !== undefined) {
@@ -67,10 +67,10 @@ commandBuilder.register('toggles', {
                             global.toggles = toggles;
                             anticheat.set('toggles', toggles);
                             databases.queueSave('anticheat');
-                            sender.tellraw(`§l§f[§9PAC§f] §7You §4Set §7${args[2]} §fin the §1Toggle: §7${args[1]}, to ${args[3]} §ffrom §1Toggles§7!`);
+                            sender.tell(`§l§f[§9PAC§f] §7You §4Set §7${args[2]} §fin the §1Toggle: §7${args[1]}, to ${args[3]} §ffrom §1Toggles§7!`);
                             staff.tellraw(`§l§f[§9PAC§f] §7${name} §4Set §7${args[2]} §fin the §1Toggle: §7${args[1]}, to ${args[3]} §ffrom §1Toggles§7!`, sender);
                         } else {
-                            sender.tellraw(`§l§f[§9PAC§f] §fThe §1Object, §7${args[2]} §ffor §1Toggle: §7${args[1]}, §cdoes not exist`);
+                            sender.tell(`§l§f[§9PAC§f] §fThe §1Object, §7${args[2]} §ffor §1Toggle: §7${args[1]}, §cdoes not exist`);
                         }
                     } else {
                         if (toggles[args[1]] !== undefined) {
@@ -78,17 +78,17 @@ commandBuilder.register('toggles', {
                             global.toggles = toggles;
                             anticheat.set('toggles', toggles);
                             databases.queueSave('anticheat');
-                            sender.tellraw(`§l§f[§9PAC§f] §7You §4Set §1Toggle: §7${args[1]}, to ${args[2]} §ffrom §1Toggles§7!`);
+                            sender.tell(`§l§f[§9PAC§f] §7You §4Set §1Toggle: §7${args[1]}, to ${args[2]} §ffrom §1Toggles§7!`);
                             staff.tellraw(`§l§f[§9PAC§f] §7${name} §4Set the §1Toggle: §7${args[1]}, to ${args[2]} §ffrom §1Toggles§7!`, sender);
                         } else {
-                            sender.tellraw(`§l§f[§9PAC§f] §fThe §1Toggle: §7${args[1]}, §cdoes not exist`);
+                            sender.tell(`§l§f[§9PAC§f] §fThe §1Toggle: §7${args[1]}, §cdoes not exist`);
                         }
                     }
 
                 }
                 break;
             default:
-                sender.tellraw(`§l§f[§9PAC§f] §cexpected reset, r, set, or s at argument 0`);
+                sender.tell(`§l§f[§9PAC§f] §cexpected reset, r, set, or s at argument 0`);
                 break;
         }
     }

@@ -14,7 +14,7 @@ commandBuilder.register('events', {
     ],
     prefix,
     callback: (sender, args) => {
-        sender.tellraw(JSON.stringify(eventBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
-        // sender.tellraw(JSON.stringify(eventBuilder));
+        sender.tell(JSON.stringify(eventBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
+        // sender.tell(JSON.stringify(eventBuilder));
     }
 });

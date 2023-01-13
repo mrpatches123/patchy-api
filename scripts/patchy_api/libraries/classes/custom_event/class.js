@@ -1,6 +1,7 @@
 import eventBuilder from "../events/export_instance.js";
 import time from "../time.js";
 import errorLogger from "../error.js";
+import { content } from "../../utilities.js";
 export class CustomEvent {
 	constructor(eventKey) {
 		this.eventKey = eventKey;
@@ -42,7 +43,8 @@ export class CustomEvent {
 				// if (this.eventKey === 'tickAfterLoad' && key === 'position*API') content.warn({ key, bool2: callback instanceof Function, bool: callbackForKey instanceof Function });
 				if (callback instanceof Function) callback(key, callbackForKey, i);
 				else callbackForKey(eventResponse);
-				this.subscriptions.keys[key].time = time.end(`Events*API*${this.eventKey}*${key}`);
+				// content.warn(this.eventKey, eventBuilder.subscriptions[this.eventKey].keys);
+				eventBuilder.subscriptions[this.eventKey].keys[key].time = time.end(`Events*API*${this.eventKey}*${key}`);
 			} catch (error) {
 				errorLogger.log(error, error.stack, { event: this.eventKey, key });
 			}

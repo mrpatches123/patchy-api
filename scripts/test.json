@@ -1,0 +1,56 @@
+{
+	"Block": {
+		"name": "minecraft:moving_block",
+		"states": {},
+		"version": 2561
+	},
+	"CanPlaceOn": [
+		"minecraft:dirt",
+		"minecraft:end_stone",
+		"minecraft:grass",
+		"minecraft:stone",
+		"minecraft:bedrock",
+		"minecraft:sand",
+		"minecraft:netherrack"
+	],
+	"Count": 1b,
+	"Damage": 0s,
+	"Name": "minecraft:moving_block",
+	"WasPickedUp": 0b,
+	"tag": {
+		"display": {
+			"Lore": [
+				"say hi"
+			],
+			"Name": "Â§gÂ§lMovingBlock Minecart Command"
+		},
+		"ench": [
+			{
+				"id": 28s,
+				"lvl": 1s
+			}
+		],
+		"movingBlock": {
+			"name": "minecraft:air"
+		},
+		"movingEntity": {
+			"Occupants": [
+				{
+					"ActorIdentifier": "minecraft:command_block_minecart<>",
+					"SaveData": {
+						"Command": "say hi",
+						"Persistent": 1b,
+						"Pos": [],
+						"Ticking": 1b,
+						"identifier": "minecraft:command_block_minecart"
+					},
+					"TicksLeftToStay": 0
+				}
+			],
+			"id": "Beehive"
+		},
+		"pistonPosX": 0,
+		"pistonPosY": 0,
+		"pistonPosZ": 0
+	}
+}

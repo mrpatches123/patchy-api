@@ -43,7 +43,7 @@ commandBuilder.register('error', {
                 if (errorLogger[args[0]]) {
                     sender.tellrawStringify(errorLogger[args[1]]);
                 } else {
-                    sender.tellraw(`key: ${args[1]}, doesn't exist`);
+                    sender.tell(`key: ${args[1]}, doesn't exist`);
                 }
                 break;
             case 'byevent':

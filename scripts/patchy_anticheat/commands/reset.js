@@ -37,7 +37,7 @@ commandBuilder.register('reset', {
 			playerFound.scoreSet('kicks');
 			discipline.notify(sender, `reset ${args[0]}'s flags and kicks`);
 		} else {
-			sender.tellraw(`Player: ${args[0]} not found!`);
+			sender.tell(`Player: ${args[0]} not found!`);
 		}
 	}
 });

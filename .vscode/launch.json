@@ -4,9 +4,9 @@
 		{
 			"type": "minecraft-js",
 			"request": "attach",
-			"name": "Wait for Minecraft Debug Connections",
+			"name": "(patchy-api) Wait for Minecraft Debug Connections",
 			"mode": "listen",
-			"localRoot": "${workspaceFolder}/",
+			"localRoot": "${workspaceFolder}/scripts/package_import.js",
 			"port": 19144
 		}
 	]

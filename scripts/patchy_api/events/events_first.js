@@ -7,6 +7,7 @@ import time from '../libraries/classes/time.js';
 global.playerJoined = {};
 global.tickAfterLoadI = 0;
 let a = 0;
+let test = false;
 eventBuilder.register({
 	worldLoad: {
 		subscription: {
@@ -29,7 +30,7 @@ eventBuilder.register({
 					const { loaded, loadedPlayers } = global;
 					// content.warn({ bool: loaded && loadedPlayers });
 					if (loaded && loadedPlayers) {
-						eventBuilder.getEvent('tickAfterLoad').iterate(event);;
+						eventBuilder.getEvent('tickAfterLoad').iterate(event);
 					}
 					// else if ((loading && (!loaded && !loadedPlayers)) || global.tickAfterLoadI++ > 100) {
 					// 	global.loaded = true;
@@ -52,6 +53,7 @@ eventBuilder.register({
 						if (!global.hasOwnProperty('loading')) global.loading = true;
 						if (!global.loaded) return;
 						if (global.playerJoined.hasOwnProperty(id)) return;
+
 						eventBuilder.getEvent('playerJoined').iterate({ player }, (key, callback) => {
 							callback({ player });
 						});
@@ -59,7 +61,7 @@ eventBuilder.register({
 
 						if (players.length === i + 1 && !global.hasOwnProperty('loadedPlayers')) return;
 						global.loadedPlayers = true;
-
+						// content.warn({ t: 'playerJoined', loaded: global.loaded, loadedPlayers: global.loadedPlayers });
 
 					});
 
@@ -153,5 +155,6 @@ eventBuilder.register({
 		}
 	}
 });
-
 // world.say(`123 - ${JSON.stringify(eventBuilder, null, 4)}`);
+
+

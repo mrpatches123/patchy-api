@@ -37,7 +37,7 @@ commandBuilder.register('unban', {
         let anticheat = databases.getFromEntity('anticheat');
         content.warn({ type: typeOf(anticheat), anticheat });
         if (anticheat === undefined) {
-            sender.tellraw('§l§f[§9PAC§f] §cNo §7players §chave been banned!');
+            sender.tell('§l§f[§9PAC§f] §cNo §7players §chave been banned!');
         } else {
             console.warn(args[0]);
             switch (args[0]) {
@@ -53,11 +53,11 @@ commandBuilder.register('unban', {
                         anticheat.delete(id);
                         databases.queueSave('anticheat');
                     });
-                    sender.tellraw(`§l§f[§9PAC§f] §7You §aUnbanned §cAll §fof the following §7players: §7${andArray(names)}§f!`);
+                    sender.tell(`§l§f[§9PAC§f] §7You §aUnbanned §cAll §fof the following §7players: §7${andArray(names)}§f!`);
                     staff.tellraw(`§l§f[§9PAC§f] §7${name} §aUnbanned §cAll §fof the following §7players: §7${andArray(names)}§f!`, sender);
                     break;
                 case undefined:
-                    sender.tellraw(`§l§f[§9PAC§f] §cYou must input a playername, "player Name".  or %all%!`);
+                    sender.tell(`§l§f[§9PAC§f] §cYou must input a playername, "player Name".  or %all%!`);
                     break;
                 default:
                     const playerId = anticheat.find((id, value) => value.name === args[0]);
@@ -65,13 +65,13 @@ commandBuilder.register('unban', {
 
                     if (playerId) {
                         const playerAC = anticheat.get(playerId);
-                        sender.tellraw(`§l§f[§9PAC§f] §7You §aUnbanned §7${playerAC.name ?? 'undefined'}!`);
+                        sender.tell(`§l§f[§9PAC§f] §7You §aUnbanned §7${playerAC.name ?? 'undefined'}!`);
                         staff.tellraw(`§l§f[§9PAC§f] §7${name} §aUnbanned §7${playerAC.name ?? 'undefined'}§f!`, sender);
                         anticheat.delete(playerId);
                         databases.queueSave('anticheat');
                         content.warn({ anticheat });
                     } else {
-                        sender.tellraw(`§l§f[§9PAC§f] §7${args[0]} §cis not §1Banned §cor does not §4Exist§f!`);
+                        sender.tell(`§l§f[§9PAC§f] §7${args[0]} §cis not §1Banned §cor does not §4Exist§f!`);
                     }
                     break;
             }

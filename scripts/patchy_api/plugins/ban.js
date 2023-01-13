@@ -1,4 +1,4 @@
-import { eventBuilder, players, global } from "../modules";
+import { eventBuilder, players, global } from "../modules.js";
 global.unbanWindows = [];
 eventBuilder.subscribe('ban*api', {
 	tickAfterLoad: () => {

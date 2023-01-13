@@ -22,7 +22,7 @@ commandBuilder.register('global', {
             if (global[args[0]]) {
                 sender.tell(JSON.stringify(global[args[0]], null, 4));
             } else {
-                sender.tellraw(`key: ${args[0]}, doesn't exist`);
+                sender.tell(`key: ${args[0]}, doesn't exist`);
             }
         };
     }

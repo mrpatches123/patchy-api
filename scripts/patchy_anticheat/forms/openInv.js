@@ -14,7 +14,7 @@ formBuilder.create('showInv', {
                     const { name } = sender;
                     const playerName = playerSelected.name;
                     console.warn(playerName);
-                    sender.tellraw(`§l§f[§9PAC§f] §7you §fcan now §cView §7the §1Inventory§f of §7${playerName}!`);
+                    sender.tell(`§l§f[§9PAC§f] §7you §fcan now §cView §7the §1Inventory§f of §7${playerName}!`);
                     staff.tellraw(`§l§f[§9PAC§f] §7${name} §cViewed §7the §1Inventory§f of §7${playerName}!`, sender);
 
                     if (playerSelected) {
