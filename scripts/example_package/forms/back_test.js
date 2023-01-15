@@ -1,14 +1,14 @@
 import { global, formBuilder, content, server } from '../../patchy_api/modules.js';
 server.objectiveAdd('testone');
 
-formBuilder.create('testBAck1', {
+formBuilder.create('testBack1', {
 	action: [
 		{
 			button: {
 				text: 'page2'
 			},
-			callback: (player) => {
-				formBuilder.show(player, 'testBack2');
+			callback: (receiver) => {
+				formBuilder.show(receiver, 'testBack2');
 			}
 		},
 		{
@@ -24,8 +24,8 @@ formBuilder.create('testBack2', {
 			button: {
 				text: 'page3'
 			},
-			callback: (player) => {
-				formBuilder.show(player, 'testBack3');
+			callback: (receiver) => {
+				formBuilder.show(receiver, 'testBack3');
 			}
 		},
 		{
@@ -40,7 +40,7 @@ formBuilder.create('testBack3', {
 		{
 			refresh: {
 				text: 'Refresh'
-			},
+			}
 		},
 		{
 			back: {

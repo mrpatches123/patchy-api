@@ -1,5 +1,6 @@
-import { Location, BlockLocation, Block, Dimension, XYRotation, Player, MinecraftBlockTypes, Vector } from '@minecraft/server';
-import { content, randomCoordsOutsideCircle } from '../utilities.js';
+import { Location, BlockLocation, Block, Dimension, XYRotation, MinecraftBlockTypes, Vector } from '@minecraft/server';
+import { content, isVector2, isVector3, native, randomCoordsOutsideCircle } from '../utilities.js';
+import { Player } from './player/class.js';
 const unsafeBlocks = [
 	MinecraftBlockTypes.lava.id,
 	MinecraftBlockTypes.flowingLava.id,
@@ -145,6 +146,78 @@ class TeleportBuilder {
 			if (!unsafeBlocks.includes(blockFloor.typeId) && blockAbove.typeId === MinecraftBlockTypes.air.id) return newLocation;
 		}
 	}
+	/**
+	 * @typedef {Object} RelitiveOffset 
+	 * @property {import('@minecraft/server').Vector3} location
+	 * @property {import('@minecraft/server').Vector3} offset
+	 */
+	/**
+	 * @typedef {Object} TeleportObjectOnce
+	 * @property {import('@minecraft/server').Vector3 | RelitiveOffset} location
+	 * @property {import('@minecraft/server').XYRotation | import('@minecraft/server').Vector3 | RelitiveOffset} face
+	 * @property {Dimension} dimension
+	 */
+	/**
+	 * @param {Player} player 
+	 * @param {TeleportObjectOnce} teleportObject 
+	 */
+	teleportOnce(player, teleportObject) {
+		const { rotation: rotationPlayer } = player;
+		// if (teleportObject instanceof Array) value = teleportObject[Math.floor(Math.random() * this[key].length)];
+		let { location, face, dimension } = teleportObject;
+		content.warn({ val: native.stringify(teleportObject), Dimension: dimension instanceof Dimension });
+		if (!isVector3(location) && location instanceof Object) {
+			let { offset, location: relitiveLocation } = location;
+			if (relitiveLocation instanceof BlockLocation) {
+				const { x, y, z } = relitiveLocation;
+				relitiveLocation = new Location(Math.floor(x) + 0.5, Math.floor(y), Math.floor(z) + 0.5);
+			}
+			if (offset instanceof BlockLocation) {
+				const { x, y, z } = offset;
+				offset = new Location(Math.floor(x) + 0.5, Math.floor(y), Math.floor(z) + 0.5);
+			}
+			const { x, y, z } = relitiveLocation;
+			const { x: ox, y: oy, z: oz } = offset;
+			location = new Location(x + ox, y + oy, z + oz);
+		}
+
+		if (face && !isVector2(face) && face instanceof Object) {
+			let { offset, location: relitiveLocation } = face;
+			if (relitiveLocation instanceof BlockLocation) {
+				const { x, y, z } = relitiveLocation;
+				relitiveLocation = new Location(Math.floor(x) + 0.5, Math.floor(y), Math.floor(z) + 0.5);
+			}
+			if (offset instanceof BlockLocation) {
+				const { x, y, z } = offset;
+				offset = new Location(Math.floor(x) + 0.5, Math.floor(y), Math.floor(z) + 0.5);
+			}
+			const { x, y, z } = relitiveLocation;
+			const { x: ox, y: oy, z: oz } = offset;
+			face = new Location(x + ox, y + oy, z + oz);
+		}
+		let rotation = (face instanceof BlockLocation || face instanceof Location) ? undefined : face;
+		let facing = (rotation) ? undefined : face;
+		if (location instanceof BlockLocation) {
+			const { x, y, z } = location;
+			location = new Location(Math.floor(x) + 0.5, Math.floor(y), Math.floor(z) + 0.5);
+		}
+		if (facing instanceof BlockLocation) {
+			const { x, y, z } = location;
+			facing = new Location(Math.floor(x) + 0.5, Math.floor(y), Math.floor(z) + 0.5);
+		}
+		if (facing && !rotation) return player.teleportFacing(location, dimension, facing);
+		content.warn({ rotation: rotation.constructor.name, rotation });
+		if (!isVector2(rotation)) { rotation = rotationPlayer; }
+		const { x: rx, y: ry } = rotation;
+		// content.warn({ location: location instanceof BlockLocation || location instanceof Location, dimension: dimension instanceof Dimension, rx, ry });
+		player.teleport(
+			location,
+			dimension,
+			rx,
+			ry
+		);
+
+	};
 	/**
 	 * @method remove
 	 * @param {Player} player 

@@ -1,8 +1,35 @@
 import { BlockLocation, Block, Dimension, Player, MinecraftBlockTypes, MinecraftItemTypes, system, ItemStack } from "@minecraft/server";
-import { permutationClone } from '../../../../patchy_api/modules.js';
+import { rotationToDirection, permutationClone } from '../../../../patchy_api/modules.js';
 
 const bucket = new ItemStack(MinecraftItemTypes.bucket, 1, 0);
+const reverseDirection = {
+	"down": "up",
+	"east": "west",
+	"north": "south",
+	"south": "north",
+	"up": "down",
+	"west": "east"
+};
+function rotationToDirection(rotation) {
+	let { x, y } = rotation;
 
+	x = (x / 45 + 2) | 0;
+	y = ((y + 45) / 90 + 2) | 0;
+	console.warn(x, y);
+	if (x < 1) return 'up';
+	else if ((x > 2)) return 'down';
+	switch (y) {
+		case 2:
+			return 'south';
+		case 4:
+		case 0:
+			return 'north';
+		case 1:
+			return 'east';
+		case 3:
+			return 'west';
+	}
+};
 const allDirectionsRotationPlacement = (blockId) => (dimension, blockLocation, blockFace, source) => {
 
 	dimension.getBlock(blockLocation).setType(MinecraftBlockTypes[blockId]);
@@ -11,14 +38,11 @@ const allDirectionsRotationPlacement = (blockId) => (dimension, blockLocation, b
 	 */
 	const block = dimension.getBlock(blockLocation);
 	const { permutation } = block;
-	console.warn(JSON.stringify(permutationClone(permutation)));
 	const facing_direction = permutation.getProperty('facing_direction');
 	facing_direction.value = reverseDirection[rotationToDirection(source.rotation)];
 	block.setPermutation(permutation);
-	console.warn(JSON.stringify({ t: 28282, [block.typeId]: permutationClone(block.permutation) }));
 	const { mainHand } = source;
 	system.run(() => mainHand.amount--);
-
 };
 
 

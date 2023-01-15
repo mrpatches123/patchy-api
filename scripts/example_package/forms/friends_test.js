@@ -40,11 +40,8 @@ formBuilder.create('friendsTest', {
 			}
 		},
 		{
-			button: {
+			back: {
 				text: 'Back'
-			},
-			callback: () => {
-				formBuilder.show(receiver, 'test');
 			}
 		}];
 	}
@@ -115,11 +112,8 @@ formBuilder.create('friendRequests', {
 			}
 		},
 		{
-			button: {
+			back: {
 				text: 'Back'
-			},
-			callback: (receiver) => {
-				formBuilder.show(receiver, 'friendsTest');
 			}
 		}
 	]
@@ -158,11 +152,8 @@ formBuilder.create('friendsRequestsManage', {
 						}
 					},
 					{
-						button: {
-							text: "Back"
-						},
-						callback: (receiver) => {
-							formBuilder.show(receiver, 'friendRequests');
+						back: {
+							text: 'Back'
 						}
 					}
 				]);
@@ -219,11 +210,8 @@ formBuilder.create('friendsRequestsManage', {
 						}
 					},
 					{
-						button: {
-							text: "Back"
-						},
-						callback: (receiver) => {
-							formBuilder.show(receiver, 'friendRequests');
+						back: {
+							text: 'Back'
 						}
 					}
 				]);
@@ -278,11 +266,8 @@ formBuilder.create('friendsAdd', {
 				text: 'Refresh'
 			}
 		}, {
-			button: {
+			back: {
 				text: 'Back'
-			},
-			callback: () => {
-				formBuilder.show(receiver, 'friendsTest');
 			}
 		}];
 	}
@@ -348,11 +333,8 @@ formBuilder.create('manageFreind', {
 				}
 			},
 			{
-				button: {
+				back: {
 					text: 'Back'
-				},
-				callback: () => {
-					formBuilder.show(receiver, 'friendsTest');
 				}
 			}
 		]);
@@ -385,11 +367,8 @@ formBuilder.create('tpaRequests', {
 			}
 		},
 		{
-			button: {
+			back: {
 				text: 'Back'
-			},
-			callback: (receiver) => {
-				formBuilder.show(receiver, 'friendsTest');
 			}
 		}
 
@@ -439,11 +418,8 @@ formBuilder.create('manageTpa', {
 			]);
 		},
 		{
-			button: {
+			back: {
 				text: 'Back'
-			},
-			callback: (receiver) => {
-				formBuilder.show(receiver, 'tpaRequests');
 			}
 		}
 	]

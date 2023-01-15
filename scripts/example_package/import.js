@@ -10,7 +10,7 @@ import './commands/enchant_all.js';
 import './forms/test.js';
 import './forms/friends_test.js';
 import './forms/profile.js';
-
+import './forms/back_test.js';
 //properties
 import './properties/player.js';
 

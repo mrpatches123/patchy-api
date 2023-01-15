@@ -48,4 +48,4 @@ commandBuilder.register('plot', {
 		}
 
 	}
-});;;;;;
+});

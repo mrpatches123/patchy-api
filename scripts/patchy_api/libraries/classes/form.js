@@ -1,4 +1,5 @@
-import { world, Player, Location, Vector } from '@minecraft/server';
+import { world, Location, Vector } from '@minecraft/server';
+import { Player } from './player/class.js';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message } from '@minecraft/server-ui';
 import { content, native, RemovableTree, server, typeOf } from '../utilities.js';
 import wait from './wait.js';
@@ -14,16 +15,16 @@ const responses = {
     modal: 'formValues',
     message: 'selection'
 };
-[];
+
 /**
  * @typedef {Object} ObjectForm
- * @property {Array<ModalTypes | ((player: Player, i: Number, ...extraArguments: Array<any>) => {})>} modal
- * @property {Array<ActionTypes | ((player: Player, i: Number, ...extraArguments: Array<any>) => {})>} action
- * @property {Array<MessageTypes | ((player: Player, i: Number, ...extraArguments: Array<any>) => {})>} message
+ * @property {Array<ModalTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => {})>} modal
+ * @property {Array<ActionTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => {})>} action
+ * @property {Array<MessageTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => {})>} message
  */
 
 /**
- * @typedef {(player: Player, i: Number, ...extraArguments: Array<any>) => {}} generationCallback
+ * @typedef {(receiver: Player, i: Number, ...extraArguments: Array<any>) => {}} generationCallback
  */
 
 /**
@@ -33,7 +34,7 @@ const responses = {
  * @property {ModalSlider | generationCallback} slider
  * @property {ModalTextField | generationCallback} textField
  * @property {Modaltoggle | generationCallback} toggle
- * @property {(player: Player, selection: Number | String, ...extraArguments: Array<any>) => {}} callback
+ * @property {(receiver: Player, selection: Number | String, ...extraArguments: Array<any>) => {}} callback
  */
 
 /**
@@ -74,7 +75,7 @@ const responses = {
  * @property {ActionBack | generationCallback} back
  * @property {ActionRefresh | generationCallback} refresh
  * @property {ActionToggle | generationCallback} toggle
- * @property {(player: Player, selection: Number | String, ...extraArguments: Array<any>) => {}} callback
+ * @property {(receiver: Player, selection: Number | String, ...extraArguments: Array<any>) => {}} callback
  */
 
 /**
@@ -100,7 +101,7 @@ const responses = {
 /**
  * @typedef {Object} ActionToggle
  * @property {Array<ActionToggleOptions>} options
- * @property {'player' | 'world' | generationCallback} dependency
+ * @property {'receiver' | 'world' | generationCallback} dependency
  * @property {Boolean | generationCallback} postfix
  * @property {Boolean | generationCallback} prefix
  * @property {Boolean | generationCallback} reopen
@@ -121,7 +122,7 @@ const responses = {
  * @property {String | generationCallback} body
  * @property {MessageButton1 | generationCallback} button1
  * @property {MessageButton2 | generationCallback} button2
- * @property {(player: Player, selection: Number | String, ...extraArguments: Array<any>) => {}} callback
+ * @property {(receiver: Player, selection: Number | String, ...extraArguments: Array<any>) => {}} callback
  */
 /**
  * @typedef {Object} MessageButton1
@@ -210,7 +211,7 @@ const methods = {
 
 
 
-// dependency = d?:'player', 'world'
+// dependency = d?:'receiver', 'world'
 // scoreboardName = if undefined memory
 class FormBuilder {
     constructor() {
@@ -244,7 +245,7 @@ class FormBuilder {
             form.body(body);
             form.button1('Yes');
             form.button2('No');
-            const { selection, canceled, cancelationReason } = await form.show(receiver);
+            const { selection, canceled, cancelationReason } = await form.show(receiver.player);
             if (canceled) return cancelationReason;
             if (selection) {
                 if (callbackIfYes instanceof Function) callbackIfYes(receiver);
@@ -288,7 +289,7 @@ class FormBuilder {
     }
     /**
      * @method showAwait
-     * @param {Player} player 
+     * @param {Player} receiver 
      * @param {String} key 
      * @param  {...any} extraArguments
      */
@@ -305,7 +306,7 @@ class FormBuilder {
     }
     /**
      * @method show
-     * @param {Player} player 
+     * @param {Player} receiver 
      * @param {String} key 
      * @param  {...any} extraArguments
      */
@@ -316,26 +317,26 @@ class FormBuilder {
     }
     /**
      * @method showMove
-     * @param {Player} player 
+     * @param {Player} receiver 
      * @param {String} key 
      * @param  {...any} extraArguments
      */
-    showMove(player, key, ...extraArguments) {
-        const { id, location, viewVector, name } = player;
+    showMove(receiver, key, ...extraArguments) {
+        const { id, location, viewVector, name } = receiver;
 
-        player.tellraw(`§l§eClose chat and Move to open the Menu!, ${id}`);
+        receiver.tellraw(`§l§eClose chat and Move to open the Menu!, ${id}`);
         global.playerMap[id].lastLocation = location;
         global.playerMap[id].lastViewVector = viewVector;
         wait.add(`formWait${id}`, () => {
 
 
-            const { location, viewVector, name } = player;
+            const { location, viewVector, name } = receiver;
 
             const { lastLocation = location, lastViewVector = viewVector } = global.playerMap[id];
             const { x: lx, y: ly, z: lz } = lastLocation;
             const { x: vx, y: vy, z: vz } = lastViewVector;
             content.warn({ lastLocation: { lx, ly, lz }, lastViewVector: { vx, vy, vz } });
-            // content.warn({ name, key, 'player?': player instanceof Player, playerMap: global.playerMap[id], lastLocation: lastLocation instanceof Location });
+            // content.warn({ name, key, 'receiver?': receiver instanceof Player, playerMap: global.playerMap[id], lastLocation: lastLocation instanceof Location });
 
             content.warn({ lastLocation: native.stringify(lastLocation), boolL: lastLocation instanceof Location, lastViewVector: native.stringify(lastViewVector), boolL: lastViewVector instanceof Vector });
             if (!viewVector.equals(lastViewVector) ||
@@ -345,18 +346,18 @@ class FormBuilder {
             global.playerMap[id].lastLocation = location;
             global.playerMap[id].lastViewVector = viewVector;
 
-        }, () => { formBuilder.show(player, key, ...extraArguments); }, { once: true, start: true, remove: true });
+        }, () => { formBuilder.show(receiver, key, ...extraArguments); }, { once: true, start: true, remove: true });
 
     }
     /**
-     * @param {Player} player 
+     * @param {Player} receiver 
      * @param {String} key 
      * @param  {...any} extraArguments 
      * @returns {GeneratedForm}
      * @private
      */
-    generateForm(player, key, ...extraArguments) {
-        const { name, id, memory } = player;
+    generateForm(receiver, key, ...extraArguments) {
+        const { name, id, memory, scores } = receiver;
         // if (!extraArguments.length) { extraArguments = []; }
         // content.warn({ extraArguments });
         if (!this[key]) {
@@ -373,7 +374,7 @@ class FormBuilder {
         let formArray;
         content.warn({ key, type: typeof this[key][type] });
         if (typeof this[key][type] === 'function') {
-            formArray = [...this[key][type](player, ...extraArguments)];
+            formArray = [...this[key][type](receiver, ...extraArguments)];
         } else {
             formArray = [...this[key][type]];
         }
@@ -386,7 +387,7 @@ class FormBuilder {
             // content.warn({ formArray, i, type: typeof object, array: isArray(object), extraArguments });
             let objectClone;
             if (typeof object === 'function') {
-                let objectGenerated = object(player, i, ...extraArguments);
+                let objectGenerated = object(receiver, i, ...extraArguments);
                 if (typeof objectGenerated === 'object') {
                     if (isArray(objectGenerated)) {
                         formArray = [...formArray.delete(i).merge(--i, objectGenerated)];
@@ -412,7 +413,7 @@ class FormBuilder {
                 // console.warn(key, method, i);
                 let parametersClone;
                 if (typeof parameters === 'function') {
-                    parametersClone = parameters(player, i, ...extraArguments);
+                    parametersClone = parameters(receiver, i, ...extraArguments);
                 } else if (typeof parameters === 'object') {
                     parametersClone = { ...parameters };
                 } else {
@@ -422,7 +423,7 @@ class FormBuilder {
                 parameters.forEach((key, value, i) => {
                     if (typeof value === 'function') {
                         console.warn(key);
-                        parametersClone[key] = value(player, i, ...extraArguments);
+                        parametersClone[key] = value(receiver, i, ...extraArguments);
                     }
                 });
                 if (typeOf(methodType) === typeOf(parameters)) {
@@ -452,19 +453,21 @@ class FormBuilder {
             object.filter(key => key !== 'callback').forEach((method, parameters, i) => {
                 // try {
                 if (method === 'toggle' && form instanceof action) {
-                    const { options, scoreboardName, dependency = 'player' } = parameters;
+                    const { options, scoreboardName, dependency = 'receiver' } = parameters;
                     let index = 0;
                     if (scoreboardName) {
-                        if (dependency === 'player') {
-                            server.objectiveAdd(scoreboardName);
-                            index = player.scoreTest(scoreboardName) ?? 0;
+                        server.objectiveAdd(scoreboardName);
+                        if (dependency === 'receiver') {
+
+                            index = scores[scoreboardName];
                         } else {
-                            index = player.scoreTest(scoreboardName, 'world') ?? 0;
+                            index = server.scoreTest(scoreboardName, 'world') ?? 0;
                         }
                     }
                     // console.warn(index);
                     if (index > options.length - 1) {
-                        index = player.scoreSet(scoreboardName);
+                        scores[scoreboardName] = 0;
+                        index = 0;
                     }
                     // content.warn({ option: options });
                     const { prependText = '', text = '', apendText = '', iconPath } = options[index];
@@ -505,26 +508,27 @@ class FormBuilder {
      */
     /**
      * 
-     * @param {Player} player 
+     * @param {Player} receiver 
      * @param {String} key 
      * @param {GeneratedForm} generatedForm return from formBuilder.generateForm
      * @param {Boolean} awaitShow 
      * @param  {...any} extraArguments 
      * @private
      */
-    async showForm(player, key, generatedForm, awaitShow, ...extraArguments) {
+    async showForm(receiver, key, generatedForm, awaitShow, ...extraArguments) {
 
-        const { name, id, memory } = player;
+        const { name, id, memory } = receiver;
+        content.warn({ t: 'showForm', bool: memory.keys() });
         if (!memory.hasOwnProperty('lastFormsShown')) memory.lastFormsShown = {};
-        if (!memory.hasOwnProperty('formTree')) memory.lastFormShown = new RemovableTree();
+        if (!memory.hasOwnProperty('formTree')) memory.formTree = new RemovableTree();
         memory.lastFormsShown[key] = extraArguments ?? [];
         memory.formTree.next(key);
         const { form, formArray, type } = generatedForm;
-        // const response = await form.show(player);
+        // const response = await form.show(receiver);
         // const { canceled, cancelationReason } = response;
         let response;
         while (true) {
-            response = await form.show(player);
+            response = await form.show(receiver.player);
             const { cancelationReason } = response;
             if (!awaitShow || cancelationReason !== 'userBusy') {
                 if (awaitShow && this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) delete this.__awaitingPlayers[id][key];
@@ -544,14 +548,14 @@ class FormBuilder {
             // content.warn(native.stringify(object, '<function>', false));
 
             if (object?.toggle && form instanceof action) {
-                const { options, scoreboardName, dependency = 'player', postfix = true, prefix = false, reopen = false } = object.toggle;
+                const { options, scoreboardName, dependency = 'receiver', postfix = true, prefix = false, reopen = false } = object.toggle;
                 let index = 0;
                 // content.warn({ hwjd: 'test252', lengthOptions: options.length });
                 if (scoreboardName) {
-                    if (dependency === 'player') {
-                        index = player.scoreTest(scoreboardName) ?? 0;
+                    if (dependency === 'receiver') {
+                        index = receiver.scoreTest(scoreboardName) ?? 0;
                         if (index < options.length) {
-                            player.scoreSet(scoreboardName, ++index);
+                            receiver.scoreSet(scoreboardName, ++index);
                         }
                     } else {
                         index = server.scoreTest(scoreboardName, 'world') ?? 0;
@@ -563,45 +567,45 @@ class FormBuilder {
                 console.warn('index: ' + index);
                 if (index > options.length - 1) {
                     index = 0;
-                    player.scoreSet(scoreboardName);
+                    receiver.scoreSet(scoreboardName);
                 }
                 console.warn('index: ' + index);
                 if (prefix) {
                     if (options[index].callback) {
-                        options[index].callback(player, i, ...extraArguments);
+                        options[index].callback(receiver, i, ...extraArguments);
                     } else if (options.callback) {
-                        options.callback(player, i, ...extraArguments);
+                        options.callback(receiver, i, ...extraArguments);
                     }
                 }
 
-                //content.warn({ index: player.scoreTest(scoreboardName) ?? 0, l: options.length });
+                //content.warn({ index: receiver.scoreTest(scoreboardName) ?? 0, l: options.length });
                 if (reopen) {
-                    this.show(player, key);
+                    this.show(receiver, key);
                 }
 
                 if (postfix) {
                     content.warn(index);
                     if (options[index].callback) {
-                        options[index].callback(player, i, ...extraArguments);
+                        options[index].callback(receiver, i, ...extraArguments);
                     } else if (options.callback) {
-                        options.callback(player, i, ...extraArguments);
+                        options.callback(receiver, i, ...extraArguments);
                     }
                 }
 
             } else if (object?.back && form instanceof action) {
-                const { memory } = player;
+                const { memory } = receiver;
                 const backKey = memory.formTree.beforeLast();
-                const backExtraArgs = memory.lastFormsShown[backKey];
-                this.show(player, backKey, ...backExtraArgs);
+                const backExtraArgs = memory.lastFormsShown[backKey] ?? [];
+                this.show(receiver, backKey, ...backExtraArgs);
             } else if (object?.refresh && form instanceof action) {
-                this.show(player, key, ...extraArguments);
+                this.show(receiver, key, ...extraArguments);
             } else {
 
                 if (object?.button?.reopen) {
-                    this.show(player, key, ...extraArguments);
+                    this.show(receiver, key, ...extraArguments);
                 }
                 if (object?.callback) {
-                    object.callback(player, i, ...extraArguments);
+                    object.callback(receiver, i, ...extraArguments);
                 }
 
             }
@@ -612,7 +616,7 @@ class FormBuilder {
                 content.warn({ response: native.stringify(response), type: responses[type] });
 
                 if (object.callback) {
-                    object.callback(player, response[responses[type]][i], ...extraArguments);
+                    object.callback(receiver, response[responses[type]][i], ...extraArguments);
                 }
             });
         }
@@ -628,7 +632,7 @@ export default formBuilder;
 
 
 // if (score >= options.length) {
-//     index = player.scoreSet(scoreboardName);
+//     index = receiver.scoreSet(scoreboardName);
 // }
 
 // formBuilder.create('key', {

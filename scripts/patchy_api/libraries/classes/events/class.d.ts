@@ -231,9 +231,12 @@ export class StepOnBlockEvent {
 export class PlayerSpawnedEvent {
 	readonly player: Player;
 }
-export class PlayerLeft {
+export class PlayerLeftEvent {
 	playerId: string;
 	playerName: string;
+}
+export class PlayerJoinAwaitMoveEvent {
+	readonly player: Player;
 }
 export interface EventKeyTypes {
 	beforeChat: BeforeChatEvent;
@@ -279,6 +282,7 @@ export interface EventKeyTypes {
 	requestAdded: RequestAddedEvent;
 	stepOnBlock: StepOnBlockEvent;
 	playerSpawned: PlayerSpawnedEvent;
+	playerJoinAwaitMove: PlayerJoinAwaitMoveEvent;
 	worldLoad: undefined;
 };
 

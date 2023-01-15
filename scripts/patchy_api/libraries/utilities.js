@@ -4,6 +4,10 @@ export function isVector3(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
 }
+export function isVector2(target) {
+    // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
+    return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
+}
 export function isDefined(input) {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }
@@ -196,6 +200,21 @@ export function betweenVector3(target, vector1, vector2) {
     const oy2 = (y1 < y2) ? y2 : y1;
     const oz2 = (z1 < z2) ? z2 : z1;
     let { x, y, z } = target;
+    return x >= ox1 && x <= ox2 && y >= oy1 && y <= oy2 && z >= oz1 && z <= oz2;
+}
+export function betweenBlockVector3(target, vector1, vector2) {
+    const { x: x1, y: y1, z: z1 } = vector1;
+    const { x: x2, y: y2, z: z2 } = vector2;
+    const ox1 = Math.floor((x1 < x2) ? x1 : x2);
+    const oy1 = Math.floor((y1 < y2) ? y1 : y2);
+    const oz1 = Math.floor((z1 < z2) ? z1 : z2);
+    const ox2 = Math.floor((x1 < x2) ? x2 : x1);
+    const oy2 = Math.floor((y1 < y2) ? y2 : y1);
+    const oz2 = Math.floor((z1 < z2) ? z2 : z1);
+    let { x, y, z } = target;
+    x = Math.floor(x) + 0.5;
+    y = Math.floor(y) + 0.5;
+    z = Math.floor(z) + 0.5;
     return x >= ox1 && x <= ox2 && y >= oy1 && y <= oy2 && z >= oz1 && z <= oz2;
 }
 export function andArray(array = []) {

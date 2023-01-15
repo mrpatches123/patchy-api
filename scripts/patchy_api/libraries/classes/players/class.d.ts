@@ -1,4 +1,4 @@
-import { ItemStack, PlayerInventoryComponentContainer } from "@minecraft/server";
+import { ItemStack, PlayerInventoryComponentContainer, EntityQueryOptions } from "@minecraft/server";
 import { Player } from "../player/class";
 class Inventory {
 	constructor(array: ItemStack[], inventory: PlayerInventoryComponentContainer);

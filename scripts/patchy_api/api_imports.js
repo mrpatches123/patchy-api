@@ -22,6 +22,7 @@ import './plugins/player_joined.js';
 import './plugins/world_load.js';
 import './plugins/update_test.js';
 //commands;
+import './commands/form.js';
 import './commands/plot.js';
 import './commands/error.js';
 import './commands/global.js';

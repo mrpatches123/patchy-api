@@ -1,8 +1,10 @@
-import { BlockAreaSize, Vector, world, Location } from "@minecraft/server";
-import { andArray, betweenVector3, content, isDefined, isVector3, native, orArray, overworld, server, sort3DVectors } from "../../utilities.js";
+import { BlockAreaSize, Vector, world, Location, MinecraftBlockTypes } from "@minecraft/server";
+import { andArray, betweenBlockVector3, blockFaceToCoords, content, isDefined, isVector2, isVector3, native, orArray, overworld, server, sort3DVectors } from "../../utilities.js";
 import eventBuilder from "../events/export_instance.js";
 import databases from "../database.js";
 import players from "../players/export_instance.js";
+import teleportBuilder from "../teleport.js";
+import { Player } from "../player/class.js";
 export class PlotsVector3 {
 	constructor(x, y, z) {
 		this.x = x;
@@ -17,7 +19,9 @@ export class BlockVector3 {
 		this.z = z;
 	}
 }
-
+const rotations = ['0_degrees', '90_degrees', '180_degrees', '270_degrees'];
+const mirrors = ['none', 'x', 'xz', 'z'];
+const animationModes = ['block_by_block', 'layer_by_layer'];
 const directions = ['x', '-x', 'z', '-z'];
 export class PlotBuilder {
 	constructor() {
@@ -33,7 +37,7 @@ export class PlotBuilder {
 				tickAfterLoad: () => {
 
 					const keys = Object.keys(plotThis.creates);
-					content.warn('init_zplotCreateQueue', keys.length);
+					// content.warn('init_zplotCreateQueue', keys.length);
 					if (!keys.length) return console.warn('ehy'), plotThis.subscribedQueue = false, eventBuilder.unsubscribe('init_zplotCreateQueue', 'tickAfterLoad');
 
 					// content.warn({ plotThis });
@@ -107,23 +111,47 @@ export class PlotBuilder {
 	}
 	create(key, rules) {
 		// content.warn(key, rules);
-		if (typeof key !== 'string') throw new Error(`key: ${key}, at param[0] is not of type: String!`);
-		if (!(rules instanceof Object)) throw new Error(`rules, at param[1] is not of type: Object!`);
-		let { size, start, ruleSets, property, plotNumberIdentifier } = rules;
+		if (typeof key !== 'string') throw new Error(`key: ${key}, at params[0] is not of type: String!`);
+		if (!(rules instanceof Object)) throw new Error(`rules in rules at params[1] is not of type: Object!`);
+		let { size, start, ruleSets, property, plotNumberIdentifier, structure, teleport, loop = false } = rules;
 		// content.warn({ plotNumberIdentifier });
-		if (typeof plotNumberIdentifier !== 'string') throw new Error('plotNumberIdentifier: at param[1] is not of type: String!');
-		if (typeof property !== 'boolean') throw new Error('plotNumberIdentifier: at param[1] is not of type: Boolean!');
-		if (size && !(size instanceof BlockAreaSize)) throw new Error(`size, in rules at param[1] is not of type: BlockAreaSize!`);
-		if (!size && !ruleSets) throw new Error(`size and ruleSets, in rules at param[1] are not defined therefore size in either is not defined!`);
+		if (typeof plotNumberIdentifier !== 'string') throw new Error('plotNumberIdentifier in rules at params[1] is not of type: String!');
+		if (typeof property !== 'boolean') throw new Error('plotNumberIdentifier in rules at params[1] is not of type: Boolean!');
+		if (size && !(size instanceof BlockAreaSize)) throw new Error(`size, in rules at params[1] is not of type: BlockAreaSize!`);
+		if (!size && !ruleSets) throw new Error(`size and ruleSets, in rules at params[1] are not defined therefore size in either is not defined!`);
 		const indexsSize = ruleSets.reduce((sumation, current, i) => { if (!(current.size instanceof BlockAreaSize)) { sumation.push(i); return sumation; } }, []);
-		if (!size && ruleSets && indexsSize.length) throw new Error(`ruleSets, at indexs: ${andArray(indexsSize)} in rules at param[1]  `);
-		if (!start) throw new Error(`start, in rules at param[1] is not defined`);
-		if (!isVector3(start)) throw new Error(`start, in rules at param[1] is not of type: vector3`);
+		if (!size && ruleSets && indexsSize.length) throw new Error(`ruleSets, at indexs: ${andArray(indexsSize)} in rules at params[1]!`);
+		if (!start) throw new Error(`start, in rules at params[1] is not defined!`);
+		if (!isVector3(start)) throw new Error(`start, in rules at params[1] is not of type: Vector3!`);
+		if (typeof loop !== 'boolean') throw new Error(`loop, in rules at params[1] is defined and not of type: Boolean!`);
+
+		if (structure) {
+			if (!(structure instanceof Object)) throw new Error(`structure, in rules at params[1] is defined and not of type: Object!`);
+			const { identifier, rotation = '0_degrees', mirror = 'none', animationMode = 'block_by_block', animationSeconds = 0, includesEntites = true, includesBlocks = true, waterlogged = false, integrity = 100, seed } = structure;
+			if (typeof identifier !== 'string') throw new Error(`identifier in structure in rules at params[1] is not of type: String!`);
+			if (!rotations.includes(rotation)) throw new Error(`rotation in structure in rules at params[1] is not one of the following: ${orArray(rotations)}!`);
+			if (!mirrors.includes(mirror)) throw new Error(`mirror in structure in rules at params[1] is not one of the following: ${orArray(mirrors)}!`);
+			if (!animationModes.includes(animationMode)) throw new Error(`animationMode in structure in rules at params[1] is not one of the following: ${orArray(animationModes)}!`);
+			if (typeof animationSeconds !== 'number') throw new Error(`animationSeconds in structure in rules at params[1] is not of type: Number!`);
+			if (typeof includesEntites !== 'boolean') throw new Error(`includesEntites in structure in rules at params[1] is not of type: Boolean!`);
+			if (typeof includesBlocks !== 'boolean') throw new Error(`includesBlocks in structure in rules at params[1] is not of type: Boolean!`);
+			if (typeof waterlogged !== 'boolean') throw new Error(`waterlogged in structure in rules at params[1] is not of type: Boolean!`);
+			if (typeof integrity !== 'number') throw new Error(`integrity in structure in rules at params[1] is not of type: Number!`);
+			if (typeof seed !== 'string') throw new Error(`seed in structure in rules at params[1] is not of type: String!`);
+		}
+		if (teleport) {
+			if (!(teleport instanceof Object)) throw new Error(`structure, in rules at params[1] is defined and not of type: Object!`);
+			const { location, face } = teleport;
+			if (!isVector3(location)) throw new Error(`location, in teleport in rules at params[1] is not of type: Vector3!`);
+			if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: XYRotation or Vector3!`);
+			if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: XYRotation or Vector3!`);
+		}
+
 		ruleSets.forEach(({ count, start, direction, offset }, i) => {
-			if (!(start instanceof PlotsVector3) && !(start instanceof BlockVector3)) throw new Error(`start at ruleSets[${i}] in rules at param[1] is not of type: BlockVector3 or PlotVector3  `);
-			if (count && typeof count !== 'number') throw new Error(`count at ruleSets[${i}] in rules at param[1] is not of type: number`);
-			if (!directions.includes(direction)) throw new Error(`direction, ${direction} at ruleSets[${i}] in rules at param[1] is not one of the following: ${orArray(directions)}`);
-			if (offset && !isVector3(offset)) throw new Error(`offset, at ruleSets[${i}] in rules at param[1] is not of type: {x: number, y: number, z: number})}`);
+			if (!(start instanceof PlotsVector3) && !(start instanceof BlockVector3)) throw new Error(`start at ruleSets[${i}] in rules at params[1] is not of type: BlockVector3 or PlotVector3  `);
+			if (count && typeof count !== 'number') throw new Error(`count at ruleSets[${i}] in rules at params[1] is not of type: number`);
+			if (!directions.includes(direction)) throw new Error(`direction, ${direction} at ruleSets[${i}] in rules at params[1] is not one of the following: ${orArray(directions)}`);
+			if (offset && !isVector3(offset)) throw new Error(`offset, at ruleSets[${i}] in rules at params[1] is not of type: {x: number, y: number, z: number})}`);
 		});
 		this.creates[key] = rules;
 		(property) ? players.registerProperty(plotNumberIdentifier, { type: 'number' })
@@ -163,37 +191,67 @@ export class PlotBuilder {
 		eventBuilder.subscribe(`end_plots*${key}*API`, {
 			tickAfterLoad: () => {
 
-				const { plotNumberIdentifier, property, subscribed } = this.plots[key].rules;
-				// const plots = databases.get('plots*API') ?? databases.add('plots*API');
-				// const { availablePlots = [0] } = plots.get(key);
-				// if (availablePlots[0] === 0) {
-				// 	this.plots[key].subscribed = false;
-				// 	return eventBuilder.unsubscribe(`end_plots*${key}*API`, 'tickAfterLoad');
-				// }
-				const { ruleSets } = this.plots[key].rules;
+				const { plotNumberIdentifier, property, teleport, ruleSets } = this.plots[key].rules;
+
+
 				players.get().iterate((player) => {
 					// content.warn(player.name);
 					const { scores, properties, location, memory, rotation } = player;
 					let plotNumber;
 					if (property) plotNumber = properties[plotNumberIdentifier];
 					else plotNumber = scores[plotNumberIdentifier];
-					content.warn(plotNumber);
+					// content.warn(plotNumber);
 					if (!isDefined(plotNumber)) return;
 					const { size, start } = ruleSets[plotNumber];
-					const middle = new Location((size.x) / 2 + start.x, start.y, (size.z) / 2 + start.z);
-
 					let { lastLocation = location } = memory;
-
-
 					const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
 					memory.lastLocation = location;
-					if (betweenVector3(location, start, end)) return;
-					let fixedLocation = (betweenVector3(lastLocation, start, end)) ? lastLocation : middle;
-					const { x, y, z } = fixedLocation;
-					const { x: rx, y: ry } = rotation;
+					if (betweenBlockVector3(location, start, end)) return;
+					if (betweenBlockVector3(lastLocation, start, end)) {
+						const { x, y, z } = lastLocation;
+						const { x: rx, y: ry } = rotation;
+						player.teleport(new Location(x, y, z), overworld, rx, ry);
+					} else {
+						if (teleport) {
+							let { location: teleportLocation, face } = teleport;
+							teleportLocation = { location: start, offset: teleportLocation };
+							if (isVector3(teleportLocation)) face = { location: start, offset: face };
+							const object = { location: teleportLocation, face, dimension: overworld };
 
-					player.teleport(new Location(x, y, z), overworld, rx, ry);
+							teleportBuilder.teleportOnce(player, object);
+						} else {
+							player.teleport(new Location((size.x) / 2 + start.x, start.y, (size.z) / 2 + start.z), overworld, rx, ry);
+						}
+					}
 				});
+
+			},
+			blockBreak: ({ player, block, brokenBlockPermutation }) => {
+				const { plotNumberIdentifier, property, ruleSets } = this.plots[key].rules;
+				const { properties, scores } = player;
+				let plotNumber;
+				if (property) plotNumber = properties[plotNumberIdentifier];
+				else plotNumber = scores[plotNumberIdentifier];
+				if (!isDefined(plotNumber)) return;
+				const { size, start } = ruleSets[plotNumber];
+				const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
+				if (betweenBlockVector3(block.location, start, end)) return;
+				block.setPermutation(brokenBlockPermutation);
+			},
+			beforeItemUseOn: (event) => {
+				const { blockFace, blockLocation, source: player, dimension } = event;
+				if (!(player instanceof Player)) return;
+				const { properties, scores } = player;
+				let plotNumber;
+				const { plotNumberIdentifier, property, ruleSets } = this.plots[key].rules;
+				if (property) plotNumber = properties[plotNumberIdentifier];
+				else plotNumber = scores[plotNumberIdentifier];
+				if (!isDefined(plotNumber)) return;
+				const { size, start } = ruleSets[plotNumber];
+				const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
+				const blockPlaceLocation = blockFaceToCoords(blockFace, blockLocation);
+				if (betweenBlockVector3(blockPlaceLocation, start, end)) return;
+				event.cancel = true;
 			}
 		});
 		this.plots[key].subscribed = true;
@@ -201,21 +259,37 @@ export class PlotBuilder {
 	add(player, key) {
 		const { scores, properties } = player;
 		const { subscribed } = this.plots[key];
-		const { plotNumberIdentifier, property } = this.plots[key].rules;
+		const { plotNumberIdentifier, property, loop, teleport, structure, ruleSets = [] } = this.plots[key].rules;
+		let { location: teleportLocation, face } = teleport;
 		const plots = databases.get('plots*API');
 		if (!plots) throw new Error('why does the plots*API db not exist');
 		const plot = plots.get(key);
 		if (!plot) throw new Error(`plot: ${key}, does not exist`);
 		let { availablePlots, currentIndex, hasBeenSubscribed } = plot;
-		if (availablePlots.length <= 1) { availablePlots.push(++currentIndex); };
+		if (!loop && ruleSets.length === currentIndex) return false;
+
+
 		const plotNumber = availablePlots.shift();
+		if (availablePlots.length === 0) { availablePlots.push(++currentIndex); };
 		if (property) properties[plotNumberIdentifier] = plotNumber;
 		else scores[plotNumberIdentifier] = plotNumber;
 		if (!subscribed) {
 			this.subscribe(key);
 			hasBeenSubscribed = true;
 		}
-		content.warn({ availablePlots, currentIndex, hasBeenSubscribed });
+
+		if (teleport) {
+			const { start: { x, y, z } } = ruleSets[plotNumber];
+			const startLocation = new Location(x, y, z);
+			teleportLocation = { location: startLocation, offset: teleportLocation };
+			// content.warn(native.stringify(face));
+			if (isVector3(face)) face = { location: startLocation, offset: face };
+			// content.warn(native.stringify(face));
+			teleportBuilder.teleportOnce(player, { location: teleportLocation, face, dimension: overworld });
+		}
+		if (structure) {
+
+		}
 		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
 		content.chatFormat({ databases });
 		databases.queueSave('plots*API');

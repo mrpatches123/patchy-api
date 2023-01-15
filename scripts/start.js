@@ -244,14 +244,14 @@ system.events.beforeWatchdogTerminate.subscribe((event) => {
 // 	'minecraft:shulker_box': allDirectionsRotationPlacement('shulkerBox'),
 // 	'minecraft:undyed_shulker_box': allDirectionsRotationPlacement('undyedShulkerBox'),
 // };
-// const reverseDirection = {
-// 	"down": "up",
-// 	"east": "west",
-// 	"north": "south",
-// 	"south": "north",
-// 	"up": "down",
-// 	"west": "east"
-// };
+const reverseDirection = {
+	"down": "up",
+	"east": "west",
+	"north": "south",
+	"south": "north",
+	"up": "down",
+	"west": "east"
+};
 // function permutationClone(permutation) {
 // 	const permutationProperties = [];
 // 	/**

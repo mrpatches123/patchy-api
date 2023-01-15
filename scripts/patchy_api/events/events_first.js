@@ -9,6 +9,26 @@ global.tickAfterLoadI = 0;
 let a = 0;
 let test = false;
 eventBuilder.register({
+	playerJoinAwaitMove: {
+		subscription: {
+			playerJoined: {
+				function: ({ player }) => {
+					const systemRunId = system.runSchedule(() => {
+						const { rotation, memory } = player;
+						const { lastRotation = rotation } = memory;
+						const { x: rx, y: ry } = rotation;
+						const { x: lrx, y: lry } = lastRotation;
+						memory.lastRotation = rotation;
+						content.warn({ rx, ry, lrx, lry });
+						if (rx === lrx && ry === lry) return;
+						eventBuilder.getEvent('playerJoinAwaitMove').iterate({ player });
+						system.clearRunSchedule(systemRunId);
+					}, 0);
+				}
+			}
+		}
+
+	},
 	worldLoad: {
 		subscription: {
 			tick: {

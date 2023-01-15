@@ -12,8 +12,8 @@ formBuilder.create('test', {
                 iconPath: 'textures/forms/Main/Test',
                 reopen: true
             },
-            callback: () => {
-                formBuilder.show(player, 'testBAck1');
+            callback: (receiver) => {
+                formBuilder.show(receiver, 'testBack1');
             }
         },
         {
@@ -25,16 +25,16 @@ formBuilder.create('test', {
                     {
                         text: 'Toggle: ON',
                         postfix: true,
-                        callback: (player) => {
-                            content.warn({ Toggle: player.id });
+                        callback: (receiver) => {
+                            content.warn({ Toggle: receiver.id });
                         }
                     },
                     {
 
                         text: 'Toggle: OFF',
                         postfix: true,
-                        callback: (player) => {
-                            content.warn({ Toggle: player.id });
+                        callback: (receiver) => {
+                            content.warn({ Toggle: receiver.id });
                         }
                     }
                 ]
@@ -44,24 +44,24 @@ formBuilder.create('test', {
             button: {
                 text: 'Profile'
             },
-            callback: (player) => {
-                formBuilder.show(player, 'playerProfile');
+            callback: (receiver) => {
+                formBuilder.show(receiver, 'playerProfile');
             }
         },
         {
             button: {
                 text: 'Friendsa%%a'
             },
-            callback: (player) => {
-                formBuilder.show(player, 'friendsTest');
+            callback: (receiver) => {
+                formBuilder.show(receiver, 'friendsTest');
             }
         },
         {
             button: {
                 text: 'question test'
             },
-            callback: (player) => {
-                formBuilder.showConformation(player, 'Is js Cool?', (player) => player.tell('You are Cool!'), (player) => player.tell('You are lame!'));
+            callback: (receiver) => {
+                formBuilder.showConformation(receiver, 'Is js Cool?', (receiver) => receiver.tell('You are Cool!'), (player) => receiver.tell('You are lame!'));
             }
         }
     ]

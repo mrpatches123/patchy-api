@@ -6,6 +6,10 @@ plotBuilder.create('buildBattle', {
 	size: new BlockAreaSize(10, 100, 10),
 	start: new BlockLocation(139, 96, 216),
 	plotNumberIdentifier: 'plotNumber',
+	teleport: {
+		location: new BlockLocation(4, 1, 4),
+		face: new BlockLocation(5, 1, 4)
+	},
 	ruleSets: [
 		{
 			count: 3,
