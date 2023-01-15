@@ -41,6 +41,9 @@ export class Player {
 	get container() {
 		return this.player.getComponent('inventory').container;
 	}
+	get inventory() {
+		return players.getInventory(this.player);
+	}
 	get scores() {
 		const player = this.player;
 		return new Proxy({}, {

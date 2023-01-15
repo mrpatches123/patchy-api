@@ -11,6 +11,7 @@ import './forms/test.js';
 import './forms/friends_test.js';
 import './forms/profile.js';
 import './forms/back_test.js';
+import './commands/test_func_form.js';
 //properties
 import './properties/player.js';
 

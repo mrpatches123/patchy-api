@@ -1,7 +1,7 @@
 import { ItemStack, Player as PlayerType } from '@minecraft/server';
 import { PlayerInventoryComponentContainer, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, XYRotation, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions } from '@minecraft/server';
 import { EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
-import { Inventory } from '../inventory.js';
+import { Inventory } from "../players/export_instance.js";
 interface PlayerEntity {
 	Player: PlayerType;
 	Entity: Entity;
@@ -153,10 +153,13 @@ export declare class Player extends Entity {
 	 * @throws This property can throw when used.
 	 */
 	readonly container: PlayerInventoryComponentContainer;
-
-	mainHand: ItemStack;
 	/**
 	 * proxy with get and set on the main hand of the player even the item properties have a get and set
+	 * @throws This property can throw when used.
+	 */
+	mainHand: ItemStack;
+	/**
+	 * returns and array of itemstacks with chaching so the inventory is only gotten once per tick
 	 * @throws This property can throw when used.
 	 */
 	inventory: Inventory;

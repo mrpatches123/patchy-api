@@ -20,11 +20,11 @@ import wait from './libraries/classes/wait.js';
 import tagDatabases from './libraries/classes/tag_database.js';
 import requestBuilder from './libraries/classes/request.js';
 import { texturePaths } from './libraries/texture_path.js';
-import { ModalForm } from './libraries/classes/forms_func.js';
+import { ModalForm, ActionForm, MessageForm } from './libraries/classes/forms_func.js';
 import preformance from './libraries/classes/preformace.js';
 import propertyBuilder from './libraries/classes/property.js';
 import fill from './libraries/classes/fill.js';
-export { Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
+export { Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, ActionForm, MessageForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
 
 
 

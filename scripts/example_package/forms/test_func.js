@@ -1,7 +1,7 @@
-import { ModalForm } from "../../patchy_api/modules.js";
+import { content, ModalForm, native } from "../../patchy_api/modules.js";
 
-export function showTestFunc(player, awaitNotUserBusy = false) {
-	const modaltest = new ModalForm()
+export async function showTestFunc(player, awaitNotUserBusy = false) {
+	const response = await new ModalForm()
 		.title("modalFuncTest")
 		.dropdown("dropdown", [
 			{
@@ -28,4 +28,6 @@ export function showTestFunc(player, awaitNotUserBusy = false) {
 			console.warn(player.name, '0textField1', outputText);
 		}).toggle("toggle", false, (player, stat))
 		.show(player, awaitNotUserBusy);
+	content.warn({ functest: native.toObject(response) });
+
 }
