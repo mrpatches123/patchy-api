@@ -1,4 +1,4 @@
-import { world, ItemStack, , Items } from "@minecraft/server";
+import { world, ItemStack, Items } from "@minecraft/server";
 import { content, native, toProperCase, lockedItemKey } from "../utilities.js";
 import eventBuilder from "./events/export_instance.js";
 import global from './global.js';

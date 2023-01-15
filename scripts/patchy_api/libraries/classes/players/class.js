@@ -7,7 +7,7 @@ const types = Object.keys(typeDefinitionFunctions);
 function isDefined(input) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
 }
-class Inventory {
+export class Inventory {
 	constructor(array, inventory) {
 		this.array = array;
 		this.container = inventory;
