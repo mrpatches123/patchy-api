@@ -15,7 +15,7 @@ class Inventory {
 	iterate(callback) {
 		if (!(callback instanceof Function)) throw new Error('Not a function at args[0]');
 		this.array.forEach((item, i) => {
-			const newItem = callback(item);
+			const newItem = callback(item, i);
 			if (!(newItem instanceof ItemStack)) return;
 			this.array[i] = newItem;
 			this.container.setItem(i, newItem);

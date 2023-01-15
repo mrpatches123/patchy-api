@@ -47,4 +47,7 @@ export class Players {
 	resetProperty(player: Player, identifier: string, value: string | number | boolean): void;
 	registerProperty(identifier: string, options: propertyOptionsString | propertyOptionsNumberBoolean): void;
 }
-
+export class Inventory {
+	constructor(array: ItemStack[], inventory: PlayerInventoryComponentContainer);
+	iterate(callback: (item: ItemStack, i: Number) => {}): void;
+}
