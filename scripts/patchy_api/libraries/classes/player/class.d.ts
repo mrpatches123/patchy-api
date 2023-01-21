@@ -1,7 +1,7 @@
 import { ItemStack, Player as PlayerType } from '@minecraft/server';
 import { PlayerInventoryComponentContainer, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, XYRotation, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions } from '@minecraft/server';
 import { EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
-import { Inventory } from "../players/export_instance.js";
+// import { Inventory } from "../players/export_instance.js";
 interface PlayerEntity {
 	Player: PlayerType;
 	Entity: Entity;
@@ -127,6 +127,7 @@ interface EntityComponents {
 	'wants_jockey': EntityWantsJockeyComponent;
 }
 export declare class Player extends Entity {
+	gamemode: number;
 	constructor(player: PlayerType);
 	/**
 	 * if the player can have commands ran on them

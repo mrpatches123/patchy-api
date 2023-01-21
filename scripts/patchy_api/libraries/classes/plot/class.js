@@ -5,6 +5,7 @@ import databases from "../database.js";
 import players from "../players/export_instance.js";
 import teleportBuilder from "../teleport.js";
 import { Player } from "../player/class.js";
+import gamemode from "../gamemode.js";
 export class PlotsVector3 {
 	constructor(x, y, z) {
 		this.x = x;
@@ -35,14 +36,12 @@ export class PlotBuilder {
 		if (!this.subscribedQueue) {
 			eventBuilder.subscribe('init_zplotCreateQueue', {
 				tickAfterLoad: () => {
-
 					const keys = Object.keys(plotThis.creates);
 					// content.warn('init_zplotCreateQueue', keys.length);
 					if (!keys.length) return console.warn('ehy'), plotThis.subscribedQueue = false, eventBuilder.unsubscribe('init_zplotCreateQueue', 'tickAfterLoad');
 
 					// content.warn({ plotThis });
 					keys.forEach(key => {
-
 						const rules = plotThis.creates[key];
 						delete plotThis.creates[key];
 						const { ruleSets, size, start } = rules;
@@ -100,7 +99,6 @@ export class PlotBuilder {
 						if (hasBeenSubscribed) plotThis.subscribe(key);
 						plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
 						databases.queueSave('plots*API');
-
 					});
 				}
 			});
@@ -186,24 +184,32 @@ export class PlotBuilder {
 		let { availablePlots = [0] } = plots.get(key);
 		return availablePlots;
 	}
+	setCurrentPlot(player, key) {
+		player.memory;
+	}
 	subscribe(key) {
 		content.warn(`end_plots*${key}*API`);
 		eventBuilder.subscribe(`end_plots*${key}*API`, {
 			tickAfterLoad: () => {
-
-				const { plotNumberIdentifier, property, teleport, ruleSets } = this.plots[key].rules;
-
-
 				players.get().iterate((player) => {
 					// content.warn(player.name);
 					const { scores, properties, location, memory, rotation } = player;
+					let { lastLocation = location, currentPlot, ingorePlotSystem = false } = memory;
+					if (!currentPlot || ingorePlotSystem) return;
+					const { plotNumberIdentifier, property, teleport, ruleSets, defaultPermision, defaultGamemode } = this.plots[currentPlot].rules;
+					const { plotOverides: { number: numberOveride, gamemode: gamemodeOveride = defaultGamemode } } = memory;
 					let plotNumber;
-					if (property) plotNumber = properties[plotNumberIdentifier];
+					if (isDefined(maskedPlotNumber)) plotNumber = numberOveride;
+					else if (property) plotNumber = properties[plotNumberIdentifier];
 					else plotNumber = scores[plotNumberIdentifier];
 					// content.warn(plotNumber);
 					if (!isDefined(plotNumber)) return;
 					const { size, start } = ruleSets[plotNumber];
-					let { lastLocation = location } = memory;
+					if (gamemodeOveride) {
+						const { gamemode: gamemodePlayer } = player;
+						if (gamemodePlayer !== gamemodeOveride) player.gamemode = gamemodeOveride;
+					}
+
 					const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
 					memory.lastLocation = location;
 					if (betweenBlockVector3(location, start, end)) return;
@@ -227,31 +233,54 @@ export class PlotBuilder {
 
 			},
 			blockBreak: ({ player, block, brokenBlockPermutation }) => {
-				const { plotNumberIdentifier, property, ruleSets } = this.plots[key].rules;
-				const { properties, scores } = player;
+				const { scores, properties, location, memory, rotation } = player;
+				let { currentPlot, ingorePlotSystem = false } = memory;
+				if (!currentPlot || ingorePlotSystem) return;
+				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode } = this.plots[currentPlot].rules;
+				const { plotOverides: { number: numberOveride, permision = defaultPermision, gamemode: gamemodeOveride = defaultGamemode } } = memory;
 				let plotNumber;
-				if (property) plotNumber = properties[plotNumberIdentifier];
+				if (isDefined(maskedPlotNumber)) plotNumber = numberOveride;
+				else if (property) plotNumber = properties[plotNumberIdentifier];
 				else plotNumber = scores[plotNumberIdentifier];
 				if (!isDefined(plotNumber)) return;
-				const { size, start } = ruleSets[plotNumber];
-				const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
-				if (betweenBlockVector3(block.location, start, end)) return;
-				block.setPermutation(brokenBlockPermutation);
+				switch (permision) {
+					case 'write': {
+						const { size, start } = ruleSets[plotNumber];
+						const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
+						if (betweenBlockVector3(block.location, start, end)) return;
+					} case 'read': {
+						block.setPermutation(brokenBlockPermutation);
+						break;
+					}
+				}
+
+
 			},
 			beforeItemUseOn: (event) => {
 				const { blockFace, blockLocation, source: player, dimension } = event;
 				if (!(player instanceof Player)) return;
-				const { properties, scores } = player;
+				const { scores, properties, location, memory, rotation } = player;
+				let { currentPlot, ingorePlotSystem = false } = memory;
+				if (!currentPlot || ingorePlotSystem) return;
+				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode } = this.plots[currentPlot].rules;
 				let plotNumber;
-				const { plotNumberIdentifier, property, ruleSets } = this.plots[key].rules;
-				if (property) plotNumber = properties[plotNumberIdentifier];
+				if (isDefined(maskedPlotNumber)) plotNumber = numberOveride;
+				else if (property) plotNumber = properties[plotNumberIdentifier];
 				else plotNumber = scores[plotNumberIdentifier];
 				if (!isDefined(plotNumber)) return;
-				const { size, start } = ruleSets[plotNumber];
-				const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
-				const blockPlaceLocation = blockFaceToCoords(blockFace, blockLocation);
-				if (betweenBlockVector3(blockPlaceLocation, start, end)) return;
-				event.cancel = true;
+				switch (permision) {
+					case 'write': {
+						const { size, start } = ruleSets[plotNumber];
+						const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
+						const blockPlaceLocation = blockFaceToCoords(blockFace, blockLocation);
+						if (betweenBlockVector3(blockPlaceLocation, start, end)) return;
+					} case 'read': {
+						event.cancel = true;
+						break;
+					}
+				}
+
+
 			}
 		});
 		this.plots[key].subscribed = true;

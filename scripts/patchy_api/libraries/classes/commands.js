@@ -40,6 +40,7 @@ class CommandBuilder {
      * @returns { String }
      */
     listCommands(prefix, sender) {
+        content.warn({ t: 'listCommands', prefix });
         const commandList = this[prefix].filter((command, { requires, callback }) => {
             const { score, tag } = requires ?? {};
             if (requires) {

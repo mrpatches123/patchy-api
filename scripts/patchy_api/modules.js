@@ -1,6 +1,7 @@
-import { isVector2, betweenBlockVector3, betweenVector3, isDefined, permutationClone, RemovableTree, generateRandomString, chunkStringRegex, chunkString, obfuscate255, deobfuscate255, end, overworld, nether, andArray, assignToPath, blockFaceToCoords, combine, content, getNames, ItemsGet, hypot2, hypot3, lockedItemKey, crossHareDataKey, native, parseList, pathIsObject, pathIsSettable, rainbow, rainbowWeight, randomCoordsOutsideCircle, server, sort3DRange, sortRange, staff, toProperCase, typeOf } from './libraries/utilities.js';
+import { metricNumbers, isVector2, betweenBlockVector3, betweenVector3, isDefined, permutationClone, RemovableTree, generateRandomString, chunkStringRegex, chunkString, obfuscate255, deobfuscate255, end, overworld, nether, andArray, assignToPath, blockFaceToCoords, combine, content, getNames, ItemsGet, hypot2, hypot3, lockedItemKey, crossHareDataKey, native, parseList, pathIsObject, pathIsSettable, rainbow, rainbowWeight, randomCoordsOutsideCircle, server, sort3DRange, sortRange, staff, toProperCase, typeOf } from './libraries/utilities.js';
 
-export { isVector2, betweenBlockVector3, betweenVector3, isDefined, permutationClone, RemovableTree, generateRandomString, chunkStringRegex, chunkString, obfuscate255, deobfuscate255, end, overworld, nether, andArray, assignToPath, blockFaceToCoords, combine, content, getNames, ItemsGet, hypot2, hypot3, lockedItemKey, crossHareDataKey, native, parseList, pathIsObject, pathIsSettable, rainbow, rainbowWeight, randomCoordsOutsideCircle, server, sort3DRange, sortRange, staff, toProperCase, typeOf };
+export { metricNumbers, isVector2, betweenBlockVector3, betweenVector3, isDefined, permutationClone, RemovableTree, generateRandomString, chunkStringRegex, chunkString, obfuscate255, deobfuscate255, end, overworld, nether, andArray, assignToPath, blockFaceToCoords, combine, content, getNames, ItemsGet, hypot2, hypot3, lockedItemKey, crossHareDataKey, native, parseList, pathIsObject, pathIsSettable, rainbow, rainbowWeight, randomCoordsOutsideCircle, server, sort3DRange, sortRange, staff, toProperCase, typeOf };
+
 import eventBuilder from './libraries/classes/events/export_instance.js';
 import players from './libraries/classes/players/export_instance.js';
 import { Database } from './libraries/classes/database.js';
@@ -9,6 +10,7 @@ import databases from './libraries/classes/database.js';
 import errorLogger from './libraries/classes/error.js';
 import formBuilder from './libraries/classes/form.js';
 import global from './libraries/classes/global.js';
+import scoreboardBuilder from './libraries/classes/scoreboard.js';
 import plotBuilder, { PlotsVector3, BlockVector3 } from './libraries/classes/plot/export_instance.js';
 import { Player } from './libraries/classes/player/class.js';
 //import inventoryBuilder from './libraries/classes/inventory.js';
@@ -24,7 +26,8 @@ import { ModalForm, ActionForm, MessageForm } from './libraries/classes/forms_fu
 import preformance from './libraries/classes/preformace.js';
 import propertyBuilder from './libraries/classes/property.js';
 import fill from './libraries/classes/fill.js';
-export { Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, ActionForm, MessageForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
+import structureBuilder from './libraries/classes/structure/export_instance.js';
+export { structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, ActionForm, MessageForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
 
 
 

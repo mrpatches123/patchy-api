@@ -1,5 +1,5 @@
 import { BlockLocation, BlockType, BlockPermutation, system, BlockAreaSize } from "@minecraft/server";
-import { content, overworld, sort3DVectors } from "../utilities.js";
+import { content, overworld, sort3DRange, sort3DVectors } from "../utilities.js";
 /**
  * @typedef {Object} BlockOptions
  * @property {BlockType} type
@@ -14,7 +14,6 @@ import { content, overworld, sort3DVectors } from "../utilities.js";
  * @property {Number} maxPlacementsPerTick default?=8192 and 0 is infinity
  * @property {BlockType} replace 
  */
-
 function isVector3(target) {
 	// content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
 	return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
@@ -22,9 +21,68 @@ function isVector3(target) {
 class Fill {
 	constructor() {
 		this.queue = [];
+		this.subscribed = false;
 	}
-	queuefill(fillOptions) {
-		getGenerator();
+	subscribe() {
+		if (this.subscribed) return new Error('how did you subscribe this again');
+		const fillThis = this;
+		function run() {
+			system.run(async () => {
+
+				try {
+					if (!fillThis.queue.length) return;
+					run();
+					const { fillOptions, iterator } = fillThis.queue[0];
+					const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048, replace } = fillOptions;
+					const blocksIsArray = blocks instanceof Array;
+
+					for (let i = 0; i < maxPlacementsPerTick; i++) {
+
+						const current = iterator.next();
+						// content.warn({ t: 'wdwwdwd', i, done: current.done, t2: 'why not work' });
+						if (current.done) { fillThis.queue.shift(), await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => console.warn(error, error.stack)); break; }
+
+						/**
+						 * @type {BlockLocation}
+						 */
+						const { blockLocation, isFirstBlockOfChunk } = current.value;
+						const { x, y, z } = blockLocation;
+						if (isFirstBlockOfChunk) {
+							await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => console.warn(error, error.stack));
+							await overworld.runCommandAsync(`tickingarea add ${x} 0 ${z} ${x + 15} 0 ${z + 15} fillTickAPI true`).catch(error => console.warn(error, error.stack));
+
+						}
+
+						// content.warn({ x, y, z });
+						let blockOptions;
+						if (blocksIsArray) {
+							blockOptions = blocks[Math.floor(Math.random() * blocks.length)];
+						} else {
+							blockOptions = blocks;
+						}
+						const block = overworld.getBlock(blockLocation);
+						const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions.type;
+						// content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
+						if (replace && block.typeId !== replace.id) continue;
+						block.setType(blockType);
+						if (blockOptions instanceof BlockType) continue;
+						if (!(blockOptions?.permutation instanceof BlockPermutation)) continue;
+						block.setPermutation(blockOptions.permutation);
+						if (isFirstBlockOfChunk) break;
+					}
+				} catch (error) {
+					console.warn(error, error.stack);
+				}
+			});
+
+		}
+		run();
+	}
+	queuefill(fillOptions, type) {
+		const generator = this.getGenerator(fillOptions, type);
+		const iterator = generator();
+		this.queue.push({ iterator, fillOptions });
+		this.subscribe();
 	}
 	/**
 	 * @method check
@@ -32,7 +90,7 @@ class Fill {
 	 * @private
 	 */
 	check(fillOptions) {
-		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 512 } = fillOptions;
+		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048 } = fillOptions;
 		if (!(fillOptions instanceof Object)) throw new Error('fillOptions at params[0] is not of type: Object!');
 
 		if (!isVector3(location1)) throw new Error('location1 in fillOptions at params[0] is not of type: {x: number, y: number, z: number}!');
@@ -52,8 +110,8 @@ class Fill {
 
 		if (typeof hollow !== 'number') throw new Error('hollow in fillOptions at params[0] is not of type: Number!');
 		if (typeof maxPlacementsPerTick !== 'number') throw new Error('maxPlacementsPerTick in fillOptions at params[0] is not of type: Number!');
-
 	}
+
 	/**
 	 * @method getGenerator
 	 * @param {FillOptions} fillOptions 
@@ -61,56 +119,98 @@ class Fill {
 	 * @returns {Generator<BlockLocation,undefined,BlockLocation>}
 	 * @private
 	 */
-	getGenerator(fillOptions, type) {
-		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048 } = fillOptions;
+	getGenerator(fillOptions) {
+		const [location1, location2] = sort3DVectors(fillOptions.location1, fillOptions.location2);
 		const { x: x1, y: y1, z: z1 } = location1, { x: x2, y: y2, z: z2 } = location2;
-		const length = x2 - x1 + 1, height = y2 - y1 + 1, width = z2 - z1 + 1;
-		const area = width * length;
-		const volume = area * height;
-		// content.warn({ width, length, height, location1: { x1, y1, z1 }, location2: { x2, y2, z2 }, t: 'why nioweroirwuwru', area, volume });
-		switch (type) {
-			case 'circle':
-				return function* () {
-					for (let i = 0, x = x1, y = y1, z = z1; i < area; i++, x++) {
-						if (x > length) x = x1, z++;
-						// if (z > width) x = x1, y++;
-						if (x - x1 > length / 2) continue;
-						if (z - z1 > width / 2) continue;
-						yield new BlockLocation(x, y, z);
+		const startChunkX = Math.floor(x1 / 16);
+		const endChunkX = Math.floor(x2 / 16);
+		const startChunkZ = Math.floor(z1 / 16);
+		const endChunkZ = Math.floor(z2 / 16);
+		let x, y, z;
+		return function* () {
+			for (let cx = startChunkX; cx <= endChunkX; cx++) {
+				for (let cz = startChunkZ; cz <= endChunkZ; cz++) {
+					const startX = Math.max(cx * 16, x1);
+					const endX = Math.min(cx * 16 + 15, x2);
+					const startZ = Math.max(cz * 16, z1);
+					const endZ = Math.min(cz * 16 + 15, z2);
+					for (y = y1; y <= y2; y++) {
+						for (x = startX; x <= endX; x++) {
+							for (z = startZ; z <= endZ; z++) {
+								const isFirstBlockOfChunk = x === startX && y === y1 && z === startZ;
+								yield { blockLocation: new BlockLocation(x, y, z), isFirstBlockOfChunk };
+							}
+						}
 					}
-				};
-			case 'box':
-
-				return function* () {
-					for (let i = 0, x = 0, y = 0, z = 0; i < volume; i++, x++) {
-						if (x >= length) x = 0, z++;
-						if (z >= width) z = 0, y++;
-						yield new BlockLocation(x + x1, y + y1, z + z1);
-					}
-				};
-			case 'sphere':
-				return function* () {
-					for (let i = 0, x = x1, y = y1, z = z1; i < volume; i++, x++) {
-						if (x > length) x = x1, z++;
-						if (z > width) x = x1, y++;
-						if (Math.abs(x - x1) > length / 2) continue;
-						if (Math.abs(z - z1) > width / 2) continue;
-						if (Math.abs(y - y1) > height / 2) continue;
-						yield new BlockLocation(x, y, z);
-					}
-				};
-			case 'cylinder':
-				return function* () {
-					for (let i = 0, x = x1, y = y1, z = z1; i < volume; i++, x++) {
-						if (x > length) x = x1, z++;
-						if (z > width) x = x1, y++;
-						if (x - x1 > length / 2) continue;
-						if (z - z1 > width / 2) continue;
-						yield new BlockLocation(x, y, z);
-					}
-				};
-		}
+				}
+			}
+		};
 	}
+
+	// getGenerator(fillOptions, type) {
+	// 	const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 1 } = fillOptions;
+	// 	const { x: x1, y: y1, z: z1 } = location1, { x: x2, y: y2, z: z2 } = location2;
+	// 	const length = x2 - x1 + 1, height = y2 - y1 + 1, width = z2 - z1 + 1;
+	// 	const area = width * length;
+	// 	const volume = area * height;
+	// 	// content.warn({ width, length, height, location1: { x1, y1, z1 }, location2: { x2, y2, z2 }, t: 'why nioweroirwuwru', area, volume });
+	// 	switch (type) {
+	// 		case 'box':
+
+	// 			return function* () {
+	// 				for (let i = 0, x = 0, y = 0, z = 0, csX = 0, csZ = 0, mX, mZ; i < volume; i++, x++) {
+
+	// 					if (x >= length) {
+	// 						mX = x, x = csX, z++;
+	// 					} else if (!((x + x1) % 16)) {
+	// 						content.warn({ bool: y >= height - 1 && !((z + z1 + 1) % 16) && x < length - 1, x, y, z, mX, mZ, csX, csZ, modX: (x + x1) % 16, modZ: (z + z1 + 1) % 16, height, lessX: x < length - 1, maxHeight: y >= height - 1 });
+	// 						if (y >= height - 1 && !((z + z1 + 2) % 16) && x < length - 1) csX = mX + 1;
+	// 						else mX = x, x = csX, z++;
+	// 					};
+	// 					if (z >= length) {
+	// 						mZ = z, z = csZ, y++;
+	// 					} else if (!((z + z1) % 16)) {
+	// 						if (y >= height - 1 && x >= length && z < length) csZ = mZ, csX = 0;
+	// 						else mZ = z, z = csZ, y++;
+	// 					};
+	// 					if (y >= height) y = 0;
+	// 					yield new BlockLocation(x + x1, y + y1, z + z1);
+	// 				}
+	// 			};
+	// 		case 'circle':
+	// 			return function* () {
+	// 				for (let i = 0, x = x1, y = y1, z = z1; i < area; i++, x++) {
+	// 					if (x > length) x = x1, z++;
+	// 					// if (z > width) x = x1, y++;
+	// 					if (x - x1 > length / 2) continue;
+	// 					if (z - z1 > width / 2) continue;
+	// 					yield new BlockLocation(x, y, z);
+	// 				}
+	// 			};
+
+	// 		case 'sphere':
+	// 			return function* () {
+	// 				for (let i = 0, x = x1, y = y1, z = z1; i < volume; i++, x++) {
+	// 					if (x > length) x = x1, z++;
+	// 					if (z > width) x = x1, y++;
+	// 					if (Math.abs(x - x1) > length / 2) continue;
+	// 					if (Math.abs(z - z1) > width / 2) continue;
+	// 					if (Math.abs(y - y1) > height / 2) continue;
+	// 					yield new BlockLocation(x, y, z);
+	// 				}
+	// 			};
+	// 		case 'cylinder':
+	// 			return function* () {
+	// 				for (let i = 0, x = x1, y = y1, z = z1; i < volume; i++, x++) {
+	// 					if (x > length) x = x1, z++;
+	// 					if (z > width) x = x1, y++;
+	// 					if (x - x1 > length / 2) continue;
+	// 					if (z - z1 > width / 2) continue;
+	// 					yield new BlockLocation(x, y, z);
+	// 				}
+	// 			};
+	// 	}
+	// }
 	/**
 	 * @method fill
 	 * @param {FillOptions} fillOptions
@@ -119,54 +219,18 @@ class Fill {
 	 */
 	fill(fillOptions, type) {
 
-		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 8191, replace } = fillOptions;
-		const generator = this.getGenerator(fillOptions, type);
 
-		const iterator = generator();
-		const blocksIsArray = blocks instanceof Array;
 
-		function tick() {
-
-			for (let i = 0; i < maxPlacementsPerTick; i++) {
-
-				const current = iterator.next();
-				// content.warn({ t: 'wdwwdwd', i, done: current.done, t2: 'why not work' });
-				if (current.done) return;
-
-				/**
-				 * @type {BlockLocation}
-				 */
-				const blockLocation = current.value;
-				const { x, y, z } = blockLocation;
-				// content.warn({ x, y, z });
-				let blockOptions;
-				if (blocksIsArray) {
-					blockOptions = blocks[Math.floor(Math.random() * blocks.length)];
-				} else {
-					blockOptions = blocks;
-				}
-				const block = overworld.getBlock(blockLocation);
-				const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions.type;
-				// content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
-				if (replace && block.typeId !== replace.id) continue;
-				block.setType(blockType);
-				if (blockOptions instanceof BlockType) continue;
-				if (!(blockOptions?.permutation instanceof BlockPermutation)) continue;
-				block.setPermutation(blockOptions.permutation);
-			}
-			system.run(tick);
-		}
-		tick();
 	};
 	/**
-	 * @pro
+	 * @method box
 	 * @param {FillOptions} fillOptions 
 	 */
 	box(fillOptions) {
 		// content.warn('ehhjwhjwd');
 		this.check(fillOptions);
 		// content.warn('wklkwdklwd');
-		this.fill(fillOptions, 'box');
+		this.queuefill(fillOptions, 'box');
 	}
 	circle(fillOptions) {
 		this.check(fillOptions);

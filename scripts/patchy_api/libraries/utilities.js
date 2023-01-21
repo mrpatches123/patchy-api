@@ -750,3 +750,7 @@ export function parseCommand(message, prefix) {
     }
     return output;
 }
+const types = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'N', 'D'];
+export function metricNumbers(value, place = 2) {
+    return (value / 10 ** (~~(log10(value) / 3) * 3)).toFixed(place) + types[~~(log10(value) / 3)];
+}

@@ -3,7 +3,7 @@ import config from '../config.js';
 
 
 import { commandBuilder } from '../../patchy_api/modules.js';
-import { showTestFunc } from '../forms/test_func.js';
+import { showTestFuncAction } from '../forms/test_func.js';
 import { world } from '@minecraft/server';
 const { prefix } = config;
 commandBuilder.register('formfunc', {
@@ -14,7 +14,7 @@ commandBuilder.register('formfunc', {
     prefix,
     callback: (sender, args) => {
         sender.tell('close chat to open form!');
-        showTestFunc(sender, true);
+        showTestFuncAction(sender, true);
     }
 });
 

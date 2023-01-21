@@ -1,6 +1,6 @@
 import config from '../config.js';
 
-const { prefix } = config;
+const { commandPrefix: prefix } = config;
 
 
 

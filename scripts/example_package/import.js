@@ -1,9 +1,7 @@
 //commands
-import './commands/help.js';
-import './commands/rename.js';
 import './commands/menu.js';
 // import './commands/test.js';
-import './commands/tags.js';
+import '../patchy_api/commands/tags.js';
 import './commands/enchant_all.js';
 // import './commands/test_func_form.js';
 //forms

@@ -3,9 +3,21 @@ import { Player as PlayerType, PlayerInventoryComponentContainer, system } from 
 import players from "../players/export_instance.js";
 import errorLogger from "../error.js";
 import { content } from "../../utilities.js";
+import scoreboardBuilder from "../scoreboard.js";
+import gamemode from "../gamemode.js";
 export class Player {
+	/**
+	 * 
+	 * @param {PlayerType} player 
+	 */
 	constructor(player) {
 		this.player = player;
+	}
+	get gamemode() {
+		return gamemode.get(this);
+	}
+	set gamemode(value) {
+		this.player.runCommandAsync(`gamemode ${value}`);
 	}
 	get loaded() {
 		const { id } = this.player;
@@ -30,7 +42,6 @@ export class Player {
 		});
 	}
 	set mainHand(value) {
-		content.warn(value?.typeId);
 		const { selectedSlot } = this.player;
 		/**
 		 * @type {PlayerInventoryComponentContainer}
@@ -48,10 +59,10 @@ export class Player {
 		const player = this.player;
 		return new Proxy({}, {
 			get(target, objectiveId, value) {
-				return player.scoreTest(objectiveId);
+				return scoreboardBuilder.get(player, objectiveId);
 			},
 			set(target, objectiveId, value) {
-				player.scoreSet(objectiveId, value);
+				scoreboardBuilder.set(player, objectiveId, value);
 				return Reflect.set(...arguments);
 			}
 		});
@@ -116,6 +127,9 @@ export class Player {
 	get nameTag() {
 		return this.player.nameTag;
 	}
+	set nameTag(value) {
+		this.player.nameTag = value;
+	}
 	get onScreenDisplay() {
 		return this.player.onScreenDisplay;
 	}
@@ -127,6 +141,9 @@ export class Player {
 	}
 	get selectedSlot() {
 		return this.player.selectedSlot;
+	}
+	set selectedSlot(value) {
+		this.player.selectedSlot = value;
 	}
 	get target() {
 		return this.player.target;
@@ -148,6 +165,9 @@ export class Player {
 	}
 	getBlockFromViewVector(...args) {
 		return this.player.getBlockFromViewVector(...args);
+	}
+	getComponent(...args) {
+		return this.player.getComponent(...args);
 	}
 	getComponents(...args) {
 		return this.player.getComponents(...args);

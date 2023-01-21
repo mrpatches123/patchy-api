@@ -1,9 +1,9 @@
 import config from '../config.js';
-import { formBuilder, commandBuilder, content, tagDatabases, players } from '../../patchy_api/modules.js';
-const { prefix } = config;
+import { formBuilder, commandBuilder, content, tagDatabases, players } from '../modules.js';
+const { commandPrefix: prefix } = config;
 
 commandBuilder.register('tags', {
-    description: "Show menu",
+    description: "tags",
     prefix,
     usages: [
         `${prefix}tags`

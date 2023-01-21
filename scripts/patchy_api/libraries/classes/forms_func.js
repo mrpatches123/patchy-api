@@ -1,7 +1,15 @@
-import { Player } from "@minecraft/server";
-import { ModalFormData, ActionFormData, ActionFormResponse, ModalFormResponse, MessageFormData } from "@minecraft/server-ui";
+import { Player, world } from "@minecraft/server";
+import { ModalFormData, ActionFormData, ActionFormResponse, ModalFormResponse, MessageFormData, MessageFormResponse, FormCancelationReason } from "@minecraft/server-ui";
 
 
+export const content = {
+	warn(...messages) {
+		console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
+	},
+	chatFormat(...messages) {
+		world.say(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? value.toString().replaceAll('\r\n', '\n') : value, 4)).join(' '));
+	}
+};
 function isNumberDefined(input) {
 	return (input !== false && input !== null && input !== undefined && input !== NaN && input !== Infinity);
 }
@@ -13,7 +21,7 @@ export class MessageForm {
 	/**
 	 * @method title
 	 * @param {String} titleText 
-	 * @returns {ActionForm}
+	 * @returns {MessageForm}
 	 */
 	title(titleText) {
 		if (typeof titleText !== 'string') throw new Error(`titleText: ${titleText}, at params[0] is not a String!`);
@@ -23,18 +31,18 @@ export class MessageForm {
 	/**
 	 * @method body
 	 * @param {String} bodyText 
-	 * @returns {ActionForm}
+	 * @returns {MessageForm}
 	 */
 	body(bodyText) {
 		if (typeof bodyText !== 'string') throw new Error(`bodyText: ${titleText}, at params[0] is not a String!`);
-		this.form.body(titleText);
+		this.form.body(bodyText);
 		return this;
 	}
 	/**
 	 * @method button1
 	 * @param {String} text 
-	 * @param {String} iconPath 
-	 * @returns {ActionForm}
+	 * @param {(player: Player, i: Number) => {}} callback 
+	 * @returns {MessageForm}
 	 */
 	button1(text, callback) {
 		if (typeof text !== 'string') throw new Error(`text: ${label}, at params[0] is not a String!`);
@@ -46,8 +54,8 @@ export class MessageForm {
 	/**
 	 * @method button2
 	 * @param {String} text 
-	 * @param {String} iconPath 
-	 * @returns {ActionForm}
+	 * @param {(player: Player, i: Number) => {}} callback 
+	 * @returns {MessageForm}
 	 */
 	button2(text, callback) {
 		if (typeof text !== 'string') throw new Error(`text: ${label}, at params[0] is not a String!`);
@@ -60,19 +68,31 @@ export class MessageForm {
 	 * @method show
 	 * @param {Player} player 
 	 * @param {Boolean} awaitNotBusy 
-	 * @returns {Promise<ModalFormResponse>}
+	 * @param {(player: Player, response: MessageFormResponse) => {}} callback?
+	 * @returns {Promise<MessageFormResponse>}
 	 */
-	async show(player, awaitNotBusy = false) {
-		let response;
-		while (true) {
-			response = await this.form.show(player);
-			const { cancelationReason } = response;
-			if (!awaitNotBusy || cancelationReason !== 'userBusy') break;
+	async show(player, awaitNotBusy = false, callback) {
+		try {
+
+
+			if (!(player instanceof Player)) player = player?.player;
+			if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player!`);
+			if (awaitNotBusy && typeof awaitNotBusy !== 'boolean') throw new Error(`awaitNotBusy at params[1] is not a Boolean!`);
+			if (callback && !(callback instanceof Function)) throw new Error(`callback at params[2] is not a Function!`);
+			let response;
+			while (true) {
+				response = await this.form.show(player);
+				const { cancelationReason } = response;
+				if (!awaitNotBusy || cancelationReason !== 'userBusy') break;
+			}
+			const { selection } = response;
+			const callbackIndex = this.callbacks[selection];
+			if (callbackIndex instanceof Function) callbackIndex(player, selection);
+			if (callback instanceof Function) callback(player, response);
+			return response;
+		} catch (error) {
+			console.log(error, error.stack);
 		}
-		const { selection } = response;
-		const callback = this.callbacks[selection];
-		if (callback instanceof Function) callback(player, value);
-		return response;
 	}
 }
 export class ActionForm {
@@ -97,18 +117,19 @@ export class ActionForm {
 	 */
 	body(bodyText) {
 		if (typeof bodyText !== 'string') throw new Error(`bodyText: ${titleText}, at params[0] is not a String!`);
-		this.form.boby(titleText);
+		this.form.body(bodyText);
 		return this;
 	}
 	/**
 	 * @method body
 	 * @param {String} text 
 	 * @param {String} iconPath 
+	 * @param {(player: Player, i: Number) => {}} callback 
 	 * @returns {ActionForm}
 	 */
 	button(text, iconPath, callback) {
 		if (typeof text !== 'string') throw new Error(`text: ${label}, at params[0] is not a String!`);
-		if (iconPath && typeof defaultValue !== 'string') throw new Error(`iconPath: ${defaultValue}, at params[1] is defined and is not a String!`);
+		if (iconPath && typeof iconPath !== 'string') throw new Error(`iconPath: ${defaultValue}, at params[1] is defined and is not a String!`);
 		if (callback && !(callback instanceof Function)) throw new Error(`callback at params[2] is defined and is not a Function!`);
 		this.callbacks.push(callback);
 		this.form.button(text, iconPath);
@@ -118,19 +139,29 @@ export class ActionForm {
 	 * @method show
 	 * @param {Player} player 
 	 * @param {Boolean} awaitNotBusy 
+	 * @param {(player: Player, response: ActionFormResponse) => {}} callback?
 	 * @returns {Promise<ActionFormResponse>}
 	 */
-	async show(player, awaitNotBusy = false) {
-		let response;
-		while (true) {
-			response = await this.form.show(player);
-			const { cancelationReason } = response;
-			if (!awaitNotBusy || cancelationReason !== 'userBusy') break;
+	async show(player, awaitNotBusy = false, callback) {
+		try {
+			if (!(player instanceof Player)) player = player?.player;
+			if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player!`);
+			if (awaitNotBusy && typeof awaitNotBusy !== 'boolean') throw new Error(`awaitNotBusy at params[1] is not a Boolean!`);
+			if (callback && !(callback instanceof Function)) throw new Error(`callback at params[2] is not a Function!`);
+			let response;
+			while (true) {
+				response = await this.form.show(player);
+				const { cancelationReason } = response;
+				if (!awaitNotBusy || cancelationReason !== 'userBusy') break;
+			}
+			const { selection } = response;
+			const callbackIndex = this.callbacks[selection];
+			if (callbackIndex instanceof Function) callbackIndex(player, selection);
+			if (callback instanceof Function) callback(player, response);
+			return response;
+		} catch (error) {
+			console.log(error, error.stack);
 		}
-		const { selection } = response;
-		const callback = this.callbacks[selection];
-		if (callback instanceof Function) callback(player, value);
-		return response;
 	}
 }
 
@@ -153,14 +184,14 @@ export class ModalForm {
 	 * @method toggle
 	 * @param {String} label 
 	 * @param {Boolean} defaultValue? 
-	 * @param {(player: Player, state: Boolean) => {}} callback?
+	 * @param {(player: Player, state: Boolean, i: number) => {}} callback?
 	 */
 	toggle(label, defaultValue, callback) {
 		if (typeof label !== 'string') throw new Error(`label: ${label}, at params[0] is not a String!`);
 		if (defaultValue && typeof defaultValue !== 'string') throw new Error(`defaultValue: ${defaultValue}, at params[1] is defined and is not a String!`);
 		if (callback && !(callback instanceof Function)) throw new Error(`callback at params[2] is defined and is not a Function!`);
 		this.callbacks.push(callback);
-		this.form.slider(label, placeholderText, defaultValue);
+		this.form.toggle(label, defaultValue);
 		return this;
 	}
 	/**
@@ -178,7 +209,7 @@ export class ModalForm {
 	 * @param {String} label 
 	 * @param {dropdownOptions} options 
 	 * @param {Number} defaultValueIndex?
-	 * @param {(player: Player, selection: Number) => {}} callback?
+	 * @param {(player: Player, selection: Number, i: number) => {}} callback?
 	 */
 	dropdown(label, options, defaultValueIndex = 0, callback) {
 		if (typeof label !== 'string') throw new Error(`label: ${label}, at params[0] is not a String!`);
@@ -199,7 +230,7 @@ export class ModalForm {
 	 * @param {Number} maximumValue 
 	 * @param {Number} valueStep 
 	 * @param {Number} defaultValue?
-	 * @param {(player: Player, selection: Number) => {}} callback?
+	 * @param {(player: Player, selection: Number, i: number) => {}} callback?
 	 */
 	slider(label, minimumValue, maximumValue, valueStep, defaultValue = null, callback) {
 		if (typeof label !== 'string') throw new Error(`label: ${label}, at params[0] is not a String!`);
@@ -217,7 +248,7 @@ export class ModalForm {
 	 * @param {String} label 
 	 * @param {String} placeholderText 
 	 * @param {String} defaultValue 
-	 * @param {(player: Player, outputText: STring) => {}} callback?
+	 * @param {(player: Player, outputText: String, i: number) => {}} callback?
 	 * @returns {ModalForm}
 	 */
 	textField(label, placeholderText, defaultValue = null, callback) {
@@ -226,7 +257,7 @@ export class ModalForm {
 		if (defaultValue && typeof defaultValue !== 'string') throw new Error(`defaultValue: ${defaultValue}, at params[2] is defined and is not a String!`);
 		if (callback && !(callback instanceof Function)) throw new Error(`callback at params[3] is defined and is not a Function!`);
 		this.callbacks.push(callback);
-		this.form.slider(label, placeholderText, defaultValue);
+		this.form.textField(label, placeholderText, defaultValue);
 		return this;
 	};
 
@@ -234,27 +265,38 @@ export class ModalForm {
 	 * @method show
 	 * @param {Player} player 
 	 * @param {Boolean} awaitNotBusy?
+	 * @param {(player: Player, response: ModalFormResponse) => {}} callback?
 	 * @returns {Promise<ModalFormResponse>}
 	 */
-	async show(player, awaitNotBusy = false) {
-		let response;
-		while (true) {
-			response = await this.form.show(player);
-			const { cancelationReason } = response;
-			if (!awaitNotBusy || cancelationReason !== 'userBusy') break;
-		}
-		const { formValues } = response;
-		formValues.forEach((value, i) => {
-			if (callback instanceof Array) {
-				const callback = this.callbacks[i][0][value];
-				const callbackAll = this.callbacks[i][1][value];
-				if (callback instanceof Function) callback(player);
-				if (callbackAll instanceof Function) callbackAll(player, value);
-			} else {
-				const callback = this.callbacks[i];
-				if (callback instanceof Function) callback(player, value);
+	async show(player, awaitNotBusy = false, callback) {
+		try {
+			if (!(player instanceof Player)) player = player?.player;
+			if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player!`);
+			if (awaitNotBusy && typeof awaitNotBusy !== 'boolean') throw new Error(`awaitNotBusy at params[1] is not a Boolean!`);
+			if (callback && !(callback instanceof Function)) throw new Error(`callback at params[2] is not a Function!`);
+			let response;
+			while (true) {
+				response = await this.form.show(player);
+				const { cancelationReason } = response;
+				if (!awaitNotBusy || cancelationReason !== 'userBusy') break;
 			}
-		});
-		return response;
+			const { formValues, cancelationReason } = response;
+			if (cancelationReason !== FormCancelationReason.userClosed
+				&& cancelationReason !== FormCancelationReason.userBusy) formValues.forEach((value, i) => {
+					if (this.callbacks[i] instanceof Array) {
+						const callback = this.callbacks[i][0];
+						const callbackAll = this.callbacks[i][1];
+						if (callback instanceof Function) callback(player, i);
+						if (callbackAll instanceof Function) callbackAll(player, value, i);
+					} else {
+						const callback = this.callbacks[i];
+						if (callback instanceof Function) callback(player, value, i);
+					}
+				});
+			if (callback instanceof Function) callback(player, response);
+			return response;
+		} catch (error) {
+			console.warn(error, error.stack);
+		}
 	}
 }

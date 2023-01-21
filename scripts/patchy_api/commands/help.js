@@ -1,7 +1,7 @@
 import config from '../config.js';
 
-import { commandBuilder } from '../../patchy_api/modules.js';
-const { prefix } = config;
+import { commandBuilder } from '../modules.js';
+const { commandPrefix: prefix } = config;
 commandBuilder.register('help', {
     description: "Used to get all available commands or infomation about a specific command.",
     usages: [

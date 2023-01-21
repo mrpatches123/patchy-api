@@ -3,7 +3,7 @@ import { eventBuilder, global, content, overworld, databases } from '../../patch
 global.players = {};
 eventBuilder.subscribe('init_world_load*API', {
 	worldLoad: () => {
-		try { overworld.runCommandAsync(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick`); } catch { }
+		try { overworld.runCommandAsync(`tickingarea add 0 0 0 0 0 0 PatchyDataBaseTick true`); } catch { }
 		databases.initialize();
 	}
 });
