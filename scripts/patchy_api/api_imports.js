@@ -47,3 +47,4 @@ import './commands/rename.js';
 import './commands/help.js';
 import './commands/commands.js';
 import './commands/structure.js';
+import './commands/loads.js';
