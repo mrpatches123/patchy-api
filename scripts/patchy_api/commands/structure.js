@@ -32,19 +32,20 @@ commandBuilder.register('structure', {
 		x1 = Math.floor(relativeParse(sender, x1, 'x'));
 		y1 = Math.floor(relativeParse(sender, y1, 'y'));
 		z1 = Math.floor(relativeParse(sender, z1, 'z'));
-		const location1 = new BlockLocation(x1, y1, y1);
+		const location1 = new BlockLocation(x1, y1, z1);
 
 		switch (action) {
 			case 'save': {
 				x2 = Math.floor(relativeParse(sender, x2, 'x'));
 				y2 = Math.floor(relativeParse(sender, y2, 'y'));
 				z2 = Math.floor(relativeParse(sender, z2, 'z'));
-				const location2 = new BlockLocation(x2, y2, y2);
+				const location2 = new BlockLocation(x2, y2, z2);
 				structureBuilder.save({
 					name,
 					location1,
 					location2,
-					dimension
+					dimension,
+					saveMode: 'disk'
 				});
 				break;
 			} case 'load': {
@@ -58,3 +59,5 @@ commandBuilder.register('structure', {
 		}
 	}
 });
+
+//!struct save test ~* ~-40* ~* ~150* ~80* ~150*

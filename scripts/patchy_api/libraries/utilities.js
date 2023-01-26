@@ -365,7 +365,7 @@ const native = {
                 case "object": {
                     const prototype = Object.getPrototypeOf({});
                     for (const key in input1) {
-                        if (prototype.hasOwnProperty(key)) { return; }
+                        if (prototype.hasOwnProperty(key)) { continue; }
                         call(input1[key], [...path, key]);
                     }
                     break;

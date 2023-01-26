@@ -56,11 +56,12 @@ export class StructureBuilder {
 					if (!currentSave) return (system.clearRun(systemIdNumber), thisStructure.subscribedSaveQueue = false);
 					const [name, dimension, iterator, { location1, location2, saveMode, includesEntites, includesBlocks }] = currentSave;
 					const { value, done } = iterator.next();
-
+					let shouldReturn = false;
+					await dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).then(() => shouldReturn = true, error => console.warn(error, error.stack));
+					if (shouldReturn) return (shouldReturn = false, tick());
 					if (done) return (tick(), thisStructure.saveQueue.shift(), dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).catch(error => console.warn(error, error.stack)));
 					const [{ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }, column, row] = value;
-					// content.warn({ command: `tickingarea add ${x1} ${y1} ${z1} ${x2} ${y2} ${z2} StructureSaveAPI true`, location1: { x: x1, y: y1, z: z1 }, location2: { x: x2, y: y2, z: z2 }, column, row });
-					await dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).catch(error => console.warn(error, error.stack));
+					content.warn({ command: `tickingarea add ${x1} ${y1} ${z1} ${x2} ${y2} ${z2} StructureSaveAPI true`, location1: { x: x1, y: y1, z: z1 }, location2: { x: x2, y: y2, z: z2 }, column, row });
 					await dimension.runCommandAsync(`tickingarea add ${x1} ${y1} ${z1} ${x2} ${y2} ${z2} StructureSaveAPI true`).catch(error => console.warn(error, error.stack));
 					await dimension.runCommandAsync(`structure save ${name}_${column}_${row} ${x1} ${y1} ${z1} ${x2} ${y2} ${z2}`).catch(error => console.warn(error, error.stack));
 					tick();
@@ -122,12 +123,19 @@ export class StructureBuilder {
 					thisStructure.vars.init = true;
 					const { x, z, c, r, newRow } = thisStructure.vars;
 					const [{ name, dimension, location: { x: x1, y, z: z1 } }] = currentLoad;
-					content.warn({ name, dimension: dimension.id, x, z, c, r });
-					await dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).catch(error => console.warn(error, error.stack));
+					let shouldReturn = false;
+					await dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).then(() => shouldReturn = true, error => console.warn(error, error.stack));
+					if (shouldReturn) return (shouldReturn = false, tick());
+					content.warn({ x1, z1, command: `structure load ${name}_${c}_${r} ${x + x1} ${y} ${z + z1}`, name, dimension: dimension.id, x, z, c, r });
 					await dimension.runCommandAsync(`tickingarea add ${x + x1} ${y} ${z + z1} ${x + x1 + 63} ${y} ${z + z1 + 63} StructureSaveAPI true`).catch(error => console.warn(error, error.stack));
-					await dimension.runCommandAsync(`structure load ${name}_${c}_${r} ${x + x1} ${y} ${z + z1}`).catch(error => {
-						tick(); console.warn(error, error.stack);
+					await dimension.runCommandAsync(`structure load ${name}_${c}_${r} ${x + x1} ${y} ${z + z1}`).then(() => {
+						tick();
+						thisStructure.vars.newRow = false;
+						thisStructure.vars.x += 64, thisStructure.vars.c++;
+					}, () => {
+
 						if (newRow || (!x && !z)) {
+							tick();
 							thisStructure.loadQueue.shift();
 							thisStructure.vars = {};
 							dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).catch(error => console.warn(error, error.stack));
@@ -138,11 +146,11 @@ export class StructureBuilder {
 							thisStructure.vars.c = 0;
 							thisStructure.vars.x = 0;
 							thisStructure.vars.newRow = true;
+							tick();
+							return;
 						}
-					});
-					thisStructure.vars.newRow = false;
-					thisStructure.vars.x += 64, thisStructure.vars.c++;
-					tick();
+					}).catch(error => console.warn(error, error.stack));
+
 				} catch (error) {
 					console.warn(error, error.stack);
 				}

@@ -1,4 +1,4 @@
-import { system } from '@minecraft/server';
+import { system, world, Location, BlockLocation } from '@minecraft/server';
 function startwodjopwpwdjwwpodjdwo() {
 	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
 }
@@ -6,110 +6,13 @@ startwodjopwpwdjwwpodjdwo();
 system.events.beforeWatchdogTerminate.subscribe((event) => {
 	event.cancel = true;
 });
-
-import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
-import { world, Player } from '@minecraft/server';
-import { content, native } from './patchy_api/libraries/utilities';
-
-
-world.events.entityHit.subscribe(({ entity: player, hitEntity }) => {
-	if (!(player instanceof Player)) return;
-	if (!hitEntity) return;
-	if (hitEntity.hasTag("BlockS")) {
-		BlockShop(player);
-		player.runCommandAsync(`playsound random.chestopen`);
-	}
-});
-
-const ItemBlock = [{
-	textures: 'textures/blocks/grass_side_carried.png',
-	name: 'Grass',
-	cost: 75,
-	sell: 10,
-	data: 0,
-	item: 'grass'
-},
-{
-	textures: 'textures/blocks/dirt_with_roots.png',
-	name: 'Rooted Dirt',
-	cost: 70,
-	sell: 5,
-	data: 0,
-	item: 'dirt_with_roots',
-},
-{
-	textures: 'textures/blocks/dirt.png',
-	name: 'Dirt',
-	cost: 70,
-	sell: 5,
-	data: 0,
-	item: 'dirt',
-},
-{
-	textures: 'textures/blocks/sand.png',
-	name: 'Sand',
-	cost: 70,
-	sell: 5,
-	data: 0,
-	item: 'sand',
-},
-{
-	textures: 'textures/blocks/red_sand.png',
-	name: 'Red Sand',
-	cost: 70,
-	sell: 5,
-	data: 0,
-	item: 'red_sand',
-},
-];
-
-async function BlockShop(player) {
-	try {
-
-
-		const gui = new ActionFormData();
-		gui.title(`§l§eConstruccion`);
-		for (const item of ItemBlock)
-			gui.button(`§l${item.name}\n§r§eCosto: §6$${item.cost}`,
-				`${item.textures}`);
-		const result = await gui.show(player);
-
-		if (result.canceled)
-			return;
-		const item = ItemBlock[result.selection];
-		var money = getScore(player, "money");
-		let brick = new ModalFormData()
-			.title(`§l§e${item.name}`)
-			.slider(`§7- §eTu Dinero : §6${money}\n§c•> §aComprar x1 §7§7${item.name} §a= §6$${item.cost}\n§c•> §6Vender x1 §b${item.name} §a= §6$${item.sell}\n\n§eCantidad`, 1, 64, 1)
-			.dropdown("Accion", ["Comprar", "Vender"], 0);
-		const res = await brick.show(player);
-		let dataCost = item.cost * res.formValues[0];
-		let dataSell = item.sell * res.formValues[0];
-		if (res.formValues[1] === 0) {
-			try {
-				await player.runCommandAsync(`scoreboard players remove @s[scores={money=${dataCost}..}] money ${dataCost}`);
-				player.runCommandAsync(`give @s ${item.item} ${res.formValues[0]} ${item.data}`);
-				player.tell(`§l§aTIENDA §7>> §r§7Compraste §ex${res.formValues[0]} ${item.name}`);
-				player.runCommandAsync(`playsound random.levelup @s ~~~ 1 2`);
-			} catch (e) {
-				player.tell(`§l§aTIENDA §7>> §r§cDinero Insuficiente`);
-			}
-		}
-		if (res.formValues[1] === 1) {
-			try {
-				await player.runCommandAsync(`clear @s[hasitem={item=${item.item},quantity=${res.formValues[0]}..}] ${item.item} ${item.data} ${res.formValues[0]}`);
-				player.runCommandAsync(`scoreboard players add @s money ${dataSell}`);
-				player.tell(`TIENDA §7>> §aVendiste exitosamente §ex${res.formValues[0]} ${item.name} §acon Ganancias de: §e$${dataSell}`);
-				player.runCommandAsync(`playsound random.levelup @s ~~~ 1 2`);
-			} catch (e) {
-				player.tell(`TIENDA §7>> §cNo puedes vender §ex${res.formValues[0]} ${item.name} §cpor que no tienes esa cantidad`);
-				player.runCommandAsync(`playsound note.bass @s`);
-			}
-		}
-	} catch (error) {
-		console.warn(error, error.stack);
-	}
-};
+// const xyz = ['x', 'y', 'z'];
+// const proto = Object.keys(Object.getPrototypeOf({}));
+// world.events.tick.subscribe(() => {
+// 	world.getAllPlayers().forEach((player) => {
+// 		console.warn(player.location.constructor.name);
+// 	});
+// });
 
 // import { BlockLocation, world, BlockPermutation } from "@minecraft/server";
 // export const content = {

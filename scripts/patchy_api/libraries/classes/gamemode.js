@@ -22,8 +22,9 @@ class Gamemode {
 		this.players = {};
 		gamemodes.forEach(gamemode => {
 			if (currentLength === playerLength) return;
-			world.getPlayers({ gameMode: gamemode }).forEach(({ id }) => this.players[id] = gamemode);
-			currentLength += ids.length;
+			const players = [...world.getPlayers({ gameMode: gamemode })];
+			players.forEach(({ id }) => this.players[id] = gamemode);
+			currentLength += players.length;
 		});
 		const thisGamemode = this;
 		system.run(() => thisGamemode.refreshed = false);

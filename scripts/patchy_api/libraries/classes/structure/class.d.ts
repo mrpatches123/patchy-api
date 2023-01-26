@@ -1,6 +1,6 @@
 import { Vector3, Dimension } from "@minecraft/server";
 
-interface StructureSaveOptions {
+export interface StructureSaveOptions {
 	name: string,
 	dimension: Dimension;
 	location1: Vector3;
@@ -18,13 +18,13 @@ interface StructureSaveOptions {
 	 */
 	includesBlocks?: boolean;
 }
-interface StructureLoadOptions {
+export interface StructureLoadOptions {
 	dimension: Dimension;
 	/**
 	 * most negtive x, y, and z postion of the load (maby the save) will be here
 	 */
 	location: Vector3;
-	identifier: string,
+	name: string,
 	rotation?: '0_degrees' | '90_degrees' | '180_degrees' | '270_degrees';
 	mirror?: 'none' | 'x' | 'xz' | 'z';
 	animationMode?: 'block_by_block' | 'layer_by_layer';
