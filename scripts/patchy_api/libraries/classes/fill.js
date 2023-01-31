@@ -1,4 +1,4 @@
-import { BlockLocation, BlockType, Vector3, BlockPermutation, system, BlockAreaSize } from "@minecraft/server";
+import { BlockLocation, BlockType, BlockPermutation, system, BlockAreaSize } from "@minecraft/server";
 import { content, overworld, sort3DVectors } from "../utilities.js";
 /**
  * @typedef {Object} BlockOptions
@@ -7,8 +7,8 @@ import { content, overworld, sort3DVectors } from "../utilities.js";
  */
 /**
  * @typedef {Object} FillOptions
- * @property {Vector3} location1
- * @property {Vector3} location2
+ * @property {{x: number, y: number, z: number}} location1
+ * @property {{x: number, y: number, z: number}} location2
  * @property {BlockType | BlockOptions | (BlockType | BlockOptions)[]} blocks
  * @property {Number} hollow default?=0 which is solid and the number = thickness 
  * @property {Number} maxPlacementsPerTick default?=8192 and 0 is infinity
@@ -35,9 +35,9 @@ class Fill {
 		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 512 } = fillOptions;
 		if (!(fillOptions instanceof Object)) throw new Error('fillOptions at params[0] is not of type: Object!');
 
-		if (!isVector3(location1)) throw new Error('location1 in fillOptions at params[0] is not of type: Vector3!');
+		if (!isVector3(location1)) throw new Error('location1 in fillOptions at params[0] is not of type: {x: number, y: number, z: number}!');
 
-		if (!isVector3(location2)) throw new Error('location2 in fillOptions at params[0] is not of type: Vector3!');
+		if (!isVector3(location2)) throw new Error('location2 in fillOptions at params[0] is not of type: {x: number, y: number, z: number}!');
 
 		if (!(blocks instanceof BlockType) && !(blocks instanceof Array) && !(blocks instanceof Object)) throw new Error('blocks at params[0] is not of type: Object, Array, or BlockType!');
 

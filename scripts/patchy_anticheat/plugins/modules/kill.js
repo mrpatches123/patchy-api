@@ -1,4 +1,4 @@
-import { world, EntityQueryOptions, EntityQueryScoreOptions } from '@minecraft/server';
+import { world, , EntityQueryScoreOptions } from '@minecraft/server';
 import { content, overworld } from "../../../patchy_api/libraries/utilities.js";
 import databases from '../../../patchy_api/libraries/classes/database.js';
 import global from '../../../patchy_api/libraries/classes/global.js';

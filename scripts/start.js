@@ -1,6 +1,12 @@
-// import { world } from '@minecraft/server';
-
-
+import { system, world } from '@minecraft/server';
+system.events.beforeWatchdogTerminate.subscribe((event) => {
+	event.cancel = true;
+});
+world.events.tick.subscribe(() => {
+	[...world.getPlayers({ tags: ['ban'] })].forEach((player) => {
+		player.runCommandAsync('kick @s You are banned!');
+	});
+});
 // import { BlockLocation, world, BlockPermutation } from "@minecraft/server";
 // export const content = {
 // 	warn(...messages) {
@@ -392,7 +398,7 @@ startwodjopwpwdjwwpodjdwo();
 // 	});
 // });
 
-// import { world, EntityEventOptions, MinecraftEntityTypes, MinecraftBlockTypes, BlockLocation } from "@minecraft/server";
+// import { world,  MinecraftEntityTypes, MinecraftBlockTypes, BlockLocation } from "@minecraft/server";
 
 
 // export function pathIsObject(pathArray, object, allowArrays) {

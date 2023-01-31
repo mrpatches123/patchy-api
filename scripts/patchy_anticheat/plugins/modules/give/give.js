@@ -1,5 +1,5 @@
 import { bannedItems } from './banned_items.js';
-import { Items, ItemStack, world, EntityQueryOptions } from "@minecraft/server";
+import { Items, ItemStack, world } from "@minecraft/server";
 import discipline from "../../../libraries/discipline.js";
 import { players, eventBuilder, andArray, toProperCase } from "../../../../patchy_api/modules.js";
 eventBuilder.subscribe('give', {

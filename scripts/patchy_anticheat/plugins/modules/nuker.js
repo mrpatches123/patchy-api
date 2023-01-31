@@ -1,5 +1,5 @@
 
-import { world, EntityQueryOptions, MinecraftBlockTypes } from '@minecraft/server';
+import { world, , MinecraftBlockTypes } from '@minecraft/server';
 import global from '../../../patchy_api/libraries/classes/global.js';
 import discipline from '../../libraries/discipline.js';
 import { databases, eventBuilder, players, overworld, content, staff, native } from '../../../patchy_api/modules.js';

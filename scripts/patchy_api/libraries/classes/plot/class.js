@@ -89,9 +89,9 @@ export class PlotBuilder {
 		this.plots[key].rules = rules;
 		this.plots[key].rules.ruleSets = generatedRuleSets;
 		this.plots[key].players = {};
-		const plots = databases.get('plots*API');
+		const plots = databases.get('plots*API') ?? databases.add('plots*API');
 		content.warn({ plots });
-		let { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key);
+		let { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key) ?? [];
 		content.warn({ hasBeenSubscribed });
 		if (hasBeenSubscribed) this.subscribe(key);
 		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });

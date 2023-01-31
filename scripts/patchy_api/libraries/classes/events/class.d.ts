@@ -1,5 +1,5 @@
 import { Player } from "../player/class.js";
-import { Entity, DefinitionModifier, Dimension, BlockLocation, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, Location, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions } from '@minecraft/server';
+import { Entity, DefinitionModifier, Dimension, BlockLocation, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, Location, PropertyRegistry, world, , EntityEventOptions } from '@minecraft/server';
 
 export class BeforeChatEvent {
 	cancel: boolean;

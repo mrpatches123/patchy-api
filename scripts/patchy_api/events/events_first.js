@@ -1,6 +1,6 @@
 import eventBuilder from "../libraries/classes/events/export_instance.js";
 import global from '../libraries/classes/global.js';
-import { EntityEventOptions, world, EntityHurtEvent, system } from '@minecraft/server';
+import { world, EntityHurtEvent, system } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
 import errorLogger from "../libraries/classes/error.js";
 import time from '../libraries/classes/time.js';

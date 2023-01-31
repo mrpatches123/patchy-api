@@ -2,7 +2,7 @@ import eventBuilder from "./events/export_instance.js";
 import { content, sort3DRange, sort3DVectors } from '../utilities.js';
 import global from "./global.js";
 import players from "./players/export_instance.js";
-import { Vector3, Player, BlockLocation, Location } from "@minecraft/server";
+import { Player, BlockLocation, Location } from "@minecraft/server";
 const { floor } = Math;
 class PositionBuilder {
 	constructor() {
@@ -54,9 +54,9 @@ class PositionBuilder {
 	}
 	/**
 	 * @typedef {Object} PostionObject
-	 * @property {Vector3} location1
-	 * @property {Vector3} location2
-	 * @property {(player: Player, location1: Vector3, location2: Vector3) => {}} callback
+	 * @property {{x: number, y: number, z: number}} location1
+	 * @property {{x: number, y: number, z: number}} location2
+	 * @property {(player: Player, location1: {x: number, y: number, z: number}, location2: {x: number, y: number, z: number}) => {}} callback
 	 */
 	/**
 	 * @method add 

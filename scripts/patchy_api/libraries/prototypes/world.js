@@ -4,11 +4,11 @@ import { World } from '@minecraft/server';
 const worldFunctions = {
 	/**
 	 * @method getEntities
-	 * @param {EntityQueryOptions} EntityQueryOptions 
+	 * @param {import("@minecraft/server").EntityQueryOptions} entityQueryOptions 
 	 * @returns {Array<Entity>}
 	 */
-	getEntities(EntityQueryOptions) {
-		return [...overworld.getEntities(EntityQueryOptions), ...nether.getEntities(EntityQueryOptions), , ...end.getEntities(EntityQueryOptions)];
+	getEntities(entityQueryOptions) {
+		return [...overworld.getEntities(entityQueryOptions), ...nether.getEntities(entityQueryOptions), , ...end.getEntities(entityQueryOptions)];
 	}
 };
 Object.assign(World.prototype, worldFunctions);
