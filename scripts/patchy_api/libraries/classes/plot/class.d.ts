@@ -13,6 +13,7 @@ interface PlotRuleSet {
 	start: { x: number, y: number, z: number; } | PlotsVector3;
 	offset?: { x: number, y: number, z: number; };
 	direction: 'x' | '-x' | 'z' | '-z';
+	blockPlaceMargin: { x: number, y: number, z: number; };
 }
 interface Teleport {
 	location: Vector3;
@@ -41,7 +42,7 @@ export class PlotBuilder {
 	setCurrent(player: Player, key: string): void;
 	query(player: Player, key: string): number;
 	create<key extends string>(key: string, rules: PlotRules<key>): void;
-	add(player: Player, key: string): void;
+	add(player: Player, key: string): { wasAdded: boolean, plotNumber: number | undefined; };
 	remove(player: Player, key: string): void;
 	set(player: Player, key: string, plotNumber: number): void;
 	list(key: string): number[];

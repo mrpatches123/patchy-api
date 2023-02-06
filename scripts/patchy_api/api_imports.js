@@ -48,3 +48,5 @@ import './commands/help.js';
 import './commands/commands.js';
 import './commands/structure.js';
 import './commands/loads.js';
+import './commands/scoreboard.js';
+import './commands/tags.js';

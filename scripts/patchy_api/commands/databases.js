@@ -19,11 +19,17 @@ commandBuilder.register('databases', {
     },
     aliases: ['dbs'],
     callback: (sender, args) => {
-        if (args[0]) {
-            if (!databases.hasOwnProperty(args[0])) sender.tell(`database: ${args[0]}, does not exist!`);
-            sender.tell(databases.getFromEntity(args[0]));
-        } else {
-            sender.tell(JSON.stringify(databases, (key, value) => (value instanceof Function) ? '<f>' : value));
+        const [subcommand, key] = args;
+        switch (subcommand) {
+            case 'print': {
+                if (key) return (sender.tell(databases.getFromEntity(args[0])));
+                sender.tell(JSON.stringify(databases, (key, value) => (value instanceof Function) ? '<f>' : value));
+                break;
+            } case 'delete': {
+                if (!key) return (sender.tell(`key at params[1] is undefined`));
+                if (!databases.hasOwnProperty(key)) return (sender.tell(`key at params[1] does not exist`));
+                databases.delete(key, true);
+            }
         }
     }
 });

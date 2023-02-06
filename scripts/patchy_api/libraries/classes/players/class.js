@@ -94,14 +94,31 @@ export class Players {
 		});
 		world.events.tick.subscribe(() => {
 			if (!global.refreshBasePlayerIterator) return;
-			this.refreshBasePlayerIterator();
+			content.chatFormat({ test: global.refreshBasePlayerIterator });
+			playersObject.refreshBasePlayerIterator();
 			global.refreshBasePlayerIterator = false;
+		});
+		world.events.playerLeave.subscribe(() => {
+			playersObject.refreshBasePlayerIterator();
 		});
 	}
 	refreshBasePlayerIterator() {
 		this.basePlayerIterator = new PlayerIterator(loads.players);
-		// content.warn({ t: 8938923832, basePlayerIterator: this.basePlayerIterator });
+		this.playerQueryIterators = {};
+		content.chatFormat({ t: 8938923832, basePlayerIterator: this.basePlayerIterator });
+	}/**
+	 * @param {import('@minecraft/server').EntityQueryOptions} entityQueryOptions 
+	 * @param {boolean} cache 
+	 * @returns {Player}
+	 */
+	find(entityQueryOptions, cache) {
+		return this.get(entityQueryOptions, cache).array()[0];
 	}
+	/**
+	 * @param {import('@minecraft/server').EntityQueryOptions} entityQueryOptions 
+	 * @param {boolean} cache 
+	 * @returns {PlayerIterator}
+	 */
 	get(entityQueryOptions, cache = true) {
 		let worldPlayers;
 		if (!entityQueryOptions) return this.basePlayerIterator;//this.basePlayerIterator;

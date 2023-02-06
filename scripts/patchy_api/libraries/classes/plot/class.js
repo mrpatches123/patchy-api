@@ -7,6 +7,7 @@ import teleportBuilder from "../teleport.js";
 import { Player } from "../player/class.js";
 import gamemode from "../gamemode.js";
 import structureBuilder from "../structure/export_instance.js";
+import wait from "../wait.js";
 const gamemodes = [0, 1, 2];
 export class PlotsVector3 {
 	constructor(x, y, z) {
@@ -37,6 +38,7 @@ export class PlotBuilder {
 		this.plots = {};
 		this.creates = {};
 		this.subscribedQueue = false;
+		this.registeredProperties = false;
 	}
 	runCreateQueue() {
 		content.warn('runCreateQueue28923382782372388372278');
@@ -120,6 +122,22 @@ export class PlotBuilder {
 			this.subscribedQueue = true;
 		}
 	}
+	registerOverides() {
+		players.registerProperty('currentPlot', {
+			type: 'string',
+			maxLength: 32
+		});
+		players.registerProperty('gamemodeOveride', {
+			type: 'number'
+		});
+		players.registerProperty('permisionOveride', {
+			type: 'string',
+			maxLength: 5
+		});
+		players.registerProperty('plotNumberOveride', {
+			type: 'number'
+		});
+	}
 	create(key, rules) {
 		// content.warn(key, rules);
 		if (typeof key !== 'string') throw new Error(`key: ${key}, at params[0] is not of type: String!`);
@@ -162,15 +180,18 @@ export class PlotBuilder {
 			if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: XYRotation or Vector3!`);
 		}
 
-		ruleSets.forEach(({ count, start, direction, offset }, i) => {
+		ruleSets.forEach(({ count, start, direction, offset, blockPlaceMargin }, i) => {
 			if (!(start instanceof PlotsVector3) && !(start instanceof BlockVector3)) throw new Error(`start at ruleSets[${i}] in rules at params[1] is not of type: BlockVector3 or PlotVector3  `);
 			if (count && typeof count !== 'number') throw new Error(`count at ruleSets[${i}] in rules at params[1] is not of type: number`);
 			if (!directions.includes(direction)) throw new Error(`direction, ${direction} at ruleSets[${i}] in rules at params[1] is not one of the following: ${orArray(directions)}`);
 			if (offset && !isVector3(offset)) throw new Error(`offset, at ruleSets[${i}] in rules at params[1] is not of type: {x: number, y: number, z: number})}`);
+			if (blockPlaceMargin && !isVector3(blockPlaceMargin)) throw new Error(`blockPlaceMargin, at ruleSets[${i}] in rules at params[1] is not of type: {x: number, y: number, z: number})}`);
 		});
 		this.creates[key] = rules;
+		if (!this.registeredProperties) this.registeredProperties = true, this.registerOverides();
 		(property) ? players.registerProperty(plotNumberIdentifier, { type: 'number' })
 			: server.objectiveAdd(plotNumberIdentifier);
+
 		this.runCreateQueue();
 		// content.warn({ plot: this });
 	}
@@ -192,176 +213,6 @@ export class PlotBuilder {
 		}
 		((property) ? properties : scores)[plotNumberIdentifier] = plotNumber;
 		availablePlots = availablePlots.filter(value => value !== plotNumber);
-		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
-		databases.queueSave('plots*API');
-		return true;
-	}
-	list(key) {
-		const plots = databases.get('plots*API') ?? databases.add('plots*API');
-		let { availablePlots = [0] } = plots.get(key);
-		return availablePlots;
-	}
-	setCurrent(player, key) {
-		player.memory.currentPlot = key;
-	}
-	setOveride(player, key, value) {
-		if (!memory.hasOwnProperty('plotOverides')) player.memory.plotOverides = {};
-		player.memory.plotOverides[key] = value;
-	}
-	getRuleSet(key, number) {
-		if (!this.plots.hasOwnProperty(key)) throw new Error(`key: ${key}, does not exist!`);
-		const { ruleSets, loop, start, loopDirection, maxX, maxZ } = this.plots[key].rules;
-		if (!isDefined(number)) throw new Error('why is number not defined');
-		if (!loop) return ruleSets[number];
-		const row = Math.floor(ruleSets.length / number);
-		const column = ruleSets.length % number;
-		content.warn({ t: "wwdwddwwdwd", len: ruleSets.length, number: isDefined(number), column, bool: overworld instanceof Dimension });
-		const ruleSet = ruleSets[column];
-		const { start: startRuleSet, offset, calculated } = ruleSet;
-		let { x, y, z } = startRuleSet;
-		switch (loopDirection) {
-			case 'x': {
-				z += maxZ * row + offset.z * (row + 1);
-				x += offset.x * (column + 1);
-				break;
-			} case '-x': {
-				z -= maxZ * row - offset.z * (row + 1);
-				x += offset.x * (column + 1);
-				break;
-			} case 'z': {
-				x += maxX * row + offset.x * (column + 1);
-				z += offset.z * (row + 1);
-				break;
-			} case '-z': {
-				x -= maxX * row - offset.x * (row + 1);
-				z += offset.z * (row + 1);
-				break;
-			}
-		}
-		return { ...ruleSet, ...{ start: new BlockLocation(x, y, z) } };
-	}
-	subscribe(key) {
-		content.warn(`end_plots*${key}*API`);
-		eventBuilder.subscribe(`end_plots*${key}*API`, {
-			tickAfterLoad: () => {
-				players.get().iterate((player) => {
-					// content.warn(player.name);
-					const { scores, properties, location, memory, rotation } = player;
-					let { lastLocation = location, currentPlot, ingorePlotSystem = false } = memory;
-					// content.warn({ currentPlot });
-					if (!currentPlot) return;
-					if (ingorePlotSystem) return;
-					const { plotNumberIdentifier, property, teleport, defaultGamemode } = this.plots[currentPlot].rules;
-					const { plotOverides: { number: maskedPlotNumber, gamemode: gamemodeOveride = defaultGamemode } = {} } = memory;
-					let plotNumber;
-					if (isDefined(maskedPlotNumber)) plotNumber = maskedPlotNumber;
-					else if (property) plotNumber = properties[plotNumberIdentifier];
-					else plotNumber = scores[plotNumberIdentifier];
-					// content.warn(plotNumber);
-					if (!isDefined(plotNumber)) return;
-					const { size, start } = this.getRuleSet(key, plotNumber);
-					if (gamemodeOveride) {
-						const { gamemode: gamemodePlayer } = player;
-						if (gamemodePlayer !== gamemodeOveride) player.gamemode = gamemodeOveride;
-					}
-
-					const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
-					const { x, y, z } = lastLocation;
-					content.warn({ lastLocation: objectVector3(lastLocation), start: objectVector3(start), bool1: betweenBlockVector3(location, start, end), bool2: betweenBlockVector3(lastLocation, start, end) });
-					memory.lastLocation = location;
-					if (betweenBlockVector3(location, start, end)) return;
-					if (betweenBlockVector3(lastLocation, start, end)) {
-						const { x, y, z } = lastLocation;
-						const { x: rx, y: ry } = rotation;
-						player.teleport(new Location(x, y, z), overworld, rx, ry);
-					} else {
-						if (teleport) {
-							let { location: teleportLocation, face } = teleport;
-							teleportLocation = { location: start, offset: teleportLocation };
-							if (isVector3(teleportLocation)) face = { location: start, offset: face };
-							const object = { location: teleportLocation, face, dimension: overworld };
-							teleportBuilder.teleportOnce(player, object);
-						} else {
-							const { x: rx, y: ry } = rotation;
-							// player.teleport(new Location((size.x) / 2 + start.x, start.y, (size.z) / 2 + start.z), overworld, rx, ry);
-						}
-					}
-				});
-
-			},
-			blockBreak: ({ player, block, brokenBlockPermutation }) => {
-				const { scores, properties, location, memory, rotation } = player;
-				let { currentPlot, ingorePlotSystem = false } = memory;
-				if (!currentPlot || ingorePlotSystem) return;
-				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode } = this.plots[currentPlot].rules;
-				const { plotOverides: { number: numberOveride, permision = defaultPermision, gamemode: gamemodeOveride = defaultGamemode } } = memory;
-				let plotNumber;
-				if (isDefined(maskedPlotNumber)) plotNumber = numberOveride;
-				else if (property) plotNumber = properties[plotNumberIdentifier];
-				else plotNumber = scores[plotNumberIdentifier];
-				if (!isDefined(plotNumber)) return;
-				switch (permision) {
-					case 'write': {
-						const { size, start } = ruleSets[plotNumber];
-						const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
-						if (betweenBlockVector3(block.location, start, end)) return;
-					} case 'read': {
-						block.setPermutation(brokenBlockPermutation);
-						break;
-					}
-				}
-
-
-			},
-			beforeItemUseOn: (event) => {
-				const { blockFace, blockLocation, source: player, dimension } = event;
-				if (!(player instanceof Player)) return;
-				const { scores, properties, location, memory, rotation } = player;
-				let { currentPlot, ingorePlotSystem = false } = memory;
-				if (!currentPlot || ingorePlotSystem) return;
-				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode } = this.plots[currentPlot].rules;
-				let plotNumber;
-				if (isDefined(maskedPlotNumber)) plotNumber = numberOveride;
-				else if (property) plotNumber = properties[plotNumberIdentifier];
-				else plotNumber = scores[plotNumberIdentifier];
-				if (!isDefined(plotNumber)) return;
-				switch (permision) {
-					case 'write': {
-						const { size, start } = ruleSets[plotNumber];
-						const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
-						const blockPlaceLocation = blockFaceToCoords(blockFace, blockLocation);
-						if (betweenBlockVector3(blockPlaceLocation, start, end)) return;
-					} case 'read': {
-						event.cancel = true;
-						break;
-					}
-				}
-
-
-			}
-		});
-		this.plots[key].subscribed = true;
-	}
-	setOveride(player, type, value) {
-		const { memory } = player;
-		memory[type] = value;
-	}
-	add(player, key) {
-		const { scores, properties } = player;
-		const { subscribed } = this.plots[key];
-		const { plotNumberIdentifier, property, loop, teleport, structure, ruleSets = [] } = this.plots[key].rules;
-		const plots = databases.get('plots*API');
-		if (!plots) throw new Error('why does the plots*API db not exist');
-		const plot = plots.get(key);
-		if (!plot) throw new Error(`plot: ${key}, does not exist`);
-		let { availablePlots, currentIndex, hasBeenSubscribed } = plot;
-		if (!loop && ruleSets.length === currentIndex) return false;
-		const plotNumber = availablePlots.shift();
-		if (availablePlots.length === 0) { availablePlots.push(++currentIndex); };
-
-		if (property) properties[plotNumberIdentifier] = plotNumber;
-		else scores[plotNumberIdentifier] = plotNumber;
-		content.warn({ plotNumber, property, score: scores[plotNumberIdentifier] });
 		if (!subscribed) {
 			this.subscribe(key);
 			hasBeenSubscribed = true;
@@ -385,6 +236,232 @@ export class PlotBuilder {
 		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
 		content.chatFormat({ databases });
 		databases.queueSave('plots*API');
+		return true;
+	}
+	list(key) {
+		const plots = databases.get('plots*API') ?? databases.add('plots*API');
+		let { availablePlots = [0] } = plots.get(key);
+		return availablePlots;
+	}
+	/**
+	 * @param {Player} player 
+	 * @param {string} key 
+	 */
+	setCurrent(player, key) {
+		player.properties.currentPlot = key;
+	}
+	/**
+	 * @param {Player} player 
+	 * @param {String} key 
+	 * @param {String | Number} value 
+	 */
+	setOveride(player, key, value) {
+		player.properties.plotOverides[key] = value;
+	}
+	getRuleSet(key, number) {
+		if (!this.plots.hasOwnProperty(key)) throw new Error(`key: ${key}, does not exist!`);
+		const { ruleSets, loop, start, loopDirection, maxX, maxZ } = this.plots[key].rules;
+		if (typeof number !== 'number') throw new Error('why is number not defined');
+		if (!loop) return ruleSets[number];
+		const row = Math.floor(number / ruleSets.length);
+		const column = number % ruleSets.length;
+		// content.warn({ t: "wwdwddwwdwd", number: number ?? number.toString(), len: ruleSets.length, number: isDefined(number), column, bool: overworld instanceof Dimension });
+		const ruleSet = ruleSets[column];
+		const { start: startRuleSet, offset } = ruleSet;
+		let { x, y, z } = startRuleSet;
+		switch (loopDirection) {
+			case 'x': {
+				z += maxZ * row + offset.z * (row + 1);
+				x += offset.x * (column + 1);
+				break;
+			} case '-x': {
+				z -= maxZ * row - offset.z * (row + 1);
+				x += offset.x * (column + 1);
+				break;
+			} case 'z': {
+				// content.warn('');
+				x += maxX * row + offset.x * (column + 1);
+				z += offset.z * (row + 1);
+				break;
+			} case '-z': {
+				x -= maxX * row - offset.x * (row + 1);
+				z += offset.z * (row + 1);
+				break;
+			}
+		}
+		return { ...ruleSet, ...{ start: new BlockLocation(x, y, z) } };
+	}
+	subscribe(key) {
+		content.warn(`end_plots*${key}*API`);
+		eventBuilder.subscribe(`end_plots*${key}*API`, {
+			tickAfterLoad: () => {
+				players.get().iterate((player) => {
+					// content.warn(player.name);
+					const { scores, properties, location, memory, rotation } = player;
+					let { lastLocation = location, ingorePlotSystem = false } = memory;
+					// content.warn({ currentPlot });
+					const { currentPlot } = properties;
+					if (!currentPlot) return;
+					if (ingorePlotSystem) return;
+					const { plotNumberIdentifier, property, teleport, defaultGamemode } = this.plots[currentPlot].rules;
+					const { plotNumberOveride, gamemodeOveride = defaultGamemode } = properties;
+					let plotNumber;
+					if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
+					else if (property) plotNumber = properties[plotNumberIdentifier];
+					else plotNumber = scores[plotNumberIdentifier];
+					// content.warn(plotNumber);
+					if (!isDefined(plotNumber)) return;
+					const { size, start } = this.getRuleSet(key, plotNumber);
+					if (gamemodeOveride) {
+						const { gamemode: gamemodePlayer } = player;
+						if (gamemodePlayer !== gamemodeOveride) player.gamemode = gamemodeOveride;
+					}
+					const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
+					const { x, y, z } = lastLocation;
+					// content.warn({ lastLocation: objectVector3(lastLocation), start: objectVector3(start), bool1: betweenBlockVector3(location, start, end), bool2: betweenBlockVector3(lastLocation, start, end) });
+					memory.lastLocation = location;
+					if (betweenBlockVector3(location, start, end)) return;
+					if (betweenBlockVector3(lastLocation, start, end)) {
+						const { x, y, z } = lastLocation;
+						const { x: rx, y: ry } = rotation;
+						player.teleport(new Location(x, y, z), overworld, rx, ry);
+					} else {
+						if (teleport) {
+							let { location: teleportLocation, face } = teleport;
+							teleportLocation = { location: start, offset: teleportLocation };
+							if (isVector3(teleportLocation)) face = { location: start, offset: face };
+							const object = { location: teleportLocation, face, dimension: overworld };
+							teleportBuilder.teleportOnce(player, object);
+						} else {
+							const { x: rx, y: ry } = rotation;
+							player.teleport(new Location((size.x) / 2 + start.x, start.y, (size.z) / 2 + start.z), overworld, rx, ry);
+						}
+					}
+				});
+
+			},
+			blockBreak: ({ player, block, brokenBlockPermutation }) => {
+				const { scores, properties, location, memory, rotation } = player;
+				const { currentPlot } = properties;
+				let { ingorePlotSystem = false } = memory;
+				if (!currentPlot || ingorePlotSystem) return;
+				const { plotNumberIdentifier, property, ruleSets, defaultPermision } = this.plots[currentPlot].rules;
+				const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
+				let plotNumber;
+				if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
+				else if (property) plotNumber = properties[plotNumberIdentifier];
+				else plotNumber = scores[plotNumberIdentifier];
+				if (!isDefined(plotNumber)) return;
+				switch (permision) {
+					case 'write': {
+						const ruleSet = this.getRuleSet(currentPlot, plotNumber);
+						const { size, start: { x: sx, y: sy, z: sz }, blockPlaceMargin: { x: mx = 0, y: my = 0, z: mz = 0 } = {} } = ruleSet;
+						const start = { x: sx + mx, y: sy + my, z: sz + mz };
+						const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
+						if (betweenBlockVector3(block.location, start, end)) return;
+					} case 'read': {
+						block.setPermutation(brokenBlockPermutation);
+						break;
+					}
+				}
+
+
+			},
+			beforeItemUseOn: (event) => {
+				const { blockFace, blockLocation, source: player, dimension } = event;
+				if (!(player instanceof Player)) return;
+				const { scores, properties, location, memory, rotation } = player;
+				const { currentPlot } = properties;
+				let { ingorePlotSystem = false } = memory;
+				if (!currentPlot || ingorePlotSystem) return;
+				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode } = this.plots[currentPlot].rules;
+				const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
+				let plotNumber;
+				if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
+				else if (property) plotNumber = properties[plotNumberIdentifier];
+				else plotNumber = scores[plotNumberIdentifier];
+				if (!isDefined(plotNumber)) return;
+				switch (permision) {
+					case 'write': {
+						const ruleSet = this.getRuleSet(currentPlot, plotNumber);
+						const { size, start: { x: sx, y: sy, z: sz }, blockPlaceMargin: { x: mx = 0, y: my = 0, z: mz = 0 } = {} } = ruleSet;
+						const start = { x: sx + mx, y: sy + my, z: sz + mz };
+						const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
+						const blockPlaceLocation = blockFaceToCoords(blockFace, blockLocation);
+						if (betweenBlockVector3(blockPlaceLocation, start, end)) return;
+					} case 'read': {
+						event.cancel = true;
+						break;
+					}
+				}
+
+
+			}
+		});
+		this.plots[key].subscribed = true;
+	}
+	setOveride(player, type, value) {
+		const { memory } = player;
+		memory[type] = value;
+	}
+	/**
+	 * @param {import('../player/class').Player} player 
+	 * @param {string} key 
+	 * @returns {{ wasAdded: boolean, plotNumber: Number | undefined}}
+	 */
+	add(player, key) {
+		const { scores, properties } = player;
+		const { subscribed } = this.plots[key];
+		const { plotNumberIdentifier, property, loop, teleport, structure, ruleSets = [] } = this.plots[key].rules;
+		const queryNumber = this.query(player, key);
+		if (isDefined(queryNumber)) return { wasAdded: false, plotNumber: queryNumber };
+		const plots = databases.get('plots*API');
+		if (!plots) throw new Error('why does the plots*API db not exist');
+		const plot = plots.get(key);
+		if (!plot) throw new Error(`plot: ${key}, does not exist`);
+		let { availablePlots, currentIndex, hasBeenSubscribed } = plot;
+		if (!loop && ruleSets.length === currentIndex) return false;
+		const plotNumber = availablePlots.shift();
+		if (availablePlots.length === 0) { availablePlots.push(++currentIndex); };
+		if (property) properties[plotNumberIdentifier] = plotNumber;
+		else scores[plotNumberIdentifier] = plotNumber;
+		content.warn({ plotNumber, property, score: scores[plotNumberIdentifier] });
+		if (!subscribed) {
+			this.subscribe(key);
+			hasBeenSubscribed = true;
+		}
+		const ruleSet = this.getRuleSet(key, plotNumber);
+		let loadId;
+		if (structure) {
+			const { start: { x, y, z } } = ruleSet;
+			const { x: sx, y: sy, z: sz } = structure.location;
+			content.warn({ t: 'structure', x: sx + x, y: sy + y, z: sz + z });
+			loadId = structureBuilder.load(Object.assign(structure, { location: new BlockLocation(sx + x, sy + y, sz + z) }));
+		}
+
+		if (teleport) {
+			content.warn('9090909090909090909');
+			wait.add(`${player}*plot*structure`, () => {
+				const test = (!loadId) ? true : structureBuilder.getLoadStatus(loadId).done;
+				content.warn({ test, loadId, done: structureBuilder.getLoadStatus(loadId)?.done });
+				return test;
+			},
+				() => {
+					let { location: teleportLocation, face } = teleport;
+					const { start: { x, y, z } } = ruleSet;
+					const startLocation = new Location(x, y, z);
+					teleportLocation = { location: startLocation, offset: teleportLocation };
+					// content.warn(native.stringify(face));
+					if (isVector3(face)) face = { location: startLocation, offset: face };
+					// content.warn(native.stringify(face));
+					teleportBuilder.teleportOnce(player, { location: teleportLocation, face, dimension: overworld });
+				}, { once: true, start: true, remove: true, afterLoad: true });
+		}
+
+		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
+		content.chatFormat({ databases });
+		databases.queueSave('plots*API');
+		return { wasAdded: true, plotNumber };
 	}
 	reset(key) {
 		const plots = databases.get('plots*API') ?? databases.add('plots*API');

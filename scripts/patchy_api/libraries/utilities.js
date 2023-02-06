@@ -153,8 +153,6 @@ export function sortRange(array) {
     const z2 = (array[0][1] < array[1][1]) ? array[1][1] : array[0][1];
     return [[x1, z1], [x2, z2]];
 }
-
-
 export function sort3DRange(array) {
     const x1 = (array[0][0] < array[1][0]) ? array[0][0] : array[1][0];
     const y1 = (array[0][1] < array[1][1]) ? array[0][1] : array[1][1];
@@ -430,20 +428,21 @@ export const server = {
         let score;
         let scoreboardIdentity;
         try { scoreboardObjective = world.scoreboard.getObjective(objective); } catch (error) { console.warn(error, error.stack); }
-        if ((target instanceof Player || target instanceof Entity) && !findParticipant) {
+        if (((target?.player ?? target) instanceof Player || target instanceof Entity) && !findParticipant) {
 
             scoreboardIdentity = target.scoreboard;
             if (!target['scoreboard']) return;
             // content.warn({ score });
         } else {
 
-            try { scoreboardIdentity = scoreboardObjective.getParticipants().find(({ displayName } === target)); } catch { }
+            try { scoreboardIdentity = scoreboardObjective.getParticipants().find((({ displayName }) => displayName === target)); } catch (error) { console.warn(error, error.stack); }
         }
+        if (!scoreboardIdentity) return;
         if (scoreboardObjective) {
             try {
                 score = scoreboardObjective.getScore(scoreboardIdentity);
-            } catch {
-                // console.warn(error, error.stack);
+            } catch (error) {
+                console.warn(error, error.stack);
             }
         }
         return score;
@@ -473,6 +472,16 @@ export const server = {
             // console.warn(error, error.stack);
             return;
         }
+    },
+    /**
+     * 
+     * @param {String} objective 
+     * @param {import('@minecraft/server').Player} player 
+     * @param {Number} amount 
+     */
+    scoreSetPlayer(objective, player, amount = 0) {
+        content.warn(`scoreboard players set @s "${objective}" ${amount}`);
+        player.runCommandAsync(`scoreboard players set @s "${objective}" ${amount}`).catch(error => console.warn(error, error.stack));
     },
     scoreSet(objective, name, amount = 0) {
         try {
@@ -752,5 +761,6 @@ export function parseCommand(message, prefix) {
 }
 const types = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'N', 'D'];
 export function metricNumbers(value, place = 2) {
-    return (value / 10 ** (~~(log10(value) / 3) * 3)).toFixed(place) + types[~~(log10(value) / 3)];
+    const digits = ~~(log10(value) / 3);
+    return (!digits) ? value : (value / 10 ** (digits * 3)).toFixed(place) + types[digits];
 }

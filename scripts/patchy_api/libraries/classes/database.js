@@ -18,7 +18,6 @@ export class Database {
      * @param {any} value value for key.
      * @returns {Database} this
      */
-
     set(key, value) {
         if (!key) {
             throw new Error('argument zero must be a key');
@@ -243,7 +242,15 @@ export class Databases {
      * @method delete delete a database from Databases
      * @param {String} name Database name
      */
-    delete(name) {
+    delete(name, removeEntity = false) {
+        if (removeEntity) {
+            const { __db_properties: propertiesObject = {} } = this[name] ?? {};
+            const { coords } = propertiesObject;
+            // content.warn({ propertiesObject });
+            if (!coords) { return; }
+            const entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(coords.x, -64, coords.z));
+            entities.forEach(entity => (entity.triggerEvent('patches:kill')));
+        }
         delete this[name];
     }
     /**

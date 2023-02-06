@@ -25,6 +25,10 @@ interface propertyOptionsNumberBoolean {
 export class Players {
 	constructor();
 	/**
+	 * finds the first player accorinf to the option or just the first player
+	 */
+	find(entityQueryOptions: EntityQueryOptions, cache = true): Player;
+	/**
 	 * gets players that are loaded meaning they can have commands ran them and caches entity querys by default per tick for perfornace
 	 */
 	get(entityQueryOptions: EntityQueryOptions, cache = true): PlayerIterator;

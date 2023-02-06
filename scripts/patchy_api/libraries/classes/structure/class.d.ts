@@ -50,7 +50,15 @@ export interface StructureLoadOptions {
 	integrity: Number;
 	seed: string;
 }
+interface StructureStatus {
+	started: boolean;
+	done: boolean;
+}
 export class StructureBuilder {
-	load(loadOptions: StructureLoadOptions): void;
-	save(saveOptions: StructureSaveOptions): void;
+
+	getLoadStatus(id: number): StructureStatus;
+	load(loadOptions: StructureLoadOptions): number;
+
+	getSaveStatus(id: number): StructureStatus;
+	save(saveOptions: StructureSaveOptions): number;
 }

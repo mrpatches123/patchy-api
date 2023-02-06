@@ -18,19 +18,38 @@ const animationModes = ['block_by_block', 'layer_by_layer'];
 export class StructureBuilder {
 	constructor() {
 		/**
-		 * @type {[string, Dimension, SaveIterator, SaveOptions][]}
+		 * @type {[string, Dimension, SaveIterator, SaveOptions, number][]}
 		 */
 		this.saveQueue = [];
 		/**
-		 * @type {[LoadOptions][]}
+		 * @type {[LoadOptions, number][]}
 		 */
 		this.loadQueue = [];
 		this.subscribedLoadQueue = false;
 		this.subscribedSaveQueue = false;
 		this.vars = {};
+		/**
+		 * @type {{[id: number]: {started: boolean, done: boolean}}}
+		 */
+		this.loads = {};
+		/**
+		 * @type {{[id: number]: {started: boolean, done: boolean}}}
+		 */
+		this.saves = {};
+		this.saveId = 0;
+		this.loadId = 0;
+	}
+	getSaveStatus(id) {
+		if (!this.saves.hasOwnProperty(id)) return;
+		return this.saves[id];
+	}
+	getLoadStatus(id) {
+		if (!this.loads.hasOwnProperty(id)) return;
+		return this.loads[id];
 	}
 	/**
 	 * @param {SaveOptions} options 
+	 * @returns {number}
 	 */
 	save(options) {
 
@@ -42,8 +61,8 @@ export class StructureBuilder {
 		if (includesEntites && typeof includesEntites !== 'boolean') throw new Error(`includesEntites in saveOptions at params[0] is defined and not of type: Boolean!`);
 		if (includesBlocks && typeof includesBlocks !== 'boolean') throw new Error(`includesBlocks in saveOptions at params[0] is defined and not of type: Boolean!`);
 		const iterator = this.getSaveIterator(...sort3DVectors(location1, location2));
-
-		this.queueSave(name, dimension, iterator, options);
+		this.queueSave(name, dimension, iterator, options, id);
+		return this.saveId++;
 	}
 	subscribeSaveQueue() {
 		const thisStructure = this;
@@ -54,12 +73,13 @@ export class StructureBuilder {
 				try {
 					const currentSave = thisStructure.saveQueue[0];
 					if (!currentSave) return (system.clearRun(systemIdNumber), thisStructure.subscribedSaveQueue = false);
-					const [name, dimension, iterator, { location1, location2, saveMode, includesEntites, includesBlocks }] = currentSave;
+					const [name, dimension, iterator, { location1, location2, saveMode, includesEntites, includesBlocks }, id] = currentSave;
+					this.saves[id].started = true;
 					const { value, done } = iterator.next();
 					let shouldReturn = false;
 					await dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).then(() => shouldReturn = true, error => console.warn(error, error.stack));
 					if (shouldReturn) return (shouldReturn = false, tick());
-					if (done) return (tick(), thisStructure.saveQueue.shift(), dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).catch(error => console.warn(error, error.stack)));
+					if (done) return (tick(), this.saves[id].done = true, thisStructure.saveQueue.shift(), dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).catch(error => console.warn(error, error.stack)));
 					const [{ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }, column, row] = value;
 					content.warn({ command: `tickingarea add ${x1} ${y1} ${z1} ${x2} ${y2} ${z2} StructureSaveAPI true`, location1: { x: x1, y: y1, z: z1 }, location2: { x: x2, y: y2, z: z2 }, column, row });
 					await dimension.runCommandAsync(`tickingarea add ${x1} ${y1} ${z1} ${x2} ${y2} ${z2} StructureSaveAPI true`).catch(error => console.warn(error, error.stack));
@@ -78,8 +98,9 @@ export class StructureBuilder {
 	 * @param {Iterator<[BlockLocation, BlockLocation, number, number]>} iterator 
 	 * @param {SaveOptions} options 
 	 */
-	queueSave(name, dimension, iterator, options) {
-		this.saveQueue.push([name, dimension, iterator, options]);
+	queueSave(name, dimension, iterator, options, id) {
+		this.loads[id] = { started: false, done: false };
+		this.saveQueue.push([name, dimension, iterator, options, id]);
 		this.subscribeSaveQueue();
 	};
 	/**
@@ -122,7 +143,8 @@ export class StructureBuilder {
 					}
 					thisStructure.vars.init = true;
 					const { x, z, c, r, newRow } = thisStructure.vars;
-					const [{ name, dimension, location: { x: x1, y, z: z1 } }] = currentLoad;
+					const [{ name, dimension, location: { x: x1, y, z: z1 } }, id] = currentLoad;
+					thisStructure.loads[id].started = true;
 					let shouldReturn = false;
 					await dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).then(() => shouldReturn = true, error => console.warn(error, error.stack));
 					if (shouldReturn) return (shouldReturn = false, tick());
@@ -136,6 +158,7 @@ export class StructureBuilder {
 
 						if (newRow || (!x && !z)) {
 							tick();
+							thisStructure.loads[id].done = true;
 							thisStructure.loadQueue.shift();
 							thisStructure.vars = {};
 							dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).catch(error => console.warn(error, error.stack));
@@ -159,18 +182,17 @@ export class StructureBuilder {
 		tick();
 	}
 	/**
-	 * @param {string} name
-	 * @param {Dimension} dimension 
-	 * @param {Iterator<[BlockLocation, BlockLocation, number, number]>} iterator 
-	 * @param {SaveOptions} options 
+	 * @param {LoadOptions} options 
+	 * @param {number} id
 	 */
-	queueLoad(options) {
-
-		this.loadQueue.push([options]);
+	queueLoad(options, id) {
+		this.loads[id] = { started: false, done: false };
+		this.loadQueue.push([options, id]);
 		this.subscribeLoadQueue();
 	};
 	/**
 	 * @param {LoadOptions} options 
+	 * @returns {number}
 	 */
 	load(options) {
 		const { name, dimension, location, rotation = '0_degrees', mirror = 'none', animationMode = 'layer_by_layer', animationSeconds = 0, includesEntites = false, includesBlocks = false, waterlogged, seed } = options;
@@ -185,6 +207,6 @@ export class StructureBuilder {
 		if (includesBlocks && typeof includesBlocks !== 'boolean') throw new Error(`includesBlocks in loadOptions at params[0] is defined and not of type: Boolean!`);
 		if (waterlogged && typeof waterlogged !== 'boolean') throw new Error(`waterlogged in loadOptions at params[0] is defined and not of type: Boolean!`);
 		if (seed && typeof seed !== 'string') throw new Error(`seed in loadOptions at params[0] is defined and not of type: String!`);
-		this.queueLoad(options);
+		this.queueLoad(options, this.loadId++);
 	}
 }

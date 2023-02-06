@@ -1,4 +1,4 @@
-import { server } from "../utilities.js";
+import { content, server } from "../utilities.js";
 import { Player } from "@minecraft/server";
 const chunk = 2147483646;
 class ScoreboardBuilder {
@@ -30,11 +30,12 @@ class ScoreboardBuilder {
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
 		this.players[id][objective].value = value, this.players[id][objective].gotten = true;
-		if (!objective.startsWith('big_')) { server.scoreSet(objective, player, value); return value; };
+		content.warn({ objective, value, this: this });
+		if (!objective.startsWith('big_')) { server.scoreSetPlayer(objective, player, value); return value; };
 		const quotient = Math.floor(value / chunk);
 		const remainder = value % chunk;
-		server.scoreSet(`${objective}*q`, player, quotient);
-		server.scoreSet(`${objective}*r`, player, remainder);
+		server.scoreSetPlayer(`${objective}*q`, player, quotient);
+		server.scoreSetPlayer(`${objective}*r`, player, remainder);
 	}
 	/**
 	 * @param {Player} player 
@@ -55,6 +56,7 @@ class ScoreboardBuilder {
 		};
 		const quotient = server.scoreTest(`${objective}*q`, player, false);
 		const remainder = server.scoreTest(`${objective}*r`, player, false);
+		content.warn({ quotient, remainder });
 		const score = quotient * chunk + remainder;
 		this.players[id][objective].value = score;
 		this.players[id][objective].gotten = true;
