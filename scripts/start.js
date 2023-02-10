@@ -11,72 +11,7 @@ system.events.beforeWatchdogTerminate.subscribe((event) => {
 // world.events.tick.subscribe(() => {
 //     world.say("hello there!");
 // });
-import { world } from "@minecraft/server";
-import * as ui from "@minecraft/server-ui";
 
-const TPA_TITLE = "TPA";
-const TPA_BODY = "Please select a request or accept line.\nRequest line to request a TP.\nAccept line to accept a TP.";
-const TPA_BUTTON_1 = "Request";
-const TPA_BUTTON_2 = "Accept";
-const REQUEST_TITLE = "TPA Request";
-const REQUEST_FIELD_LABEL = "Enter player name:";
-const REQUEST_FIELD_PLACEHOLDER = "Enter player name here";
-const REQUEST_SLIDER_LABEL = "Amount";
-const REQUEST_SLIDER_MIN = 0;
-const REQUEST_SLIDER_MAX = 100;
-const REQUEST_SLIDER_STEP = 1;
-const REQUEST_SLIDER_DEFAULT = 50;
-
-world.events.beforeItemUse.subscribe(({ source, item }) => {
-	if (item.typeId !== "minecraft:stick") return;
-
-	const TPA = new ui.MessageFormData();
-	TPA.title(TPA_TITLE);
-	TPA.body(TPA_BODY);
-	TPA.button1(TPA_BUTTON_1);
-	TPA.button2(TPA_BUTTON_2);
-
-	TPA.show(source).then(({ selection }) => {
-		if (selection === 1) {
-			const request = new ui.ModalFormData();
-			request.title(REQUEST_TITLE);
-			request.textField(REQUEST_FIELD_LABEL, REQUEST_FIELD_PLACEHOLDER);
-			request.slider(REQUEST_SLIDER_LABEL, REQUEST_SLIDER_MIN, REQUEST_SLIDER_MAX, REQUEST_SLIDER_STEP, REQUEST_SLIDER_DEFAULT);
-
-			request.show(source).then(result => {
-				const [playerName] = result.formValues;
-				const player = world.getAllPlayers().find(p => p.name === playerName);
-
-				if (player) {
-					source.runCommandAsync(`scoreboard players set "${playerName}" tpa ${Amount}`);
-					source.runCommandAsync(`say @s "${playerName}" >>> has sent you a TPA request.`);
-				}
-			});
-		} else if (selection === 0) {
-			const accept = new ui.MessageFormData();
-			accept.title(ACCEPT_TITLE);
-			accept.body(ACCEPT_BODY);
-			accept.button1(ACCEPT_BUTTON_1);
-			accept.button2(ACCEPT_BUTTON_2);
-
-			accept.show(source).then(({ selection: acceptSelection }) => {
-				if (acceptSelection === 1) {
-					source.runCommandAsync(`execute as @s if score @s tpa = "${playerName}" tpa run tp @s "${playerName}"`);
-				}
-			});
-		}
-	});
-});
-world.events.itemUse.subscribe(({ source: player, item }) => {
-	if (!(player instanceof Player)) return;
-	const { dimension, rotation: { x: rx, y: ry } } = player;
-	if (item?.typeId !== MinecraftItemTypes.diamond.id) return;
-	const block = player.getBlockFromViewVector();
-	if (!block) return;
-	const { x, y, z } = block;
-	const location = new BlockLocation(x, y + 1, z);
-	player.teleport(location, dimension, rx, ry);
-});
 // const xyz = ['x', 'y', 'z'];
 // const proto = Object.keys(Object.getPrototypeOf({}));
 // world.events.tick.subscribe(() => {

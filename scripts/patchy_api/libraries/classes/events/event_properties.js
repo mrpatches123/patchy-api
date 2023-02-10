@@ -171,6 +171,14 @@ const eventTypeProperties = {
 	projectileHit: {
 		entityEvent: true
 	},
+	entitySpawn: {
+		playerKey: 'sourceEntity',
+		playerOnly: false
+	},
+	playerSpawn: {
+		playerKey: 'player',
+		playerOnly: true
+	},
 	tick: {
 
 	},

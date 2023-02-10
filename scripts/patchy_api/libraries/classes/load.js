@@ -11,9 +11,8 @@ class Loads {
 	constructor() {
 		this.loads = {};
 		this.loaded = false;
-		world.events.playerJoin.subscribe(({ player, playerId }) => {
-			if (!player) player = world.getAllPlayers().find(({ id }) => id === playerId);
-
+		world.events.playerSpawn.subscribe(({ player, initialSpawn }) => {
+			if (!initialSpawn) return;
 			this.awaitLoad(player);
 		});
 		world.events.worldInitialize.subscribe(() => {

@@ -1,7 +1,19 @@
 import { Player } from "../player/class.js";
-import { Entity, BlockHitInformation, DefinitionModifier, Dimension, BlockLocation, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, Location, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions } from '@minecraft/server';
+import { Entity, MessageSourceType, BlockHitInformation, DefinitionModifier, Dimension, BlockLocation, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, Location, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
-
+export class ScriptEventCommandMessageEvent {
+	readonly id: string;
+	readonly initiator: Entity | Player;
+	readonly message: string;
+	readonly sourceBlock: Block;
+	readonly sourceEntity: Entity | Player;
+	readonly sourceType: MessageSourceType;
+}
+export interface EntityDamageSource {
+	cause: EntityDamageCause;
+	damagingEntity?: Entity | Player;
+	damagingProjectile?: Entity;
+}
 export class BeforeChatEvent {
 	cancel: boolean;
 	message: string;
@@ -87,7 +99,10 @@ export class EffectAddEvent {
 	effectState: number;
 	entity: Entity;
 }
-export class EntityCreateEvent {
+export class EntitySpawnEvent {
+	/**
+	 * Entity that was spawned.
+	 */
 	entity: Entity;
 }
 export class EntityHitEvent {
@@ -96,11 +111,15 @@ export class EntityHitEvent {
 	readonly hitBlock: Block;
 }
 export class EntityHurtEvent {
-	readonly cause: EntityDamageCause;
+	/**
+	 * Describes the amount of damage caused.
+	 */
 	readonly damage: number;
-	readonly damagingEntity: Entity;
+	readonly damageSource: EntityDamageSource;
+	/**
+	 * Entity that was hurt.
+	 */
 	readonly hurtEntity: Entity;
-	readonly projectile: Entity;
 }
 export class ExplosionEvent {
 	cancel: boolean;
@@ -174,10 +193,18 @@ export class PistonActivateEvent {
 	readonly piston: BlockPistonComponent;
 }
 export class PlayerJoinEvent {
-	player: Player;
+	/**
+	 * Opaque string identifier of the player that joined the game.
+	 */
+	readonly playerId: string;
+	/**
+	 * Name of the player that has joined.
+	 */
+	readonly playerName: string;
 }
 export class PlayerLeaveEvent {
 	readonly playerName: string;
+	readonly playerId: string;
 }
 export class ProjectileHitEvent {
 	readonly dimension: Dimension;
@@ -200,11 +227,9 @@ export class WorldInitializeEvent {
 	readonly propertyRegistry: PropertyRegistry;
 }
 export class PlayerHurtEvent {
-	readonly cause: EntityDamageCause;
 	readonly damage: number;
-	readonly damagingEntity: Entity | Player;
+	readonly damageSource: EntityDamageSource;
 	readonly player: Player;
-	readonly projectile: Entity;
 }
 export class PlayerDeathEvent {
 	readonly killer: Entity | Player;
@@ -239,6 +264,17 @@ export class PlayerLeftEvent {
 export class PlayerJoinAwaitMoveEvent {
 	readonly player: Player;
 }
+export class PlayerSpawnEvent {
+	/**
+	 * If true, this is the initial spawn of a player after joining
+	 * the game.
+	 */
+	initialSpawn: boolean;
+	/**
+	 * Object that represents the player that joined the game.
+	 */
+	player: Player;
+}
 export interface EventKeyTypes {
 	beforeChat: BeforeChatEvent;
 	beforeDataDrivenEntityTriggerEvent: BeforeDataDrivenEntityTriggerEvent;
@@ -254,7 +290,7 @@ export interface EventKeyTypes {
 	chat: ChatEvent;
 	dataDrivenEntityTriggerEvent: DataDrivenEntityTriggerEvent;
 	effectAdd: EffectAddEvent;
-	entityCreate: EntityCreateEvent;
+	entitySpawn: EntitySpawnEvent;
 	entityHit: EntityHitEvent;
 	entityHurt: EntityHurtEvent;
 	explosion: ExplosionEvent;
@@ -282,8 +318,10 @@ export interface EventKeyTypes {
 	playerDeath: PlayerDeathEvent;
 	requestAdded: RequestAddedEvent;
 	stepOnBlock: StepOnBlockEvent;
+	playerSpawn: PlayerSpawnEvent;
 	playerSpawned: PlayerSpawnedEvent;
 	playerJoinAwaitMove: PlayerJoinAwaitMoveEvent;
+	scriptEventReceive: ScriptEventCommandMessageEvent;
 	worldLoad: undefined;
 };
 

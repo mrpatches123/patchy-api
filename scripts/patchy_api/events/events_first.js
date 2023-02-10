@@ -1,6 +1,6 @@
 import eventBuilder from "../libraries/classes/events/export_instance.js";
 import global from '../libraries/classes/global.js';
-import { EntityEventOptions, world, EntityHurtEvent, system } from '@minecraft/server';
+import { world, EntityHurtEvent, system } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
 import errorLogger from "../libraries/classes/error.js";
 import time from '../libraries/classes/time.js';
@@ -27,7 +27,6 @@ eventBuilder.register({
 				}
 			}
 		}
-
 	},
 	worldLoad: {
 		subscription: {
@@ -90,39 +89,6 @@ eventBuilder.register({
 			}
 		}
 	},
-	// beforeExplosion: {
-	// 	subscription: {
-	// 		beforeExplosion: event => {
-	// 			let { impactedBlocks, dimension } = event;
-	// 			const cancels = [];
-	// 			const eventKey = 'beforeExplosion';
-	// 			time.start(`${eventKey}*Events*API`);
-
-	// 			this.beforeExplosion.events.keysObject.forEach((key, { callback, suppressed }) => {
-	// 				try {
-	// 					time.start(`${eventKey}*${key}*Events*API`);
-	// 					if (!suppressed) {
-	// 						const { cancel, impactedBlocks: callImpactedBlocks } = callback(event) ?? {};
-	// 						if (callImpactedBlocks) {
-	// 							impactedBlocks = impactedBlocks.filter(blockLocation => callImpactedBlocks
-	// 								.some(blockLocation1 => blockLocation1 === blockLocation))
-	// 								.map(({ x, y, z }) => new BlockLocation(x, y, z));;
-	// 						}
-	// 						cancels.push(cancel);
-	// 					}
-	// 					global.tickTime[eventKey].keys[key] = time.end(`${eventKey}*${key}*Events*API`);
-	// 				} catch (error) {
-	// 					errorLogger.log(error, error.stack, { event: 'beforeExplosion', key });
-	// 				}
-	// 			});
-	// 			if (cancels.some(bool => bool)) { event.cancel = true; }
-
-	// 			event.impactedBlocks = impactedBlocks;
-	// 			global.tickTime.beforeExplosion = time.end('beforeExplosion');
-	// 			global.tickTime[eventKey].total = time.end(`${eventKey}*Events*API`);
-	// 		}
-	// 	}
-	// },
 	playerHit: {
 		subscription: {
 			entityHit: {
@@ -147,12 +113,11 @@ eventBuilder.register({
 	},
 	playerDeath: {
 		subscription: {
-
 			entityHurt: {
-				function: ({ damagingEntity: killer, hurtEntity: player, damage, cause, projectile }) => {
+				function: ({ damageSource, hurtEntity: player, damage, cause, projectile }) => {
 					// content.warn(player.name, player.getComponent('health').current);
 					if (player.getComponent('health').current > 0) return;
-					eventBuilder.getEvent('playerDeath').iterate({ killer, player, damage, cause, projectile });
+					eventBuilder.getEvent('playerDeath').iterate({ damageSource, player, damage, cause, projectile });
 				},
 				entityOptions: { entityTypes: ["minecraft:player"] }
 			}
@@ -160,16 +125,11 @@ eventBuilder.register({
 	},
 	playerSpawned: {
 		subscription: {
-			entityHurt: {
-				function: ({ hurtEntity: player }) => {
-					if (player.getComponent('health').current > 0) return;
-					const tick = () => {
-						if (player.getComponent('health').current <= 0) return system.run(tick);
-						eventBuilder.getEvent('playerSpawned').iterate({ player });
-					}; tick();
-
-				},
-				entityOptions: { entityTypes: ["minecraft:player"] }
+			playerSpawn: {
+				function: ({ player, initialSpawn }) => {
+					if (initialSpawn) return;
+					eventBuilder.getEvent('playerSpawned').iterate({ player });
+				}
 			}
 
 		}

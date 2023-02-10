@@ -477,11 +477,17 @@ export const server = {
      * 
      * @param {String} objective 
      * @param {import('@minecraft/server').Player} player 
-     * @param {Number} amount 
+     * @param {Number} value
+     * @param {'list' | 'sidebar' | 'belowName' } updateId 
      */
-    scoreSetPlayer(objective, player, amount = 0) {
-        content.warn(`scoreboard players set @s "${objective}" ${amount}`);
-        player.runCommandAsync(`scoreboard players set @s "${objective}" ${amount}`).catch(error => console.warn(error, error.stack));
+    scoreSetPlayer(objective, player, value = 0, updateId) {
+        world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboard, value);
+        if (!updateId) return value;
+        const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
+        if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return value;
+        world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
+        world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
+        return value;
     },
     scoreSet(objective, name, amount = 0) {
         try {
@@ -503,7 +509,6 @@ export const content = {
 };
 
 /**
- * 
  * @param {{x: number, y: number, z: number}} vector 
  * @returns {XYRotation}
  */
@@ -514,11 +519,11 @@ export function vector3ToRotation(vector) {
  * @param {XYRotation} rotation 
  * @returns {{x: number, y: number, z: number}}
  */
-export function rotationToVector3(rotation) {
-    const { x: rx, y: ry } = rotation;
-    let cosRX = Math.cos(rx);
-    return { x: -Math.sin(rx) * cosRX, y: -Math.sin(ry), z: Math.cos(rx) * cosRX };
-}
+// export function rotationToVector3(rotation) {
+//     const { x: rx, y: ry } = rotation;
+//     let cosRX = Math.cos(rx);
+//     return { x: -Math.sin(rx) * cosRX, y: -Math.sin(ry), z: Math.cos(rx) * cosRX };
+// }
 
 
 

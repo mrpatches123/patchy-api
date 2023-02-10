@@ -1,4 +1,4 @@
-import { world, EntityEventOptions } from "@minecraft/server";
+import { world } from "@minecraft/server";
 import { content, native, parseList } from "../utilities.js";
 import global from "./global.js";
 import time from './time.js';

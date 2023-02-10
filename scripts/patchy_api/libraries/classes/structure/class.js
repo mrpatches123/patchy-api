@@ -1,4 +1,4 @@
-import { BlockLocation, system, Vector3, Dimension } from '@minecraft/server';
+import { BlockLocation, system, Dimension } from '@minecraft/server';
 import { isVector3, orArray, sort3DVectors, content, native } from "../../utilities";
 
 const saveModes = ['memory', 'disk'];
@@ -7,13 +7,13 @@ const mirrors = ['none', 'x', 'xz', 'z'];
 const animationModes = ['block_by_block', 'layer_by_layer'];
 
 /**
- * @typedef {{name: string, dimension: Dimension, location1: Vector3, location2: Vector3, saveMode?: 'memory' | 'disk', includesEntites?: boolean, includesBlocks?: boolean}} SaveOptions
+ * @typedef {{name: string, dimension: Dimension, location1: import('@minecraft/server').Vector3, location2: Vector3, saveMode?: 'memory' | 'disk', includesEntites?: boolean, includesBlocks?: boolean}} SaveOptions
  */
 /**
  * @typedef {Iterator< undefined, [BlockLocation, BlockLocation]>} SaveIterator
  */
 /**
- * @typedef {{dimension: Dimension, location: Vector3, name: string, rotation?: '0_degrees' | '90_degrees' | '180_degrees' | '270_degrees', mirror?: 'none' | 'x' | 'xz' | 'z', animationMode?: 'block_by_block' | 'layer_by_layer', animationSeconds?: number, includesEntites?: boolean, includesBlocks?: boolean, waterlogged: boolean, integrity: Number, seed: string}} LoadOptions
+ * @typedef {{dimension: Dimension, location: import('@minecraft/server').Vector3, name: string, rotation?: '0_degrees' | '90_degrees' | '180_degrees' | '270_degrees', mirror?: 'none' | 'x' | 'xz' | 'z', animationMode?: 'block_by_block' | 'layer_by_layer', animationSeconds?: number, includesEntites?: boolean, includesBlocks?: boolean, waterlogged: boolean, integrity: Number, seed: string}} LoadOptions
  */
 export class StructureBuilder {
 	constructor() {
