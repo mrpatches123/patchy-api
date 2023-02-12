@@ -33,7 +33,7 @@ import './commands/events.js';
 import './commands/disconnect.js';
 import './commands/reload.js';
 import './commands/ui_test.js';
-import './commands/echest.js';
+// import './commands/echest.js';
 import './commands/tag_databases.js';
 import './commands/request.js';
 import './commands/players.js';

@@ -1,4 +1,4 @@
-import { content, orArray, server } from "../utilities.js";
+import { content, isDefined, orArray, server } from "../utilities.js";
 import { Player, world } from "@minecraft/server";
 const chunk = 2147483646;
 const displaySlotIds = ['list', 'sidebar', 'belowName'];
@@ -60,11 +60,18 @@ class ScoreboardBuilder {
 	 */
 	set(player, objective, value) {
 		const { id } = player;
+		if (player.hasOwnProperty('player')) player = player.player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
-		this.players[id][objective].value = value, this.players[id][objective].gotten = true;
+		if (!value)
+			this.players[id][objective].value = value, this.players[id][objective].gotten = true;
 		content.warn({ objective, value, this: this });
-		if (!objective.startsWith('big_')) { server.scoreSetPlayer(objective, player, value, this.objectives?.[objective]?.displaySlot); return value; };
+		if (!objective.startsWith('big_')) {
+			if (!isDefined(value)) return server.scoreResetPlayer(objective, player);
+			server.scoreSetPlayer(objective, player, value, this.objectives?.[objective]?.displaySlot);
+			return value;
+		};
+		if (!isDefined(value)) return server.scoreResetPlayer(`${objective}*q`, player) && server.scoreResetPlayer(`${objective}*r`, player);;
 		const quotient = Math.floor(value / chunk);
 		const remainder = value % chunk;
 		server.scoreSetPlayer(`${objective}*q`, player, quotient);
@@ -77,6 +84,7 @@ class ScoreboardBuilder {
 	 */
 	get(player, objective, forceDisk) {
 		const { id } = player;
+		if (player.hasOwnProperty('player')) player = player.player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
 		const { value, gotten } = this.players[id][objective];

@@ -42,9 +42,8 @@ export class PlotBuilder {
 	setCurrent(player: Player, key: string): void;
 	query(player: Player, key: string): number;
 	create<key extends string>(key: string, rules: PlotRules<key>): void;
-	add(player: Player, key: string): { wasAdded: boolean, plotNumber: number | undefined; };
+	add(player: Player, key: string, plotNumber: number | undefined): { wasAdded: boolean, plotNumber: number | undefined, full: boolean; };
 	remove(player: Player, key: string): void;
-	set(player: Player, key: string, plotNumber: number): void;
-	list(key: string): number[];
+	list(key: string): { currentIndex: number, availablePlots: number[]; };
 	reset(key: string): void;
 }

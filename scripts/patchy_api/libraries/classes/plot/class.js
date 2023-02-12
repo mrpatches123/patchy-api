@@ -200,48 +200,11 @@ export class PlotBuilder {
 		const { plotNumberIdentifier, property } = this.plots[key].rules;
 		return ((property) ? properties : scores)[plotNumberIdentifier];
 	}
-	set(player, key, plotNumber) {
-		const { scores, properties } = player;
-		const { plotNumberIdentifier, property, subscribed } = this.plots[key];
-		const plots = databases.get('plots*API') ?? databases.add('plots*API');
-		let { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key);
-		if (currentIndex >= plotNumber && !availablePlots.includes(plotNumber)) return false;
-		if (currentIndex < plotNumber) {
-			for (let i = currentIndex + 1; i < plotNumber; i++) {
-				availablePlots.push(i);
-			}
-		}
-		((property) ? properties : scores)[plotNumberIdentifier] = plotNumber;
-		availablePlots = availablePlots.filter(value => value !== plotNumber);
-		if (!subscribed) {
-			this.subscribe(key);
-			hasBeenSubscribed = true;
-		}
-		const ruleSet = this.getRuleSet(key, plotNumber);
-		if (teleport) {
-			let { location: teleportLocation, face } = teleport;
-			const { start: { x, y, z } } = ruleSet;
-			const startLocation = new Location(x, y, z);
-			teleportLocation = { location: startLocation, offset: teleportLocation };
-			// content.warn(native.stringify(face));
-			if (isVector3(face)) face = { location: startLocation, offset: face };
-			// content.warn(native.stringify(face));
-			teleportBuilder.teleportOnce(player, { location: teleportLocation, face, dimension: overworld });
-		}
-		if (structure) {
-			const { start: { x, y, z } } = ruleSet;
-			const { x: sx, y: sy, z: sz } = structure.location;
-			structureBuilder.load(Object.assign(structure, { location: new BlockLocation(sx + x, sy + y, sz + z) }));
-		}
-		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
-		content.chatFormat({ databases });
-		databases.queueSave('plots*API');
-		return true;
-	}
 	list(key) {
 		const plots = databases.get('plots*API') ?? databases.add('plots*API');
-		let { availablePlots = [0] } = plots.get(key);
-		return availablePlots;
+		const plotObject = plots.get(key);
+		let { availablePlots, currentIndex } = plotObject ?? {};
+		return (plotObject) ? { availablePlots, currentIndex } : false;
 	}
 	/**
 	 * @param {Player} player 
@@ -267,25 +230,25 @@ export class PlotBuilder {
 		const column = number % ruleSets.length;
 		// content.warn({ t: "wwdwddwwdwd", number: number ?? number.toString(), len: ruleSets.length, number: isDefined(number), column, bool: overworld instanceof Dimension });
 		const ruleSet = ruleSets[column];
-		const { start: startRuleSet, offset } = ruleSet;
+		const { start: startRuleSet, offset: { x: ox = 0, y: oy = 0, z: oz = 0 } = {} } = ruleSet;
 		let { x, y, z } = startRuleSet;
 		switch (loopDirection) {
 			case 'x': {
-				z += maxZ * row + offset.z * (row + 1);
-				x += offset.x * (column + 1);
+				z += maxZ * row + oz * (row + 1);
+				x += ox * (column + 1);
 				break;
 			} case '-x': {
-				z -= maxZ * row - offset.z * (row + 1);
-				x += offset.x * (column + 1);
+				z -= maxZ * row - offset?.z * (row + 1);
+				x += ox * (column + 1);
 				break;
 			} case 'z': {
 				// content.warn('');
-				x += maxX * row + offset.x * (column + 1);
-				z += offset.z * (row + 1);
+				x += maxX * row + ox * (column + 1);
+				z += oz * (row + 1);
 				break;
 			} case '-z': {
-				x -= maxX * row - offset.x * (row + 1);
-				z += offset.z * (row + 1);
+				x -= maxX * row - ox * (row + 1);
+				z += oz * (row + 1);
 				break;
 			}
 		}
@@ -312,13 +275,15 @@ export class PlotBuilder {
 					// content.warn(plotNumber);
 					if (!isDefined(plotNumber)) return;
 					const { size, start } = this.getRuleSet(key, plotNumber);
-					if (gamemodeOveride) {
+					// content.warn({ t: 'hellodwkj', gamemodeOveride });
+					if (isDefined(gamemodeOveride)) {
 						const { gamemode: gamemodePlayer } = player;
+						// content.warn({ gamemodeOveride, gamemodePlayer });
 						if (gamemodePlayer !== gamemodeOveride) player.gamemode = gamemodeOveride;
 					}
 					const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
 					const { x, y, z } = lastLocation;
-					// content.warn({ lastLocation: objectVector3(lastLocation), start: objectVector3(start), bool1: betweenBlockVector3(location, start, end), bool2: betweenBlockVector3(lastLocation, start, end) });
+					// content.warn({ lastLocation: objectVector3(lastLocation), start: objectVector3(start), end: objectVector3(end), bool1: betweenBlockVector3(location, start, end), bool2: betweenBlockVector3(lastLocation, start, end) });
 					memory.lastLocation = location;
 					if (betweenBlockVector3(location, start, end)) return;
 					if (betweenBlockVector3(lastLocation, start, end)) {
@@ -407,24 +372,35 @@ export class PlotBuilder {
 	/**
 	 * @param {import('../player/class').Player} player 
 	 * @param {string} key 
-	 * @returns {{ wasAdded: boolean, plotNumber: Number | undefined}}
+	 * @param {number | undefined} plotNumber 
+	 * @returns {{ wasAdded: boolean, plotNumber: Number | undefined, full: boolean}}
 	 */
-	add(player, key) {
+	add(player, key, plotNumber) {
+		content.warn({ bool: !isDefined(plotNumber), plotNumber: plotNumber ?? 'undefined' });
 		const { scores, properties } = player;
 		const { subscribed } = this.plots[key];
 		const { plotNumberIdentifier, property, loop, teleport, structure, ruleSets = [] } = this.plots[key].rules;
 		const queryNumber = this.query(player, key);
-		if (isDefined(queryNumber)) return { wasAdded: false, plotNumber: queryNumber };
+		if (isDefined(queryNumber)) return { wasAdded: false, plotNumber: queryNumber, full: false };
 		const plots = databases.get('plots*API');
 		if (!plots) throw new Error('why does the plots*API db not exist');
 		const plot = plots.get(key);
 		if (!plot) throw new Error(`plot: ${key}, does not exist`);
 		let { availablePlots, currentIndex, hasBeenSubscribed } = plot;
-		if (!loop && ruleSets.length === currentIndex) return false;
-		const plotNumber = availablePlots.shift();
-		if (availablePlots.length === 0) { availablePlots.push(++currentIndex); };
+		if (!loop && ruleSets.length === currentIndex && !availablePlots.length) return { wasAdded: false, full: true };
+		if (!isDefined(plotNumber)) {
+			plotNumber = availablePlots.shift();
+			if (availablePlots.length === 0) availablePlots.push(++currentIndex);
+		} else if (availablePlots.includes(plotNumber)) availablePlots = availablePlots.filter(number => number !== plotNumber);
+		else if (currentIndex < plotNumber) {
+			for (let i = currentIndex + 1; i < plotNumber; i++) availablePlots.push(i);
+			currentIndex = plotNumber + 1;
+		}
+		else return { wasAdded: false, full: false };
+
 		if (property) properties[plotNumberIdentifier] = plotNumber;
 		else scores[plotNumberIdentifier] = plotNumber;
+
 		content.warn({ plotNumber, property, score: scores[plotNumberIdentifier] });
 		if (!subscribed) {
 			this.subscribe(key);
@@ -435,8 +411,8 @@ export class PlotBuilder {
 		if (structure) {
 			const { start: { x, y, z } } = ruleSet;
 			const { x: sx, y: sy, z: sz } = structure.location;
-			content.warn({ t: 'structure', x: sx + x, y: sy + y, z: sz + z });
-			loadId = structureBuilder.load(Object.assign(structure, { location: new BlockLocation(sx + x, sy + y, sz + z) }));
+			content.warn({ t: 'structure', sx, sy, sz, x: sx + x, y: sy + y, z: sz + z });
+			loadId = structureBuilder.load({ ...structure, ...{ location: new BlockLocation(sx + x, sy + y, sz + z) } });
 		}
 
 		if (teleport) {
@@ -457,11 +433,10 @@ export class PlotBuilder {
 					teleportBuilder.teleportOnce(player, { location: teleportLocation, face, dimension: overworld });
 				}, { once: true, start: true, remove: true, afterLoad: true });
 		}
-
 		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
 		content.chatFormat({ databases });
 		databases.queueSave('plots*API');
-		return { wasAdded: true, plotNumber };
+		return { wasAdded: true, plotNumber, full: false };
 	}
 	reset(key) {
 		const plots = databases.get('plots*API') ?? databases.add('plots*API');
@@ -477,7 +452,9 @@ export class PlotBuilder {
 		if (!isDefined(plotNumber)) return false;
 		if (!availablePlots.includes(plotNumber)) availablePlots.push(plotNumber);
 		availablePlots.sort();
-		((property) ? properties : scores)[plotNumberIdentifier] = undefined;
+		this.setCurrent(player, undefined);
+		if (property) properties[plotNumberIdentifier] = undefined;
+		else scores[plotNumberIdentifier] = undefined;
 		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
 		databases.queueSave('plots*API');
 		return true;
