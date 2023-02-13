@@ -1,5 +1,6 @@
 import { content, isDefined, orArray, server } from "../utilities.js";
 import { Player, world } from "@minecraft/server";
+import eventBuilder from "./events/export_instance.js";
 const chunk = 2147483646;
 const displaySlotIds = ['list', 'sidebar', 'belowName'];
 
@@ -63,9 +64,9 @@ class ScoreboardBuilder {
 		if (player.hasOwnProperty('player')) player = player.player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
-		if (!value)
-			this.players[id][objective].value = value, this.players[id][objective].gotten = true;
+		this.players[id][objective].value = value, this.players[id][objective].gotten = true;
 		content.warn({ objective, value, this: this });
+		eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
 		if (!objective.startsWith('big_')) {
 			if (!isDefined(value)) return server.scoreResetPlayer(objective, player);
 			server.scoreSetPlayer(objective, player, value, this.objectives?.[objective]?.displaySlot);

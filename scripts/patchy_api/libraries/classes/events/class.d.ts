@@ -275,6 +275,11 @@ export class PlayerSpawnEvent {
 	 */
 	player: Player;
 }
+export class ScoreboardChangeEvent {
+	player: Player;
+	objective: string;
+	value: number;
+}
 export interface EventKeyTypes {
 	beforeChat: BeforeChatEvent;
 	beforeDataDrivenEntityTriggerEvent: BeforeDataDrivenEntityTriggerEvent;
@@ -323,6 +328,7 @@ export interface EventKeyTypes {
 	playerJoinAwaitMove: PlayerJoinAwaitMoveEvent;
 	scriptEventReceive: ScriptEventCommandMessageEvent;
 	worldLoad: undefined;
+	scoreboardChange: ScoreboardChangeEvent;
 };
 
 type EventObject = { [key in keyof EventKeyTypes]: (arg: EventKeyTypes[key]) => {}; };

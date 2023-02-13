@@ -40,7 +40,7 @@ class TeleportBuilder {
 	 * @property {{x: number, y: number, z: number}} location
 	 * @property {Dimension} dimension
 	 * @property {XYRotation} rotation
-	 * @property {{x: number, y: number, z: number}} facing
+	 * @property {{x: number, y: number, z: number}} face
 	 * @property {Boolean} keepVelocity
 	 * @property {RandomOptions} random
 	 */
@@ -57,12 +57,9 @@ class TeleportBuilder {
 			value.forEach((teleportObject, i) => {
 				let { location, dimension, face, keepVelocity = false, random } = teleportObject;
 				const { minRadius = 0, maxRadius, type = 'circle', randomRotation = true, yMax, yMin = -64 } = random ?? {};
-				if (!(location instanceof Location) && !(location instanceof BlockLocation)) {
-					return new Error(`location key of teleportObject Key: ${key}, should be a instance of Location or BlockLocation`);
-				}
-				const rotation = (face instanceof BlockLocation || face instanceof Location) ? undefined : face;
+				if (!isVector3(location)) throw new Error(`location key of teleportObject Key: ${key}, should be a instance of Location or BlockLocation`);
+				const rotation = (isVector3(face)) ? undefined : face;
 				const facing = (rotation) ? undefined : face;
-				content.warn(key, face instanceof BlockLocation || face instanceof Location);
 				if (isArray) {
 					if (!this.hasOwnProperty(key)) this[key] = Array(value.length);
 					this[key][i] = {
@@ -213,17 +210,6 @@ class TeleportBuilder {
 		else value = this[key];
 		let { location, facing, rotation, keepVelocity, dimension, random } = value;
 		if (keepVelocity && player instanceof Player) throw new Error(`You cannot keep velocity on players`);
-		if (location instanceof BlockLocation) {
-			const { x, y, z } = location;
-			location = new Location(Math.floor(x) + 0.5, Math.floor(y), Math.floor(z) + 0.5);
-		}
-
-		if (facing instanceof BlockLocation) {
-			const { x, y, z } = location;
-
-			facing = new Location(Math.floor(x) + 0.5, Math.floor(y), Math.floor(z) + 0.5);
-			content.warn({ facing: { bool: facing instanceof BlockLocation, x: facing.x, y: facing.y, z: facing.z } });
-		}
 		const { minRadius = 0, maxRadius, type = 'circle', randomRotation = true, yMin, yMax } = random;
 		if (random instanceof Object) {
 			content.warn('-----generating--------------');

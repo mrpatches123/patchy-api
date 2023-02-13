@@ -6,7 +6,82 @@ startwodjopwpwdjwwpodjdwo();
 system.events.beforeWatchdogTerminate.subscribe((event) => {
 	event.cancel = true;
 });
+import { world, Player, MinecraftBlockTypes, BlockLocation, ItemStack, MinecraftItemTypes, PlayerInventoryComponentContainer } from '@minecraft/server';
 
+const cropTypes = [
+	MinecraftBlockTypes.wheat.id,
+	MinecraftBlockTypes.carrots.id,
+	MinecraftBlockTypes.potatoes.id,
+	MinecraftBlockTypes.beetroot.id
+];
+
+const cropItems = {
+	[MinecraftBlockTypes.wheat.id]: new ItemStack(MinecraftItemTypes.wheat, 1),
+	[MinecraftBlockTypes.carrots.id]: new ItemStack(MinecraftItemTypes.carrot, 1),
+	[MinecraftBlockTypes.potatoes.id]: new ItemStack(MinecraftItemTypes.potato, 1),
+	[MinecraftBlockTypes.beetroot.id]: new ItemStack(MinecraftItemTypes.beetroot, 1),
+};
+export function permutationClone(permutation) {
+	const permutationProperties = [];
+	/**
+	 * @type {BlockPermutation}
+	 */
+	const blockPermutation = permutation;
+	blockPermutation.getAllProperties().forEach(({ name, validValues, value }) => {
+		permutationProperties.push({ name, validValues, value });
+	});
+	return permutationProperties;
+}
+world.events.itemUseOn.subscribe(({ source: player, blockLocation }) => {
+	if (!(player instanceof Player)) return;
+	const block = player.dimension.getBlock(blockLocation);
+	console.warn(block?.type?.id, "hi", JSON.stringify(permutationClone(block.permutation)));
+	if (!cropTypes.includes(block?.type?.id)) return;
+	/**
+	 * @type {PlayerInventoryComponentContainer}
+	 */
+	const container = player.getComponent("inventory").container;
+	container.addItem(cropItems[block.typeId]);
+	const type = block.type;
+	block.setType(MinecraftBlockTypes.air);
+});
+// import { world, MinecraftEntityTypes, Location } from '@minecraft/server';
+// world.events.beforeItemUse.subscribe(({ source, item }) => {
+// 	console.warn(JSON.stringify({ source: source.typeId, item: item.typeId }));
+// });
+
+// /**
+//  * @type {string[]}
+//  */
+// const entityTypeIds = Object.entries(MinecraftEntityTypes).map(([key, { id }]) => id);
+// // console.warn(entityTypeIds);
+// const excludes = [
+// 	MinecraftEntityTypes.wither.id,
+// 	MinecraftEntityTypes.enderDragon.id,
+// 	MinecraftEntityTypes.tnt.id,
+// 	MinecraftEntityTypes.tntMinecart.id,
+// 	MinecraftEntityTypes.enderCrystal.id
+// ];
+// world.events.beforeExplosion.subscribe(({ source }) => {
+// 	world.say(source.typeId);
+// });
+// world.events.beforeChat.subscribe(({ sender }) => {
+// 	const { location: { x, y, z }, dimension } = sender;
+// 	const couldNotSpawn = [];
+// 	entityTypeIds.forEach(id => {
+// 		if (excludes.includes(id)) return;
+// 		try {
+
+// 			dimension.spawnEntity(id, new Location(x, y, z));
+// 		} catch (error) {
+// 			couldNotSpawn.push(id);
+// 			// console.warn( error, error.stack);
+// 		}
+
+// 	});
+// 	console.warn(JSON.stringify(couldNotSpawn));
+
+// });
 // import { world, Player, MinecraftItemTypes, BlockLocation } from '@minecraft/server';
 // world.events.tick.subscribe(() => {
 //     world.say("hello there!");

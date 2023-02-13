@@ -133,6 +133,9 @@ eventBuilder.register({
 			}
 
 		}
+	},
+	scoreboardChange: {
+		subscription: {}
 	}
 });
 // world.say(`123 - ${JSON.stringify(eventBuilder, null, 4)}`);

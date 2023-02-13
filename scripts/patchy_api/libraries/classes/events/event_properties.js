@@ -226,6 +226,11 @@ const eventTypeProperties = {
 	},
 	worldLoad: {
 		custom: true
+	},
+	scoreboardChange: {
+		custom: true,
+		playerKey: 'player',
+		playerOnly: true
 	}
 
 };
