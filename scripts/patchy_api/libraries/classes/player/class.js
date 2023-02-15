@@ -1,5 +1,5 @@
 import loads from "../load.js";
-import { Player as PlayerType, PlayerInventoryComponentContainer, system } from "@minecraft/server";
+import { Player as PlayerType, PlayerInventoryComponentContainer, system, Vector } from "@minecraft/server";
 import players from "../players/export_instance.js";
 import errorLogger from "../error.js";
 import { content } from "../../utilities.js";
@@ -11,6 +11,9 @@ export class Player {
 	 * @param {PlayerType} player 
 	 */
 	constructor(player) {
+		/**
+		 * @type {PlayerType}
+		 */
 		this.player = player;
 	}
 	get gamemode() {
@@ -155,7 +158,14 @@ export class Player {
 		return this.player.velocity;
 	}
 	get viewVector() {
-		return this.player.viewVector;
+		const { x, y, z } = this.player.viewDirection;
+		return new Vector(x, y, z);
+	}
+	get viewDirection() {
+		return this.player.viewDirection;
+	}
+	applyDamage(...args) {
+		return this.player.applyDamage(...args);
 	}
 	addEffect(...args) {
 		return this.player.addEffect(...args);

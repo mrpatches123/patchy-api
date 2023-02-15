@@ -1,4 +1,4 @@
-import { system } from '@minecraft/server';
+import { BlockLocation, system, world } from '@minecraft/server';
 function startwodjopwpwdjwwpodjdwo() {
 	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
 }
@@ -6,45 +6,51 @@ startwodjopwpwdjwwpodjdwo();
 system.events.beforeWatchdogTerminate.subscribe((event) => {
 	event.cancel = true;
 });
-import { world, Player, MinecraftBlockTypes, BlockLocation, ItemStack, MinecraftItemTypes, PlayerInventoryComponentContainer } from '@minecraft/server';
-
-const cropTypes = [
-	MinecraftBlockTypes.wheat.id,
-	MinecraftBlockTypes.carrots.id,
-	MinecraftBlockTypes.potatoes.id,
-	MinecraftBlockTypes.beetroot.id
-];
-
-const cropItems = {
-	[MinecraftBlockTypes.wheat.id]: new ItemStack(MinecraftItemTypes.wheat, 1),
-	[MinecraftBlockTypes.carrots.id]: new ItemStack(MinecraftItemTypes.carrot, 1),
-	[MinecraftBlockTypes.potatoes.id]: new ItemStack(MinecraftItemTypes.potato, 1),
-	[MinecraftBlockTypes.beetroot.id]: new ItemStack(MinecraftItemTypes.beetroot, 1),
-};
-export function permutationClone(permutation) {
-	const permutationProperties = [];
-	/**
-	 * @type {BlockPermutation}
-	 */
-	const blockPermutation = permutation;
-	blockPermutation.getAllProperties().forEach(({ name, validValues, value }) => {
-		permutationProperties.push({ name, validValues, value });
-	});
-	return permutationProperties;
-}
-world.events.itemUseOn.subscribe(({ source: player, blockLocation }) => {
-	if (!(player instanceof Player)) return;
-	const block = player.dimension.getBlock(blockLocation);
-	console.warn(block?.type?.id, "hi", JSON.stringify(permutationClone(block.permutation)));
-	if (!cropTypes.includes(block?.type?.id)) return;
-	/**
-	 * @type {PlayerInventoryComponentContainer}
-	 */
-	const container = player.getComponent("inventory").container;
-	container.addItem(cropItems[block.typeId]);
-	const type = block.type;
-	block.setType(MinecraftBlockTypes.air);
+world.events.beforeExplosion.subscribe((event) => {
+	const { source, impactedBlocks } = event;
+	const { location: { x, y, z } } = source;
+	const impackedBlocksClone = Array.from(impactedBlocks);
+	event.impactedBlocks = impackedBlocksClone.filter(({ x: bx, y: by, z: bz }) => Math.hypot(bx - x, by - y, bz - z) < 2);
 });
+// import { world, Player, MinecraftBlockTypes, BlockLocation, ItemStack, MinecraftItemTypes, PlayerInventoryComponentContainer } from '@minecraft/server';
+
+// const cropTypes = [
+// 	MinecraftBlockTypes.wheat.id,
+// 	MinecraftBlockTypes.carrots.id,
+// 	MinecraftBlockTypes.potatoes.id,
+// 	MinecraftBlockTypes.beetroot.id
+// ];
+
+// const cropItems = {
+// 	[MinecraftBlockTypes.wheat.id]: new ItemStack(MinecraftItemTypes.wheat, 1),
+// 	[MinecraftBlockTypes.carrots.id]: new ItemStack(MinecraftItemTypes.carrot, 1),
+// 	[MinecraftBlockTypes.potatoes.id]: new ItemStack(MinecraftItemTypes.potato, 1),
+// 	[MinecraftBlockTypes.beetroot.id]: new ItemStack(MinecraftItemTypes.beetroot, 1),
+// };
+// export function permutationClone(permutation) {
+// 	const permutationProperties = [];
+// 	/**
+// 	 * @type {BlockPermutation}
+// 	 */
+// 	const blockPermutation = permutation;
+// 	blockPermutation.getAllProperties().forEach(({ name, validValues, value }) => {
+// 		permutationProperties.push({ name, validValues, value });
+// 	});
+// 	return permutationProperties;
+// }
+// world.events.itemUseOn.subscribe(({ source: player, blockLocation }) => {
+// 	if (!(player instanceof Player)) return;
+// 	const block = player.dimension.getBlock(blockLocation);
+// 	console.warn(block?.type?.id, "hi", JSON.stringify(permutationClone(block.permutation)));
+// 	if (!cropTypes.includes(block?.type?.id)) return;
+// 	/**
+// 	 * @type {PlayerInventoryComponentContainer}
+// 	 */
+// 	const container = player.getComponent("inventory").container;
+// 	container.addItem(cropItems[block.typeId]);
+// 	const type = block.type;
+// 	block.setType(MinecraftBlockTypes.air);
+// });
 // import { world, MinecraftEntityTypes, Location } from '@minecraft/server';
 // world.events.beforeItemUse.subscribe(({ source, item }) => {
 // 	console.warn(JSON.stringify({ source: source.typeId, item: item.typeId }));

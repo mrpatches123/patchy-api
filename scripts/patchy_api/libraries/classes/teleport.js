@@ -15,7 +15,8 @@ const unsafeBlocks = [
 	MinecraftBlockTypes.water.id,
 	MinecraftBlockTypes.flowingWater.id,
 	MinecraftBlockTypes.soulSand.id,
-	MinecraftBlockTypes.soulSoil.id
+	MinecraftBlockTypes.soulSoil.id,
+	MinecraftBlockTypes.cactus.id
 ];
 function objectVector3(vector3) {
 	const { x, y, z } = vector3;

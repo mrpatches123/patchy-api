@@ -5,6 +5,9 @@ import time from '../time.js';
 import { setProptotype } from '../player/class.js';
 import { CustomEvent } from '../custom_event/class.js';
 import eventTypeProperties from './event_properties.js';
+import errorLogger from '../error.js';
+let keystest = [];
+let clearedKeyTest = false;
 function objectEquals(source, object) {
 	//// console.log(keys(this).equals(keys(object)))
 	if (!(source instanceof Object)) return false;
@@ -113,18 +116,17 @@ export class EventBuilder {
 			if (!this.registry.hasOwnProperty(eventKey) && !(eventKey in world.events) && !(eventKey in system.events)) throw new Error(`eventKey: ${eventKey}, in subscribeObject at params[1] is not a custom, system, or world event!`);
 
 			if (!this.subscriptions.hasOwnProperty(eventKey)) {
-				this.initSubscribe(eventKey);
 				const worldSystem = (eventKey in world.events) ? 'world' : (eventKey in system.events) ? 'system' : false;
 				if (worldSystem) {
 					this.worldSubscribe(key, eventKey, null, worldSystem, null, callback);
 				} else {
+					this.initSubscribe(eventKey);
 					const { subscription } = this.registry[eventKey];
 					const nativeSubscribeObject = {};
 					//Object.entries(subscription).forEach(([oldEventKey, { function: subscriptionFunction, entityOptions, forceNative, entityOptionsKey }]) => {
 
 					subscription.forEach((oldEventKey, { function: subscriptionFunction, entityOptions, forceNative, entityOptionsKey }) => {
 						const worldSystem = (oldEventKey in world.events) ? 'world' : (oldEventKey in system.events) ? 'system' : false;
-
 						if (worldSystem) {
 							this.worldSubscribe(eventKey, oldEventKey, entityOptionsKey, worldSystem, entityOptions, subscriptionFunction);
 						} else {
@@ -205,15 +207,20 @@ export class EventBuilder {
 		if (!this.subscriptions[eventKey].hasOwnProperty('keys')) this.subscriptions[eventKey].keys = {};
 		if (!this.subscriptions[eventKey].hasOwnProperty('subscriptions')) this.subscriptions[eventKey].subscriptions = 0;
 		if (!this.subscriptions[eventKey].hasOwnProperty('keyList')) this.subscriptions[eventKey].keyList = [];
+		this.subscriptions[eventKey].worldSubscribed = true;
 	};
 	/**
 	 * @private
 	 */
 	worldSubscribe(key, oldEventKey, entityOptionsKey, worldSystem, entityOptions, callback) {
+		// content.warn({ oldEventKey, bool: this.subscriptions?.[entityOptionsKey ?? oldEventKey]?.worldSubscribed ?? false });
+		if (this.subscriptions?.[entityOptionsKey ?? oldEventKey]?.worldSubscribed ?? false) return this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key] = { suppessed: false, callback, native: true, oldEventKey };
+		// content.warn({ oldEventKey });
 		this.initSubscribe(entityOptionsKey ?? oldEventKey);
 		this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key] = { suppessed: false, callback, native: true, oldEventKey };
 		this.subscriptions[entityOptionsKey ?? oldEventKey].subscriptions++;
 		let subscribedEventFunction;
+
 
 		if (eventTypeProperties[oldEventKey]?.modifiables?.length) {
 			subscribedEventFunction = (event) => {
@@ -232,9 +239,13 @@ export class EventBuilder {
 
 				Object.entries(this.subscriptions[entityOptionsKey ?? oldEventKey].keys).forEach(([key, { suppessed, callback }]) => {
 					if (!suppessed) {
-						time.start(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
-						callback(eventClone);
-						this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
+						try {
+							time.start(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
+							callback(eventClone);
+							this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
+						} catch (error) {
+							errorLogger.log(error, error.stack, { key: key, event: oldEventKey });
+						}
 					}
 				});
 				this.subscriptions[oldEventKey].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}`);
@@ -258,12 +269,18 @@ export class EventBuilder {
 				};
 				Object.entries(this.subscriptions[entityOptionsKey ?? oldEventKey].keys).forEach(([key, { suppessed, callback }]) => {
 					if (!suppessed) {
-						time.start(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
-						// if (!(callback instanceof Function)) content.warn(oldEventKey, key);
-						callback(eventClone);
-						this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
+						try {
+							time.start(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
+							if (oldEventKey == 'tick') keystest.push(key);
+							callback(eventClone);
+							this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
+						} catch (error) {
+							errorLogger.log(error, error.stack, { key: key, event: oldEventKey });
+						}
 					}
 				});
+				// if (oldEventKey === 'tick') content.warn({ keystest });
+				// if (oldEventKey === 'tick' && !clearedKeyTest) clearedKeyTest = true, system.run(() => (keystest = [], clearedKeyTest = false));
 				this.subscriptions[entityOptionsKey ?? oldEventKey].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}`);
 			};
 		}
@@ -277,7 +294,6 @@ export class EventBuilder {
 		if (!this.registry.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, in params[0] is not a custom, system, or world event!`);
 		return new CustomEvent(eventKey);
 	}
-
 }
 
 

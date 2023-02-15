@@ -1,5 +1,13 @@
 import { world, Items, BlockLocation, Player, Entity, XYRotation, } from '@minecraft/server';
 import errorLogger from './classes/error.js';
+export const content = {
+    warn(...messages) {
+        console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
+    },
+    chatFormat(...messages) {
+        chunkString(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value, 4)).join(' '), 500).forEach(message => world.say(message));
+    }
+};
 export function isVector3(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
@@ -516,14 +524,7 @@ export const server = {
     },
 };
 
-export const content = {
-    warn(...messages) {
-        console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
-    },
-    chatFormat(...messages) {
-        chunkString(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value, 4)).join(' '), 500).forEach(message => world.say(message));
-    }
-};
+
 
 /**
  * @param {{x: number, y: number, z: number}} vector 
