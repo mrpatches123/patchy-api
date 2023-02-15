@@ -491,6 +491,7 @@ export const server = {
     scoreResetPlayer(objective, player, updateId) {
         try {
             world.scoreboard.getObjective(objective).removeParticipant(player.scoreboard);
+            eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
             return true;
         } catch (error) {
             console.warn(error, error.stack);

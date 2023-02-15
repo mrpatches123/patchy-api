@@ -66,10 +66,11 @@ class ScoreboardBuilder {
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
 		this.players[id][objective].value = value, this.players[id][objective].gotten = true;
 		content.warn({ objective, value, this: this });
-		eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
+
 		if (!objective.startsWith('big_')) {
 			if (!isDefined(value)) return server.scoreResetPlayer(objective, player);
 			server.scoreSetPlayer(objective, player, value, this.objectives?.[objective]?.displaySlot);
+			eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
 			return value;
 		};
 		if (!isDefined(value)) return server.scoreResetPlayer(`${objective}*q`, player) && server.scoreResetPlayer(`${objective}*r`, player);;
@@ -77,6 +78,7 @@ class ScoreboardBuilder {
 		const remainder = value % chunk;
 		server.scoreSetPlayer(`${objective}*q`, player, quotient);
 		server.scoreSetPlayer(`${objective}*r`, player, remainder);
+		eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
 	}
 	/**
 	 * @param {Player} player 
