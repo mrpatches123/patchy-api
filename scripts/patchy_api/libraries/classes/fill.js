@@ -1,5 +1,5 @@
 import { BlockLocation, BlockType, BlockPermutation, system, BlockAreaSize } from "@minecraft/server";
-import { content, overworld, sort3DRange, sort3DVectors } from "../utilities.js";
+import { content, isDefined, overworld, sort3DRange, sort3DVectors } from "../utilities.js";
 /**
  * @typedef {Object} BlockOptions
  * @property {BlockType} type
@@ -32,13 +32,13 @@ class Fill {
 				try {
 					if (!fillThis.queue.length) return;
 					run();
-					const { fillOptions, iterator } = fillThis.queue[0];
+					const { fillOptions, iterator, lastValueIfNullBlock = false } = fillThis.queue[0];
 					const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048, replace } = fillOptions;
 					const blocksIsArray = blocks instanceof Array;
 
 					for (let i = 0; i < maxPlacementsPerTick; i++) {
 
-						const current = iterator.next();
+						const current = (lastValueIfNullBlock) ? lastValueIfNullBlock : iterator.next();
 						// content.warn({ t: 'wdwwdwd', i, done: current.done, t2: 'why not work' });
 						if (current.done) { fillThis.queue.shift(), await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => console.warn(error, error.stack)); break; }
 
@@ -61,6 +61,13 @@ class Fill {
 							blockOptions = blocks;
 						}
 						const block = overworld.getBlock(blockLocation);
+						if (!block) {
+							if (fillThis.queue[0]) fillThis.queue[0].lastValueIfNullBlock = current;
+							break;
+						} else {
+							if (fillThis.queue[0]) fillThis.queue[0].lastValueIfNullBlock = false;
+						}
+
 						const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions.type;
 						// content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
 						if (replace && block.typeId !== replace.id) continue;
@@ -81,7 +88,7 @@ class Fill {
 	queuefill(fillOptions, type) {
 		const generator = this.getGenerator(fillOptions, type);
 		const iterator = generator();
-		this.queue.push({ iterator, fillOptions });
+		this.queue.push({ iterator, fillOptions, nullId: this.nullId++ });
 		this.subscribe();
 	}
 	/**
@@ -96,7 +103,10 @@ class Fill {
 		if (!isVector3(location1)) throw new Error('location1 in fillOptions at params[0] is not of type: {x: number, y: number, z: number}!');
 
 		if (!isVector3(location2)) throw new Error('location2 in fillOptions at params[0] is not of type: {x: number, y: number, z: number}!');
-
+		const { y: y1 } = location1;
+		const { y: y2 } = location2;
+		if (y1 > 319 || y1 < -64) throw new Error(`y, ${y1} in location1 in fillOptions at params[0] is less than -64 or greater than 319 which cannot be filled!`);
+		if (y2 > 319 || y2 < -64) throw new Error(`y, ${y2} in location2 in fillOptions at params[0] is less than -64 or greater than 319 which cannot be filled!`);
 		if (!(blocks instanceof BlockType) && !(blocks instanceof Array) && !(blocks instanceof Object)) throw new Error('blocks at params[0] is not of type: Object, Array, or BlockType!');
 
 		if (blocks instanceof Array) blocks.forEach((block, i) => {

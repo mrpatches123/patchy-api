@@ -460,7 +460,7 @@ export const server = {
             world.scoreboard.addObjective(objective, displayName);
             return true;
         } catch (error) {
-            console.warn(error, error.stack);
+            // console.warn(error, error.stack);
             return;
         }
     },
