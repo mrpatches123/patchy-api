@@ -68,12 +68,20 @@ class ScoreboardBuilder {
 		content.warn({ objective, value, this: this });
 
 		if (!objective.startsWith('big_')) {
-			if (!isDefined(value)) return server.scoreResetPlayer(objective, player);
+			if (!isDefined(value)) {
+				const bool = server.scoreResetPlayer(objective, player);
+				eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
+				return bool;
+			};
 			server.scoreSetPlayer(objective, player, value, this.objectives?.[objective]?.displaySlot);
 			eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
 			return value;
 		};
-		if (!isDefined(value)) return server.scoreResetPlayer(`${objective}*q`, player) && server.scoreResetPlayer(`${objective}*r`, player);;
+		if (!isDefined(value)) {
+			const bool = server.scoreResetPlayer(`${objective}*q`, player) && server.scoreResetPlayer(`${objective}*r`, player);
+			eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
+			return bool;
+		}
 		const quotient = Math.floor(value / chunk);
 		const remainder = value % chunk;
 		server.scoreSetPlayer(`${objective}*q`, player, quotient);

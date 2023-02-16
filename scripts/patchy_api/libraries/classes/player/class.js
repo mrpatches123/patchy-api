@@ -105,6 +105,9 @@ export class Player {
 				} catch (error) {
 					errorLogger.log(error, error.stack, { key: 'PlayerDynamicProperties', event: 'N/A' });
 				}
+			},
+			has(target, key) {
+				return key in players.memory[id];
 			}
 
 		});
