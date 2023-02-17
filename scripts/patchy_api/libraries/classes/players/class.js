@@ -94,7 +94,7 @@ export class Players {
 		});
 		world.events.tick.subscribe(() => {
 			if (!global.refreshBasePlayerIterator) return;
-			content.chatFormat({ test: global.refreshBasePlayerIterator });
+			// content.chatFormat({ test: global.refreshBasePlayerIterator });
 			playersObject.refreshBasePlayerIterator();
 			global.refreshBasePlayerIterator = false;
 		});
@@ -105,7 +105,7 @@ export class Players {
 	refreshBasePlayerIterator() {
 		this.basePlayerIterator = new PlayerIterator(loads.players);
 		this.playerQueryIterators = {};
-		content.chatFormat({ t: 8938923832, basePlayerIterator: this.basePlayerIterator });
+		// content.chatFormat({ t: 8938923832, basePlayerIterator: this.basePlayerIterator });
 	}/**
 	 * @param {import('@minecraft/server').EntityQueryOptions} entityQueryOptions 
 	 * @param {boolean} cache 

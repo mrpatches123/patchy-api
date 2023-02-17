@@ -170,7 +170,7 @@ export class Databases {
             throw new Error(`Database: ${name}, exists`);
         } else {
             const propertiesObject = this.getPropertiesObject();
-            content.chatFormat('prop', propertiesObject);
+            // content.chatFormat('prop', propertiesObject);
             this[name] = new Database({ __db_properties: propertiesObject });
 
             // overworld.runCommandAsync(`say db ${JSON.stringify(this[name])}`);

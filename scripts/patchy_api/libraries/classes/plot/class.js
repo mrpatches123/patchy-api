@@ -437,7 +437,7 @@ export class PlotBuilder {
 				}, { once: true, start: true, remove: true, afterLoad: true });
 		}
 		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
-		content.chatFormat({ databases });
+		// content.chatFormat({ databases });
 		databases.queueSave('plots*API');
 		return { wasAdded: true, plotNumber, full: false };
 	}
