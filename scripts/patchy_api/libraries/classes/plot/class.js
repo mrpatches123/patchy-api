@@ -212,6 +212,7 @@ export class PlotBuilder {
 	 */
 	setCurrent(player, key) {
 		player.properties.currentPlot = key;
+		player.memory.lastLocation = undefined;
 	}
 	/**
 	 * @param {Player} player 
@@ -291,11 +292,13 @@ export class PlotBuilder {
 						const { x: rx, y: ry } = rotation;
 						player.teleport(new Location(x, y, z), overworld, rx, ry);
 					} else {
+						content.warn({ bool: Boolean(teleport) });
 						if (teleport) {
 							let { location: teleportLocation, face } = teleport;
 							teleportLocation = { location: start, offset: teleportLocation };
-							if (isVector3(teleportLocation)) face = { location: start, offset: face };
+							if (!isVector2(face)) face = { location: start, offset: face };
 							const object = { location: teleportLocation, face, dimension: overworld };
+							content.warn({ teleportLocation: objectVector3(teleportLocation), start: objectVector3(start) });
 							teleportBuilder.teleportOnce(player, object);
 						} else {
 							const { x: rx, y: ry } = rotation;

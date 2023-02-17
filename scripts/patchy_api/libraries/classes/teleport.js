@@ -185,8 +185,8 @@ class TeleportBuilder {
 		}
 		let rotation = (isVector3(face)) ? undefined : face;
 		let facing = (rotation) ? undefined : face;
+		content.warn({ facing: objectVector3(facing), location: objectVector3(location) });
 		if (facing && !rotation) return player.teleportFacing(location, dimension, facing);
-		content.warn({ rotation: rotation.constructor.name, rotation });
 		if (!isVector2(rotation)) { rotation = rotationPlayer; }
 		const { x: rx, y: ry } = rotation;
 		// content.warn({ location: location instanceof BlockLocation || location instanceof Location, dimension: dimension instanceof Dimension, rx, ry });
