@@ -17,12 +17,12 @@ commandBuilder.register('global', {
     callback: (sender, args) => {
 
         if (!args.length) {
-            sender.tell(JSON.stringify(global));
+            sender.sendMessage(JSON.stringify(global));
         } else {
             if (global[args[0]]) {
-                sender.tell(JSON.stringify(global[args[0]], null, 4));
+                sender.sendMessage(JSON.stringify(global[args[0]], null, 4));
             } else {
-                sender.tell(`key: ${args[0]}, doesn't exist`);
+                sender.sendMessage(`key: ${args[0]}, doesn't exist`);
             }
         };
     }

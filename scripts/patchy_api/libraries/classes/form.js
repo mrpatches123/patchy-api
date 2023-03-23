@@ -1,7 +1,7 @@
-import { world, Location, Vector } from '@minecraft/server';
+import { world, Vector } from '@minecraft/server';
 import { Player } from './player/class.js';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message } from '@minecraft/server-ui';
-import { content, native, RemovableTree, server, typeOf } from '../utilities.js';
+import { content, isDefined, native, RemovableTree, server, typeOf } from '../utilities.js';
 import wait from './wait.js';
 import eventBuilder from './events/export_instance.js';
 import global from './global.js';
@@ -216,13 +216,11 @@ const methods = {
 class FormBuilder {
     constructor() {
         this.__awaitingPlayers = {};
-        this.players = {};
-        // eventBuilder.subscribe('form*API', {
-        //     playerLeft: ({ playerId }) => {
-        //         if (this.__awaitingPlayers.hasOwnProperty(playerId)) this.__awaitingPlayers[playerId] = false;
-
-        //     }
-        // });
+        eventBuilder.subscribe('form*API', {
+            playerLeave: ({ playerId }) => {
+                if (this.__awaitingPlayers.hasOwnProperty(playerId)) delete this.__awaitingPlayers[playerId];
+            }
+        });
     }
     /**
      * @method create
@@ -296,10 +294,10 @@ class FormBuilder {
     showAwait(receiver, key, ...extraArguments) {
         const { id } = receiver;
         if (this.__awaitingPlayers[id] === false) return delete this.__awaitingPlayers[id];
-        if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) return receiver.tell('§cyou are already awaiting the same form!');
+        if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) return receiver.sendMessage('§cyou are already awaiting the same form!');
         if (!this.__awaitingPlayers.hasOwnProperty(id)) this.__awaitingPlayers[id] = {};
         this.__awaitingPlayers[id][key] = 0;
-        receiver.tell('§l§eClose chat to open the Menu!');
+        receiver.sendMessage('§l§eClose chat to open the Menu!');
         const generatedForm = this.generateForm(receiver, key, ...extraArguments);
         this.showForm(receiver, key, generatedForm, true, ...extraArguments)
             .catch(error => console.warn(generatedForm.type, key, 'callback', error, error.stack));
@@ -314,40 +312,6 @@ class FormBuilder {
         const generatedForm = this.generateForm(receiver, key, ...extraArguments);
         this.showForm(receiver, key, generatedForm, false, ...extraArguments)
             .catch(error => console.warn(generatedForm.type, key, 'callback', error, error.stack));
-    }
-    /**
-     * @method showMove
-     * @param {Player} receiver 
-     * @param {String} key 
-     * @param  {...any} extraArguments
-     */
-    showMove(receiver, key, ...extraArguments) {
-        const { id, location, viewVector, name } = receiver;
-
-        receiver.tellraw(`§l§eClose chat and Move to open the Menu!, ${id}`);
-        global.playerMap[id].lastLocation = location;
-        global.playerMap[id].lastViewVector = viewVector;
-        wait.add(`formWait${id}`, () => {
-
-
-            const { location, viewVector, name } = receiver;
-
-            const { lastLocation = location, lastViewVector = viewVector } = global.playerMap[id];
-            const { x: lx, y: ly, z: lz } = lastLocation;
-            const { x: vx, y: vy, z: vz } = lastViewVector;
-            content.warn({ lastLocation: { lx, ly, lz }, lastViewVector: { vx, vy, vz } });
-            // content.warn({ name, key, 'receiver?': receiver instanceof Player, playerMap: global.playerMap[id], lastLocation: lastLocation instanceof Location });
-
-            content.warn({ lastLocation: native.stringify(lastLocation), boolL: lastLocation instanceof Location, lastViewVector: native.stringify(lastViewVector), boolL: lastViewVector instanceof Vector });
-            if (!viewVector.equals(lastViewVector) ||
-                !location.equals(lastLocation)) {
-                return true;
-            }
-            global.playerMap[id].lastLocation = location;
-            global.playerMap[id].lastViewVector = viewVector;
-
-        }, () => { formBuilder.show(receiver, key, ...extraArguments); }, { once: true, start: true, remove: true });
-
     }
     /**
      * @param {Player} receiver 
@@ -458,14 +422,13 @@ class FormBuilder {
                     if (scoreboardName) {
                         server.objectiveAdd(scoreboardName);
                         if (dependency === 'receiver') {
-
                             index = scores[scoreboardName];
                         } else {
                             index = server.scoreTest(scoreboardName, 'world') ?? 0;
                         }
                     }
                     // console.warn(index);
-                    if (index > options.length - 1) {
+                    if (!isDefined(index) || index > options.length - 1) {
                         scores[scoreboardName] = 0;
                         index = 0;
                     }
@@ -517,7 +480,7 @@ class FormBuilder {
      */
     async showForm(receiver, key, generatedForm, awaitShow, ...extraArguments) {
 
-        const { name, id, memory } = receiver;
+        const { name, id, memory, scores } = receiver;
         content.warn({ t: 'showForm', bool: memory.keys() });
         if (!memory.hasOwnProperty('lastFormsShown')) memory.lastFormsShown = {};
         if (!memory.hasOwnProperty('formTree')) memory.formTree = new RemovableTree();
@@ -553,21 +516,22 @@ class FormBuilder {
                 // content.warn({ hwjd: 'test252', lengthOptions: options.length });
                 if (scoreboardName) {
                     if (dependency === 'receiver') {
-                        index = receiver.scoreTest(scoreboardName) ?? 0;
+                        index = scores[scoreboardName] ?? 0;
                         if (index < options.length) {
-                            receiver.scoreSet(scoreboardName, ++index);
+                            scores[scoreboardName] = ++index;
+                        } else {
+                            index = 0;
+                            scores[scoreboardName] = 0;
                         }
                     } else {
                         index = server.scoreTest(scoreboardName, 'world') ?? 0;
                         if (index < options.length) {
                             index = server.scoreSet(scoreboardName, ++index);
+                        } else {
+                            index = 0;
+                            server.scoreSet(scoreboardName, index);
                         }
                     }
-                }
-                console.warn('index: ' + index);
-                if (index > options.length - 1) {
-                    index = 0;
-                    receiver.scoreSet(scoreboardName);
                 }
                 console.warn('index: ' + index);
                 if (prefix) {

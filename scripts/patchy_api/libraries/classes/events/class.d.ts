@@ -1,5 +1,5 @@
 import { Player } from "../player/class.js";
-import { Entity, MessageSourceType, BlockHitInformation, DefinitionModifier, Dimension, BlockLocation, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, Location, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation } from '@minecraft/server';
+import { Entity, MessageSourceType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation, Vector3 } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
 export class ScriptEventCommandMessageEvent {
 	readonly id: string;
@@ -14,23 +14,42 @@ export interface EntityDamageSource {
 	damagingEntity?: Entity | Player;
 	damagingProjectile?: Entity;
 }
+export interface EntityDeathSource {
+	cause: EntityDamageCause;
+	killer?: Entity | Player;
+	projectile?: Entity;
+}
 export class BeforeChatEvent {
 	cancel: boolean;
 	message: string;
 	sender: Player;
 	sendToTargets: boolean;
-	targets: Player[];
+	getTargets(): Player[];
+	setTargets(players: Player[]): void;
 }
 export class BeforeDataDrivenEntityTriggerEvent {
 	cancel: boolean;
 	readonly entity: Entity;
 	readonly id: string;
-	modifiers: DefinitionModifier[];
+	getModifiers(): DefinitionModifier[];
+	setModifiers(modifiers: DefinitionModifier[]): void;
+}
+export class EntityDieEvent {
+	readonly damageSource: EntityDamageSource;
+	readonly deadEntity: Entity;
+}
+export class BeforeDataDrivenPlayerTriggerEvent {
+	cancel: boolean;
+	readonly player: Player;
+	readonly id: string;
+	getModifiers(): DefinitionModifier[];
+	setModifiers(modifiers: DefinitionModifier[]): void;
 }
 export class BeforeExplosionEvent {
 	cancel: boolean;
 	readonly dimension: Dimension;
-	impactedBlocks: BlockLocation[];
+	getImpactedBlocks(): Vector3[];
+	setImpactedBlocks(blocks: Vector3[]): void;
 	readonly source: Entity;
 }
 export class BeforeItemDefinitionTriggeredEvent {
@@ -46,7 +65,7 @@ export class BeforeItemUseEvent {
 }
 export class BeforeItemUseOnEvent {
 	readonly blockFace: Direction;
-	readonly blockLocation: BlockLocation;
+	getBlockLocation(): Vector3;
 	cancel: boolean;
 	readonly faceLocationX: number;
 	readonly faceLocationY: number;
@@ -82,17 +101,20 @@ export class ButtonPushEvent {
 	readonly source: Entity;
 }
 export class ChatEvent {
-	cancel: boolean;
 	message: string;
 	sender: Player;
 	sendToTargets: boolean;
-	targets: Player[];
+	getTargets(): Player[];
 }
 export class DataDrivenEntityTriggerEvent {
-	cancel: boolean;
 	readonly entity: Entity;
 	readonly id: string;
-	modifiers: DefinitionModifier[];
+	getModifiers(): DefinitionModifier[];
+}
+export class DataDrivenPlayerTriggerEvent {
+	readonly player: Player;
+	readonly id: string;
+	getModifiers(): DefinitionModifier[];
 }
 export class EffectAddEvent {
 	effect: Effect;
@@ -124,7 +146,7 @@ export class EntityHurtEvent {
 export class ExplosionEvent {
 	cancel: boolean;
 	readonly dimension: Dimension;
-	impactedBlocks: BlockLocation[];
+	getImpactedBlocks(): Vector3[];
 	readonly source: Entity;
 }
 export class ItemCompleteChargeEvent {
@@ -133,7 +155,6 @@ export class ItemCompleteChargeEvent {
 	readonly useDuration: number;
 }
 export class ItemDefinitionTriggeredEvent {
-	cancel: boolean;
 	readonly eventName: string;
 	item: ItemStack;
 	readonly source: Entity;
@@ -150,8 +171,8 @@ export class ItemStartChargeEvent {
 }
 export class ItemStartUseOnEvent {
 	readonly blockFace: Direction;
-	readonly blockLocation: BlockLocation;
-	readonly buildBlockLocation: BlockLocation;
+	getBlockLocation(): Vector3;
+	getBuildBlockLocation(): Vector3;
 	item: ItemStack;
 	readonly source: Entity;
 }
@@ -161,7 +182,7 @@ export class ItemStopChargeEvent {
 	readonly useDuration: number;
 }
 export class ItemStopUseOnEvent {
-	readonly blockLocation: BlockLocation;
+	getBlockLocation(): Vector3;
 	item: ItemStack;
 	readonly source: Entity;
 }
@@ -172,12 +193,16 @@ export class ItemUseEvent {
 }
 export class ItemUseOnEvent {
 	readonly blockFace: Direction;
-	readonly blockLocation: BlockLocation;
+	getBlockLocation(): Vector3;
 	cancel: boolean;
 	readonly faceLocationX: number;
 	readonly faceLocationY: number;
 	item: ItemStack;
 	readonly source: Entity;
+}
+export class ItemPickupEvent {
+	readonly item: ItemStack;
+	readonly player: Player;
 }
 export class LeverActionEvent {
 	readonly block: Block;
@@ -202,6 +227,12 @@ export class PlayerJoinEvent {
 	 */
 	readonly playerName: string;
 }
+export class PlayerJoinedEvent {
+	/**
+	 * the player that joined the game and can have command ran on them.
+	 */
+	readonly player: Player;
+}
 export class PlayerLeaveEvent {
 	readonly playerName: string;
 	readonly playerId: string;
@@ -209,11 +240,11 @@ export class PlayerLeaveEvent {
 export class ProjectileHitEvent {
 	readonly dimension: Dimension;
 	readonly hitVector: Vector;
-	readonly location: Location;
+	readonly location: Vector3;
 	readonly projectile: Entity;
 	readonly source: Entity;
-	readonly blockHit?: BlockHitInformation;
-	readonly entityHit?: EntityHitInformation;
+	getBlockHit(): BlockHitInformation | undefined;
+	getEntityHit(): EntityHitInformation | undefined;
 }
 export class TickEvent {
 	readonly currentTick: number;
@@ -232,10 +263,16 @@ export class PlayerHurtEvent {
 	readonly damageSource: EntityDamageSource;
 	readonly player: Player;
 }
+
 export class PlayerDeathEvent {
-	readonly killer: Entity | Player;
+	readonly damageSource: EntityDeathSource;
 	readonly player: Player;
-	readonly damage: Number;
+	readonly cause: EntityDamageCause;
+	readonly projectile: Entity;
+}
+export class EntityDeathEvent {
+	readonly damageSource: EntityDeathSource;
+	readonly entity: Entity | Player;
 	readonly cause: EntityDamageCause;
 	readonly projectile: Entity;
 }
@@ -284,6 +321,7 @@ export class ScoreboardChangeEvent {
 export interface EventKeyTypes {
 	beforeChat: BeforeChatEvent;
 	beforeDataDrivenEntityTriggerEvent: BeforeDataDrivenEntityTriggerEvent;
+	beforeDataDrivenPlayerTriggerEvent: BeforeDataDrivenPlayerTriggerEvent;
 	beforeExplosion: BeforeExplosionEvent;
 	beforeItemDefinitionEvent: BeforeItemDefinitionTriggeredEvent;
 	beforeItemUse: BeforeItemUseEvent;
@@ -295,7 +333,10 @@ export interface EventKeyTypes {
 	buttonPush: ButtonPushEvent;
 	chat: ChatEvent;
 	dataDrivenEntityTriggerEvent: DataDrivenEntityTriggerEvent;
+	dataDrivenPlayerTriggerEvent: DataDrivenPlayerTriggerEvent;
 	effectAdd: EffectAddEvent;
+	entityDie: EntityDieEvent;
+	entityDeath: EntityDeathEvent;
 	entitySpawn: EntitySpawnEvent;
 	entityHit: EntityHitEvent;
 	entityHurt: EntityHurtEvent;
@@ -309,6 +350,7 @@ export interface EventKeyTypes {
 	itemStopUseOn: ItemStopUseOnEvent;
 	itemUse: ItemUseEvent;
 	itemUseOn: ItemUseOnEvent;
+	itemPickup: ItemPickupEvent;
 	leverActivate: LeverActionEvent;
 	pistonActivate: PistonActivateEvent;
 	playerJoin: PlayerJoinEvent;
@@ -318,7 +360,7 @@ export interface EventKeyTypes {
 	weatherChange: WeatherChangeEvent;
 	worldInitialize: WorldInitializeEvent;
 	tickAfterLoad: TickEvent;
-	playerJoined: PlayerJoinEvent;
+	playerJoined: PlayerJoinedEvent;
 	playerHit: PlayerHitEvent;
 	playerHurt: PlayerHurtEvent;
 	playerDeath: PlayerDeathEvent;

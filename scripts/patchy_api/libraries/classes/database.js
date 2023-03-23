@@ -1,4 +1,4 @@
-import { BlockAreaSize, BlockLocation, world, Entity } from "@minecraft/server";
+import { BlockAreaSize, world, Entity } from "@minecraft/server";
 import { overworld, nether, end, content, native } from '../utilities.js';
 import time from "./time.js";
 // const overworld = world.getDimension('overworld');
@@ -10,7 +10,7 @@ export class Database {
     constructor(json = {}) {
         Object.assign(this, json);
         this.__db_properties = json.__db_properties ?? {};
-        content.warn({ json, __db_properties: this.__db_properties });
+        // content.warn({ json, __db_properties: this.__db_properties });
     }
     /**
      * @method set set a keys for its value in the Database
@@ -28,7 +28,7 @@ export class Database {
         } else {
 
             this[key] = value;
-            content.warn({ t: 'DatabaseSet', [key]: value, databases });
+            // content.warn({ t: 'DatabaseSet', [key]: value, databases });
             return this;
         }
 
@@ -116,7 +116,6 @@ export class Databases {
         // content.warn({ entities: entities.length });
         entities.forEach(entity => {
             let { location } = entity;
-            location = location.toBlockLocation();
             const { x, z } = location;
             const index = entityArray.findIndex(([fx, fz]) => fx === x && fz === z);
             if (index !== -1) {
@@ -132,7 +131,7 @@ export class Databases {
             const json = [];
             if (entities) {
                 const name = entities[0].getTags().find(tag => tag.includes('dbName:')).replace('dbName:', '');
-                content.warn({ dbNmae: name });
+                // content.warn({ dbNmae: name });
                 entities.forEach(entity => {
                     const order = entity.getTags().find(tag => tag.includes('dbOrder:')).replace('dbOrder:', '');
                     json.push([order, entity.nameTag]);
@@ -145,7 +144,7 @@ export class Databases {
             }
 
         });
-        content.warn({ this: this });
+        // content.warn({ this: this });
         // content.warn(this.get('requestsAPI'));
     }
     /**
@@ -220,7 +219,7 @@ export class Databases {
             const { coords } = propertiesObject;
             // content.warn({ propertiesObject });
             if (!coords) { return; }
-            let entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(coords.x, -64, coords.z));
+            let entities = overworld.getEntitiesAtBlockLocation({ x: coords.x, y: -64, z: coords.z });
             // content.warn({ entities: entities.map(({ nameTag }) => nameTag) });
             if (entities.length) {
                 entities = entities.filter(({ typeId }) => typeId === 'patches:database');
@@ -248,7 +247,7 @@ export class Databases {
             const { coords } = propertiesObject;
             // content.warn({ propertiesObject });
             if (!coords) { return; }
-            const entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(coords.x, -64, coords.z));
+            const entities = overworld.getEntitiesAtBlockLocation({ x: coords.x, y: -64, z: coords.z });
             entities.forEach(entity => (entity.triggerEvent('patches:kill')));
         }
         delete this[name];
@@ -284,19 +283,19 @@ export class Databases {
             const chunk = time.end('test37763');
             time.start('test37763');
             const databaseLength = database.length;
-            let entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(x, -64, z));
+            let entities = overworld.getEntitiesAtBlockLocation({ x, y: -64, z });
             const entitiesLength = (entities ?? []).length;
             const difference = databaseLength - entitiesLength;
             // content.warn({ difference });
             for (let i = 0; i < difference.abs(); i++) {
                 if (difference.getSign() === 1) {
-                    overworld.spawnEntity('patches:database', new BlockLocation(x, -64, z));
+                    overworld.spawnEntity('patches:database', { x, y: -64, z });
                 } else { entities[0].triggerEvent('patches:kill'); }
             }
             const entityCorrect = time.end('test37763');
             let entitySet;
             time.start('test37763');
-            entities = overworld.getEntitiesAtBlockLocation(new BlockLocation(x, -64, z));
+            entities = overworld.getEntitiesAtBlockLocation({ x, y: -64, z });
             if (entities.length) {
                 entities.forEach((entity, i) => {
                     entity.nameTag = database[i];

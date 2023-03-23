@@ -15,6 +15,6 @@ commandBuilder.register('requests', {
     },
     aliases: ['prop'],
     callback: (sender, args) => {
-        sender.tell(JSON.stringify({ requestBuilder }));
+        sender.sendMessage(JSON.stringify({ requestBuilder }));
     }
 });

@@ -15,8 +15,8 @@ commandBuilder.register('loads', {
     prefix,
     aliases: ['cmds'],
     callback: (sender, args) => {
-        sender.tell(native.stringify(loads, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
-        // sender.tell(JSON.stringify(eventBuilder));
+        sender.sendMessage(native.stringify(loads, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
+        // sender.sendMessage(JSON.stringify(eventBuilder));
     }
 });
 

@@ -1,4 +1,8 @@
 const eventTypeProperties = {
+	scriptEventReceive: {
+		playerKey: 'sourceEntity',
+		playerOnly: false
+	},
 	beforeChat: {
 		modifiables: [
 			'cancel',
@@ -18,6 +22,15 @@ const eventTypeProperties = {
 		entityEvent: true,
 		playerKey: 'entity',
 		playerOnly: false
+	},
+	beforeDataDrivenPlayerTriggerEvent: {
+		modifiables: [
+			'cancel',
+			'modifiers'
+		],
+		entityEvent: true,
+		playerKey: 'player',
+		playerOnly: true
 	},
 	beforeExplosion: {
 		modifiables: [
@@ -85,6 +98,11 @@ const eventTypeProperties = {
 		playerKey: 'source',
 		playerOnly: false
 	},
+	dataDrivenPlayerTriggerEvent: {
+		entityEvent: true,
+		playerKey: 'player',
+		playerOnly: true
+	},
 	effectAdd: {
 		entityEvent: true,
 		playerKey: 'source',
@@ -93,6 +111,16 @@ const eventTypeProperties = {
 	entityCreate: {
 		entityEvent: true,
 		playerKey: 'source',
+		playerOnly: false
+	},
+	entityDie: {
+		entityEvent: true,
+		playerKey: 'deadEntity',
+		playerOnly: false
+	},
+	entityDeath: {
+		entityEvent: true,
+		playerKey: 'entity',
 		playerOnly: false
 	},
 	entityHit: {
@@ -153,6 +181,10 @@ const eventTypeProperties = {
 		playerKey: 'source',
 		playerOnly: false,
 	},
+	itemPickup: {
+		playerKey: 'player',
+		playerOnly: true,
+	},
 	leverActivate: {
 		playerKey: 'player',
 		playerOnly: true
@@ -180,7 +212,7 @@ const eventTypeProperties = {
 		playerOnly: true
 	},
 	tick: {
-
+		custom: true
 	},
 	weatherChange: {
 
@@ -195,6 +227,9 @@ const eventTypeProperties = {
 		custom: true,
 		playerKey: 'player',
 		playerOnly: true
+	},
+	playerJoinAwaitMove: {
+		custom: true,
 	},
 	playerHit: {
 		custom: true,

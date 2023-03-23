@@ -17,7 +17,7 @@ commandBuilder.register('position', {
 	},
 	aliases: ['pos'],
 	callback: (sender, args) => {
-		sender.tell(JSON.stringify(positionBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
+		sender.sendMessage(JSON.stringify(positionBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
 
 	}
 });

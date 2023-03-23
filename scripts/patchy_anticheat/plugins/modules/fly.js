@@ -51,7 +51,7 @@ function fly(player, name, dimension, playerMap, toggles, playersScoreboard, del
             let empty = true;
             const y = Math.floor(player.location.y);
             for (let i = y - 1; i > -64; i--) {
-                empty = world.getBlock(new BlockLocation(location.x, i, location.z)).isEmpty;
+                empty = world.getBlock({ x: location.x, y: i z: location.z)).isEmpty;
                 // Commands.run(`say ${empty} ${i}`, World.getDimension(dimension));
                 if (!empty) {
                     Commands.run(`tp "${name}" ${[location.x, i + 1, location.z].join(' ')}`, World.getDimension(dimension));

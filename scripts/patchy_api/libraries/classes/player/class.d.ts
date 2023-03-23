@@ -1,6 +1,6 @@
 import { ItemStack, Player as PlayerType } from '@minecraft/server';
-import { Vector3, PlayerInventoryComponentContainer, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, XYRotation, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions } from '@minecraft/server';
-import { EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
+import { PlayAnimationOptions, EntityDamageSource, Vector3, PlayerInventoryComponentContainer, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, XYRotation, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions } from '@minecraft/server';
+import { EntityOnFireComponent, EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
 // import { Inventory } from "../players/export_instance.js";
 interface PlayerEntity {
 	Player: PlayerType;
@@ -9,6 +9,8 @@ interface PlayerEntity {
 function setProptotype(entity: Entity): Entity;
 function setProptotype(entity: PlayerType): Player;
 interface EntityComponents {
+	'minecraft:onfire': EntityOnFireComponent;
+	'onfire': EntityOnFireComponent;
 	'minecraft:addrider': EntityAddRiderComponent;
 	'addrider': EntityAddRiderComponent;
 	'minecraft:ageable': EntityAgeableComponent;
@@ -215,6 +217,7 @@ export declare class Player extends Entity {
 	 * @throws This property can throw when used.
 	 */
 	readonly scoreboard: ScoreboardIdentity;
+	readonly spawnDimension?: Dimension;
 	/**
 	 * Manages the selected slot in the player's hotbar.
 	 */
@@ -227,6 +230,8 @@ export declare class Player extends Entity {
 	 * @throws This property can throw when used.
 	 */
 	readonly target: Entity;
+	readonly totalXpNeededForNextLevel: number;
+	readonly xpEarnedAtCurrentLevel: number;
 	/**
 	 * Unique identifier of the type of the entity - for example,
 	 * 'minecraft:player'.
@@ -263,6 +268,31 @@ export declare class Player extends Entity {
 	applyDamage(amount: number, source?: EntityDamageSource): boolean;
 	addEffect(effectType: EffectType, duration: number, amplifier?: number, showParticles?: boolean): void;
 	/**
+	* @beta
+	* @remarks
+	* Adds/removes experience to/from the Player and returns the
+	* current experience of the Player.
+	* @param amount
+	* Amount of experience to add. Note that this can be negative.
+	* @returns
+	* Returns the current experience of the Player.
+	* @throws This function can throw errors.
+	*/
+	addExperience(amount: number): number;
+	/**
+	 * @beta
+	 * @remarks
+	 *  Adds/removes level to/from the Player and returns the
+	 * current level of the Player.
+	 * @param amount
+	 * Amount to add to the player.
+	 * @returns
+	 * Returns the current level of the Player.
+	 * @throws This function can throw errors.
+	 */
+	addLevels(amount: number): number;
+	resetLevel(): void;
+	/**
 	 * @remarks
 	 * Adds a specified tag to an entity.
 	 * @param tag
@@ -270,15 +300,36 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	addTag(tag: string): boolean;
+	applyImpulse(vector: Vector3): void;
+	applyKnockback(directionX: number, directionZ: number, horizontalStrength: number, verticalStrength: number): void;
+	clearSpawn(): void;
+	clearVelocity(): void;
 	/**
+	 * @beta
 	 * @remarks
-	 * Gets the first block that intersects with the vector of the
-	 * view of this entity.
-	 * @param options
-	 * Additional options for processing this raycast query.
+	 * Extinguishes the fire if the player is on fire. Note that
+	 * you can call getComponent('minecraft:onfire') and, if
+	 * present, the player is on fire."
+	 * @param useEffects
+	 * Whether to show any visual effects connected to the
+	 * extinguishing.
 	 * @throws This function can throw errors.
 	 */
-	getBlockFromViewVector(options?: BlockRaycastOptions): Block;
+	extinguishFire(useEffects?: boolean): boolean;
+
+	/**
+	 * @beta
+	 * @remarks
+	 * Sets a player on fire (if it is not in water or rain). Note
+	 * that you can call getComponent('minecraft:onfire') and, if
+	 * present, the player is on fire.
+	 * @param seconds
+	 * Length of time to set the player on fire.
+	 * @param useEffects
+	 * @throws This function can throw errors.
+	 */
+
+	getBlockFromViewDirection(options?: BlockRaycastOptions): Block;
 	/**
 	 * @remarks
 	 * Gets a component (that represents additional capabilities)
@@ -325,7 +376,7 @@ export declare class Player extends Entity {
 	 * Additional options for processing this raycast query.
 	 * @throws This function can throw errors.
 	 */
-	getEntitiesFromViewVector(options?: EntityRaycastOptions): Entity[];
+	getEntitiesFromViewDirection(options?: EntityRaycastOptions): Entity[];
 	/**
 	 * @remarks
 	 * Gets the current item cooldown time for a particular
@@ -336,6 +387,11 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	getItemCooldown(itemCategory: string): number;
+	getRotation(): XYRotation;
+	getSpawnPosition(): Vector3 | undefined;
+	getTotalXp(): number;
+	getVelocity(): Vector3;
+	getViewDirection(): Vector3;
 	/**
 	 * @remarks
 	 * Returns all tags associated with an entity.
@@ -360,6 +416,7 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	hasTag(tag: string): boolean;
+
 	isOp(): boolean;
 	/**
 	 * @remarks
@@ -377,6 +434,7 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	playSound(soundID: string, soundOptions?: SoundOptions): void;
+	playAnimation(animationName: string, options?: PlayAnimationOptions): void;
 	postClientMessage(id: string, value: string): void;
 	/**
 	 * @remarks
@@ -416,6 +474,23 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	setDynamicProperty(identifier: string, value: boolean | number | string): void;
+	/**
+	 * @beta
+	 * @remarks
+	 * Will change the specified players permissions, and whether
+	 * they are operator or not.
+	 * @param isOp
+	 * @throws This function can throw errors.
+	 */
+	setOnFire(seconds: number, useEffects?: boolean): boolean;
+	/**
+	 * @remarks
+	 * Gets the first block that intersects with the vector of the
+	 * view of this entity.
+	 * @param options
+	 * Additional options for processing this raycast query.
+	 * @throws This function can throw errors.
+	 */
 	setOp(isOp: boolean): void;
 	/**
 	 * @remarks
@@ -425,6 +500,8 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	setRotation(degreesX: number, degreesY: number): void;
+	setSpawn(spawnPosition: Vector3, spawnDimension: Dimension): void;
+
 	/**
 	 * @remarks
 	 * Sets a velocity for the entity to move with.
@@ -432,7 +509,6 @@ export declare class Player extends Entity {
 	 * X/Y/Z components of the velocity.
 	 * @throws This function can throw errors.
 	 */
-	setVelocity(velocity: { x: number, y: number, z: number; }): void;
 	/**
 	 * @remarks
 	 * Sets the item cooldown time for a particular cooldown
@@ -480,6 +556,14 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	teleportFacing(location: { x: number, y: number, z: number; }, dimension: Dimension, facingLocation: { x: number, y: number, z: number; }, keepVelocity?: boolean): void;
+	/**
+	 * @remarks
+	 * Sends a message that is displayed on the connected client
+	 * for this player.
+	 * @param message
+	 * @throws This function can throw errors.
+	 */
+	sendMessage(message: IRawMessage | string): void;
 	/**
 	 * @remarks
 	 * Sends a message that is displayed on the connected client

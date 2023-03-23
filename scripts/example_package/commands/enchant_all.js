@@ -2,7 +2,7 @@ import config from '../config.js';
 
 const { prefix } = config;
 
-import { world, Player, Location, InventoryComponentContainer, EnchantmentList, Enchantment, MinecraftEnchantmentTypes, EnchantmentType, ItemStack, MinecraftItemTypes } from '@minecraft/server';
+import { world, Player, InventoryComponentContainer, EnchantmentList, Enchantment, MinecraftEnchantmentTypes, EnchantmentType, ItemStack, MinecraftItemTypes } from '@minecraft/server';
 import { commandBuilder, content, native } from '../../patchy_api/modules.js';
 /**
  * @type Array<Enchantment>

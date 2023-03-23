@@ -1,7 +1,6 @@
 
 import { commandBuilder, structureBuilder } from '../modules.js';
 import config from '../config.js';
-import { BlockLocation } from '@minecraft/server';
 const { commandPrefix: prefix } = config;
 function relativeParse(player, input, direction) {
 	if (input.includes('~')) {
@@ -32,14 +31,14 @@ commandBuilder.register('structure', {
 		x1 = Math.floor(relativeParse(sender, x1, 'x'));
 		y1 = Math.floor(relativeParse(sender, y1, 'y'));
 		z1 = Math.floor(relativeParse(sender, z1, 'z'));
-		const location1 = new BlockLocation(x1, y1, z1);
+		const location1 = { x: x1, y: y1, z: z1 };
 
 		switch (action) {
 			case 'save': {
 				x2 = Math.floor(relativeParse(sender, x2, 'x'));
 				y2 = Math.floor(relativeParse(sender, y2, 'y'));
 				z2 = Math.floor(relativeParse(sender, z2, 'z'));
-				const location2 = new BlockLocation(x2, y2, z2);
+				const location2 = { x: x2, y: y2, z: z2 };
 				structureBuilder.save({
 					name,
 					location1,

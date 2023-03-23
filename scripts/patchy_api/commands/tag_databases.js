@@ -19,6 +19,6 @@ commandBuilder.register('tagdatabases', {
     },
     aliases: ['dbs'],
     callback: (sender, args) => {
-        sender.tell(JSON.stringify(tagDatabases, (key, value) => (value instanceof Function) ? '<f>' : value));
+        sender.sendMessage(JSON.stringify(tagDatabases, (key, value) => (value instanceof Function) ? '<f>' : value));
     }
 });

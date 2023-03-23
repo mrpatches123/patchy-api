@@ -1,6 +1,6 @@
 
 
-import { BlockLocation, MinecraftBlockTypes } from '@minecraft/server';
+import { MinecraftBlockTypes } from '@minecraft/server';
 import config from '../config.js';
 
 import { commandBuilder, fill } from '../modules.js';
@@ -18,11 +18,10 @@ commandBuilder.register('fill', {
 		}
 	},
 	prefix,
-	aliases: ['k'],
 	callback: (sender, args) => {
 		fill.box({
-			location1: new BlockLocation(31, -63, 31),
-			location2: new BlockLocation(-32, 100, -32),
+			location1: { x: 31, y: -63, z: 31 },
+			location2: { x: -32, y: 100, z: -32 },
 			blocks: MinecraftBlockTypes.air
 		});
 	}

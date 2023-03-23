@@ -1,4 +1,4 @@
-import { world, Items, BlockLocation, Player, Entity, XYRotation, } from '@minecraft/server';
+import { world, Items, Player, Entity, XYRotation } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export const content = {
     warn(...messages) {
@@ -142,7 +142,7 @@ export function randomCoordsOutsideCircle(minRadius, maxRadius) {
     const randR = () => minRadius + (maxRadius - minRadius) * sqrt(random());
     const x = Math.cos(angle) * randR();
     const z = Math.sin(angle) * randR();
-    const r = hypot(x, z,);
+    const r = hypot(x, z);
     return { x, z, r };
 }
 // function randomCoordsOutsideCircle(minRadius, maxRadius) {
@@ -277,13 +277,20 @@ export function blockFaceToCoords(blockFace, { x, y, z }) {
         [1, 0, 0]
     ][blockFace].forEach((coord, i) => location[i] += coord);
     [x, y, z] = location;
-    return new BlockLocation(x, y, z);
-    //return new Location(x,y,z);
+    return { x, y, z };
 }
 Math.randomBetween = function (n1, n2) {
     return n1 + Math.random() * Math.abs(n2 - n1);
 };
-
+/**
+ * 
+ * @param {import('@minecraft/server').Vector3} Vector3 
+ * @param {import('@minecraft/server').Vector3} offsetVector3 
+ * @returns {import('@minecraft/server').Vector3}
+ */
+export function offsetVector3(Vector3, offsetVector3) {
+    return { x: Vector3.x + offsetVector3.x, y: Vector3.y + offsetVector3.y, z: Vector3.z + offsetVector3.z };
+};
 
 
 // const array1 = {
@@ -404,17 +411,40 @@ export function toProperCase(string) {
     return string.replace(/_/g, ' ').replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 }
 export const staff = {
-    tellraw(message, exludePlayer) {
-        try {
-            overworld.runCommandAsync(`tellraw @a[scores={Notifications=1}${(exludePlayer) ? `,name=!${exludePlayer.name}` : ''}] {"rawtext":[{"text":"${message.replaceAll('"', '\\"')}"}]}`);
-            return true;
-        } catch (error) {
-            content.warn(error);
-            return undefined;
-        }
+    sendMessage(message, exludePlayer) {
+        [...world.getPlayers({ scoreOptions: [{ exclude: true, maxScore: 1, minScore: 1, objective: 'staff' }] })]
+            .filter(player => player.id !== exludePlayer)
+            .forEach(player => {
+                player.sendMessage(message.toString());
+            });
     }
 };
+try {
+    world.scoreboard.addObjective('scoreIdentityInit', 'scoreIdentityInit');
+} catch (error) {
+
+}
 export const server = {
+    /**
+     * 
+     * @param {String} objective 
+     * @param {Player} player 
+     * @param {value} value 
+     * @param {'list' | 'sidebar' | 'belowName' } updateId 
+     */
+    async setPlayerScoreboard(objective, player, value, updateId) {
+        try {
+            await player.runCommandAsync('scoreboard players set @s scoreIdentityInit 0');
+            world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboard, value);
+            if (!updateId) return;
+            const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
+            if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return;
+            world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
+            world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
+        } catch (error) {
+            console.warn('server.setPlayerScoreboard()', error, error.stack);
+        }
+    },
     tellraw(message) {
         try {
             world.say(message);
@@ -435,7 +465,7 @@ export const server = {
         let scoreboardObjective;
         let score;
         let scoreboardIdentity;
-        try { scoreboardObjective = world.scoreboard.getObjective(objective); } catch (error) { console.warn(error, error.stack); }
+        try { scoreboardObjective = world.scoreboard.getObjective(objective); } catch (error) { /*console.warn(error, error.stack);*/ }
         if (((target?.player ?? target) instanceof Player || target instanceof Entity) && !findParticipant) {
 
             scoreboardIdentity = target.scoreboard;
@@ -443,14 +473,14 @@ export const server = {
             // content.warn({ score });
         } else {
 
-            try { scoreboardIdentity = scoreboardObjective.getParticipants().find((({ displayName }) => displayName === target)); } catch (error) { console.warn(error, error.stack); }
+            try { scoreboardIdentity = scoreboardObjective.getParticipants().find((({ displayName }) => displayName === target)); } catch (error) { /*console.warn(error, error.stack);*/ }
         }
         if (!scoreboardIdentity) return;
         if (scoreboardObjective) {
             try {
                 score = scoreboardObjective.getScore(scoreboardIdentity);
             } catch (error) {
-                console.warn(error, error.stack);
+                /*console.warn(error, error.stack);*/
             }
         }
         return score;
@@ -482,7 +512,6 @@ export const server = {
         }
     },
     /**
-     * 
      * @param {String} objective 
      * @param {import('@minecraft/server').Player} player 
      * @param {Number} value
@@ -498,14 +527,15 @@ export const server = {
         }
     },
     /**
-     * 
      * @param {String} objective 
      * @param {import('@minecraft/server').Player} player 
      * @param {Number} value
      * @param {'list' | 'sidebar' | 'belowName' } updateId 
+     * @returns {number}
      */
     scoreSetPlayer(objective, player, value = 0, updateId) {
         content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
+        if (!player.scoreboard) { this.setPlayerScoreboard(objective, player, value = 0, updateId); return value; }
         world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboard, value);
         if (!updateId) return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);

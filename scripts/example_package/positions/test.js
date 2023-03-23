@@ -1,26 +1,26 @@
-import { world, BlockLocation, Location } from "@minecraft/server";
+import { world } from "@minecraft/server";
 import { overworld, positionBuilder, teleportBuilder } from "../../patchy_api/modules.js";
 
 
 positionBuilder.add({
 	stone: {
-		location1: new BlockLocation(195, 104, 208),
-		location2: new BlockLocation(197, 106, 208),
+		location1: { x: 195, y: 104, z: 208 },
+		location2: { x: 197, y: 106, z: 208 },
 		callback: (player) => {
 			teleportBuilder.teleport(player, 'toRedstone');
 		}
 
 	},
 	redstone: {
-		location1: new BlockLocation(197, 104, 232),
-		location2: new BlockLocation(200, 108, 232),
+		location1: { x: 197, y: 104, z: 232 },
+		location2: { x: 200, y: 108, z: 232 },
 		callback: (player) => {
 			teleportBuilder.teleport(player, 'toStone');
 		}
 	},
 	barrel: {
-		location1: new BlockLocation(195, 104, 220),
-		location2: new BlockLocation(195, 106, 222),
+		location1: { x: 195, y: 104, z: 220 },
+		location2: { x: 195, y: 106, z: 222 },
 		callback: (player) => {
 			teleportBuilder.teleport(player, 'random');
 		}
@@ -30,17 +30,17 @@ positionBuilder.add({
 teleportBuilder.add({
 	toRedstone: {
 		dimension: overworld,
-		location: new BlockLocation(199, 104, 231),
-		face: new Location(199.5, 104, 230.5)
+		location: { x: 199, y: 104, z: 231.5 },
+		face: { x: 199.5, y: 104, z: 230.5 }
 	},
 	toStone: {
 		dimension: overworld,
-		location: new BlockLocation(196, 104, 209),
-		face: new BlockLocation(196, 104, 210),
+		location: { x: 196.5, y: 104, z: 209.5 },
+		face: { x: 196.5, y: 104, z: 210.5 },
 	},
 	random: {
 		dimension: overworld,
-		location: new Location(208.0, 105, 220.0),
+		location: { x: 208.5, y: 105, z: 220.5 },
 		random: {
 			maxRadius: 6,
 			yMax: 109,

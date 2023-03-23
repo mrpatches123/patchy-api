@@ -1,4 +1,4 @@
-import { world, Player, Entity, ItemStack, Items, Location, MolangVariableMap, Vector, PlayerInventoryComponentContainer } from '@minecraft/server';
+import { world, Player, Entity, ItemStack, Items, MolangVariableMap, Vector, PlayerInventoryComponentContainer } from '@minecraft/server';
 import errorLogger from '../classes/error.js';
 
 const { isInteger } = Number;
@@ -123,18 +123,18 @@ const betaPlayerFunctions = {
 
 	},
 	queryTopSolid(ceiling = 319) {
-		const { location: { x, z } } = this;
-		const locations = new BlockLocation(x.floor(), ceiling, z.floor())
-			.blocksBetween(new BlockLocation(x.floor(), -64, z.floor())).reverse();
-		content.warn(native.stringify(locations[0]));
-		for (const location of locations) {
-			content.warn({ id: this.dimension.getBlock(location).type.id });
-			if (!this.dimension.getBlock(location).isEmpty) {
-				console.warn(x, location.y, z);
-				return location.y;
-			}
-		}
-		console.warn('hewidjdwwdnnwdkkj');
+		// const { location: { x, z } } = this;
+		// const locations = { x: x.floor(), y: ceiling, z: z.floor() }
+		// 	.blocksBetween({ x: x.floor(), y: -64, z: z.floor() }).reverse();
+		// content.warn(native.stringify(locations[0]));
+		// for (const location of locations) {
+		// 	content.warn({ id: this.dimension.getBlock(location).type.id });
+		// 	if (!this.dimension.getBlock(location).isEmpty) {
+		// 		console.warn(x, location.y, z);
+		// 		return location.y;
+		// 	}
+		// }
+		// console.warn('hewidjdwwdnnwdkkj');
 	},
 	ability(ability, bool = '', selector = '') {
 		let abilityCurrent;

@@ -1,19 +1,20 @@
 import eventBuilder from "./events/export_instance.js";
-import { content, sort3DRange, sort3DVectors } from '../utilities.js';
+import { content, sort3DRange, sort3DVectors, isVector3 } from '../utilities.js';
 import global from "./global.js";
 import players from "./players/export_instance.js";
-import { Player, BlockLocation, Location } from "@minecraft/server";
+import teleportBuilder from './teleport.js';
+import { Player } from "@minecraft/server";
 const { floor } = Math;
 class PositionBuilder {
 	constructor() {
+		const PositionThis = this;
 		eventBuilder.subscribe('position*API', {
 			tickAfterLoad: () => {
 				players.get().iterate((player) => {
-
-					this.forEach((key, { noLoop = false }) => {
-						// content.warn(key, noLoop);
+					// content.warn(PositionThis);
+					PositionThis.forEach((key, { noLoop = false }) => {
 						if (noLoop) return;
-						this.check(player, key);
+						PositionThis.check(player, key);
 					});
 				});
 			}
@@ -41,12 +42,10 @@ class PositionBuilder {
 	 * @param {String} key
 	 */
 	check(player, key) {
-		const { location: { x, y, z } } = player;
 		const { location1, location2, callback } = this[key];
-		const { x: x1, y: y1, z: z1 } = location1;
 		if (!this.test(player, key)) return;
 		if (typeof callback === 'string') {
-
+			teleportBuilder.teleport(player, callback);
 		} else {
 			callback(player, location1, location2);
 		}
@@ -70,25 +69,21 @@ class PositionBuilder {
 			if (!testOnly && !(callback instanceof Function)) {
 				return new Error(`function key of postionObject Key: ${key}, should be a function`);
 			}
-			if (!(location1 instanceof Location) && !(location1 instanceof BlockLocation)) {
-				return new Error(`location1 key of postionObject Key: ${key}, should be a instance of Location or BlockLocation`);
-			}
-			if (location2 && !(location1 instanceof Location) && !(location1 instanceof BlockLocation)) {
-				return new Error(`location2 key of postionObject Key: ${key}, should be a instance of Location or BlockLocation`);
-			}
+			if (!isVector3(location1)) throw new Error(`location1 key of postionObject Key: ${key}, should be a instance of Vetcor4`);
+			if (location2 && !isVector3(location1)) throw new Error(`location2 key of postionObject Key: ${key}, should be a instance of Vector3`);
 			if (location2) {
 				// const { x: x1, y: y1, z: z1 } = location1, { x: x2, y: y2, z: z2 } = location2;
 				const [{ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }] = sort3DVectors(location1, location2);
 				this[key] = {
-					location1: new BlockLocation(x1, y1, z1),
-					location2: new BlockLocation(x2, y2, z2),
+					location1: { x: x1, y: y1, z: z1 },
+					location2: { x: x2, y: y2, z: z2 },
 					callback,
 					noLoop
 				};
 			} else {
 				const { x, y, z } = location1;
 				this[key] = {
-					location1: new BlockLocation(x, y, z),
+					location1: { x, y, z },
 					callback,
 					noLoop
 				};

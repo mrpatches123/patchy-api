@@ -1,6 +1,7 @@
-import { Location, BlockLocation, Block, Dimension, XYRotation, MinecraftBlockTypes, Vector } from '@minecraft/server';
-import { content, isVector2, isVector3, native, randomCoordsOutsideCircle } from '../utilities.js';
+import { Block, Dimension, XYRotation, MinecraftBlockTypes, Vector } from '@minecraft/server';
+import { content, isVector2, isVector3, native, offsetVector3, randomCoordsOutsideCircle } from '../utilities.js';
 import { Player } from './player/class.js';
+import time from './time.js';
 const unsafeBlocks = [
 	MinecraftBlockTypes.lava.id,
 	MinecraftBlockTypes.flowingLava.id,
@@ -58,7 +59,7 @@ class TeleportBuilder {
 			value.forEach((teleportObject, i) => {
 				let { location, dimension, face, keepVelocity = false, random } = teleportObject;
 				const { minRadius = 0, maxRadius, type = 'circle', randomRotation = true, yMax, yMin = -64 } = random ?? {};
-				if (!isVector3(location)) throw new Error(`location key of teleportObject Key: ${key}, should be a instance of Location or BlockLocation`);
+				if (!isVector3(location)) throw new Error(`location key of teleportObject Key: ${key}, should be a instance of Vector3`);
 				const rotation = (isVector3(face)) ? undefined : face;
 				const facing = (rotation) ? undefined : face;
 				if (isArray) {
@@ -117,19 +118,25 @@ class TeleportBuilder {
 	 * @param {Number} yMin 
 	 * @param {Number} minRadius 
 	 * @param {Number} maxRadius 
-	 * @returns {{blockFloor: Block, blockAbove: Block, location: Location}}
+	 * @returns {{blockFloor: Block, blockAbove: Block, location: import('@minecraft/server').Vector3}}
 	 */
 	getRandomCoords(dimension, location, yMax, yMin, minRadius, maxRadius, nonRecursive) {
+		time.start('tpTest');
 		const yRange = yMax - yMin + 1;
 		const { x, z } = location;
+
 		let { x: cx, z: cz } = randomCoordsOutsideCircle(minRadius, maxRadius);
+
 		cx += x, cz += z;
 		cx = Math.floor(cx) + 0.5;
 		cz = Math.floor(cz) + 0.5;
-		location = new Location(cx, yMax, cz);
+		location = { x: cx, y: yMax, z: cz };
+
 		const blockFloor = dimension.getBlockFromRay(location, new Vector(0, -1, 0), { maxDistance: yRange, includeLiquidBlocks: true, includePassableBlocks: true });
-		location = new Location(cx, blockFloor.location.y + 1, cz);
-		return { location, blockFloor, blockAbove: dimension.getBlock(blockFloor.location.offset(0, 1, 0)) };
+		location = { x: cx, y: blockFloor.location.y + 1, z: cz };
+		const out = { location, blockFloor, blockAbove: dimension.getBlock(offsetVector3(blockFloor.location, { x: 0, y: 1, z: 0 })) };
+		content.warn({ tpTest: time.end('tpTest') });
+		return out;
 	}
 	/**
 	 * 
@@ -140,7 +147,7 @@ class TeleportBuilder {
 	 * @param {Number} minRadius 
 	 * @param {Number} maxRadius 
 	 * @param {Boolean} nonRecursive 
-	 * @returns {location: Location}}
+	 * @returns {location: import('@minecraft/server').Vector3}}
 	 */
 	getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius) {
 		while (true) {
@@ -189,7 +196,6 @@ class TeleportBuilder {
 		if (facing && !rotation) return player.teleportFacing(location, dimension, facing);
 		if (!isVector2(rotation)) { rotation = rotationPlayer; }
 		const { x: rx, y: ry } = rotation;
-		// content.warn({ location: location instanceof BlockLocation || location instanceof Location, dimension: dimension instanceof Dimension, rx, ry });
 		player.teleport(
 			location,
 			dimension,
@@ -230,7 +236,6 @@ class TeleportBuilder {
 		} else {
 			if (!rotation) { rotation = rotationPlayer; }
 			const { x: rx, y: ry } = rotation;
-			// content.warn({ location: location instanceof BlockLocation || location instanceof Location, dimension: dimension instanceof Dimension, rx, ry });
 			player.teleport(location, dimension, rx, ry);
 		}
 	};

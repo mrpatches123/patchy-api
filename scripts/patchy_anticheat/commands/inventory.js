@@ -33,15 +33,15 @@ eventBuilder.subscribe('invSeeCheck', {
     tickAfterLoad: () => {
         global.players.forEach((id, player) => {
             const { headLocation: { x: hx, y: hy, z: hz } } = player;
-            let inventoryEntities = player.dimension.getEntitiesAtBlockLocation(new BlockLocation(floor(hx), floor(hy), floor(hz))).filter(({ id }) => id === 'patches:inventory');
-            let entity = inventoryEntities.find(entity =>
-                entity.location.equals(player.headLocation)
-            );
-            if (entity) { entity.addTag('player'); }
-        });
-        try {
-            overworld.runCommandAsync('event entity @e[type=patches:inventory,tag=!player] patches:kill_inv');
-        } catch { }
+            let inventoryEntities = player.dimension.getEntitiesAtBlockLocation({ x: floor(hx), y: floor(hy) z: floor(hz))).filter(({ id }) => id === 'patches:inventory');
+        let entity = inventoryEntities.find(entity =>
+            entity.location.equals(player.headLocation)
+        );
+        if (entity) { entity.addTag('player'); }
+    });
+try {
+    overworld.runCommandAsync('event entity @e[type=patches:inventory,tag=!player] patches:kill_inv');
+} catch { }
     }
 });
 

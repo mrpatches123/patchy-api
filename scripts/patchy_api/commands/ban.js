@@ -16,8 +16,8 @@ commandBuilder.register('ban', {
 	callback: (sender, args) => {
 		const [playerName] = args;
 		const player = [...world.getPlayers({ name: playerName })][0];
-		if (!player) return sender.tell(`player: ${playerName}, does not exist!`);
-		sender.tell(`You banned ${player.name}`);
+		if (!player) return sender.sendMessage(`player: ${playerName}, does not exist!`);
+		sender.sendMessage(`You banned ${player.name}`);
 		player.addTag('ban');
 	}
 });

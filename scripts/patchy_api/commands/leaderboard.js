@@ -49,14 +49,14 @@ commandBuilder.register('leaderboard', {
 				y = relativeParse(sender, y, 'y');
 				z = relativeParse(sender, z, 'z');
 				maxLength = (maxLength) ? Number(maxLength) | 0 : undefined;
-				if (onlineOffine !== 'online' && onlineOffine !== 'offline') sender.tell(`§cparam[0], ${args[1]}, is not offline or online!`);
-				if (typeof y !== 'number') return sender.tell(`§cparam[1], ${args[2]}, is not a number that represents the y coordinate!`);
-				if (typeof z !== 'number') return sender.tell(`§cparam[2], ${args[3]}, is not a number that represents the z coordinate!`);
-				if (typeof x !== 'number') return sender.tell(`§cparam[3], ${args[4]}, is not a number that represents the x coordinate!`);
-				if (!world.scoreboard.getObjective(objective)) return sender.tell(`§cparam[4], ${args[5]}, is an scoreboard objective which does not exist!`);
-				if (maxLength && typeof maxLength !== 'number' && maxLength > 0) return sender.tell(`§cparam[5], ${args[6]}, is defined and is not a whole number that represents the max length!`);
-				if (format && !format.includes('${score}') && !format.includes('${score*f}')) return sender.tell(`§cparam[7], ${args[8]}, is defined and does not have \${score} or \${score*f}, so the system doesn't know where to put the player's score!`);
-				if (format && !format.includes('${name}')) return sender.tell(`§cparam[7], ${args[8]}, is defined and does not have \${name}, so the system doesn't know where to put the player's name!`);
+				if (onlineOffine !== 'online' && onlineOffine !== 'offline') sender.sendMessage(`§cparam[0], ${args[1]}, is not offline or online!`);
+				if (typeof y !== 'number') return sender.sendMessage(`§cparam[1], ${args[2]}, is not a number that represents the y coordinate!`);
+				if (typeof z !== 'number') return sender.sendMessage(`§cparam[2], ${args[3]}, is not a number that represents the z coordinate!`);
+				if (typeof x !== 'number') return sender.sendMessage(`§cparam[3], ${args[4]}, is not a number that represents the x coordinate!`);
+				if (!world.scoreboard.getObjective(objective)) return sender.sendMessage(`§cparam[4], ${args[5]}, is an scoreboard objective which does not exist!`);
+				if (maxLength && typeof maxLength !== 'number' && maxLength > 0) return sender.sendMessage(`§cparam[5], ${args[6]}, is defined and is not a whole number that represents the max length!`);
+				if (format && !format.includes('${score}') && !format.includes('${score*f}')) return sender.sendMessage(`§cparam[7], ${args[8]}, is defined and does not have \${score} or \${score*f}, so the system doesn't know where to put the player's score!`);
+				if (format && !format.includes('${name}')) return sender.sendMessage(`§cparam[7], ${args[8]}, is defined and does not have \${name}, so the system doesn't know where to put the player's name!`);
 
 				switch (onlineOffine) {
 					case 'online': {
@@ -75,9 +75,9 @@ commandBuilder.register('leaderboard', {
 				x = relativeParse(sender, x, 'x');
 				y = relativeParse(sender, y, 'y');
 				z = relativeParse(sender, z, 'z');
-				if (typeof y !== 'number') return sender.tell(`§cparam[1], ${args[2]}, is not a number that represents the y coordinate!`);
-				if (typeof z !== 'number') return sender.tell(`§cparam[2], ${args[3]}, is not a number that represents the z coordinate!`);
-				if (typeof x !== 'number') return sender.tell(`§cparam[3], ${args[4]}, is not a number that represents the x coordinate!`);
+				if (typeof y !== 'number') return sender.sendMessage(`§cparam[1], ${args[2]}, is not a number that represents the y coordinate!`);
+				if (typeof z !== 'number') return sender.sendMessage(`§cparam[2], ${args[3]}, is not a number that represents the z coordinate!`);
+				if (typeof x !== 'number') return sender.sendMessage(`§cparam[3], ${args[4]}, is not a number that represents the x coordinate!`);
 				leaderboardBuilder.delete({ x, y, z });
 				break;
 			} case 'update': {
@@ -87,14 +87,14 @@ commandBuilder.register('leaderboard', {
 				y = relativeParse(sender, y, 'y');
 				z = relativeParse(sender, z, 'z');
 				maxLength = (maxLength) ? Number(maxLength) | 0 : undefined;
-				if (onlineOffine !== 'online' && onlineOffine !== 'offline') sender.tell(`§cparam[0], ${args[1]}, is not offline or online!`);
-				if (typeof y !== 'number') return sender.tell(`§cparam[1], ${args[2]}, is not a number that represents the y coordinate!`);
-				if (typeof z !== 'number') return sender.tell(`§cparam[2], ${args[3]}, is not a number that represents the z coordinate!`);
-				if (typeof x !== 'number') return sender.tell(`§cparam[3], ${args[4]}, is not a number that represents the x coordinate!`);
-				if (!world.scoreboard.getObjective(objective)) return sender.tell(`§cparam[4], ${args[5]}, is an scoreboard objective which does not exist!`);
-				if (maxLength && typeof maxLength !== 'number' && maxLength > 0) return sender.tell(`§cparam[5], ${args[6]}, is defined and is not a whole number that represents the max length!`);
-				if (format && !format.includes('${score}') && !format.includes('${score*f}')) return sender.tell(`§cparam[7], ${args[8]}, is defined and does not have \${score} or \${score*f}, so the system doesn't know where to put the player's score!`);
-				if (format && !format.includes('${name}')) return sender.tell(`§cparam[7], ${args[8]}, is defined and does not have \${name}, so the system doesn't know where to put the player's name!`);
+				if (onlineOffine !== 'online' && onlineOffine !== 'offline') sender.sendMessage(`§cparam[0], ${args[1]}, is not offline or online!`);
+				if (typeof y !== 'number') return sender.sendMessage(`§cparam[1], ${args[2]}, is not a number that represents the y coordinate!`);
+				if (typeof z !== 'number') return sender.sendMessage(`§cparam[2], ${args[3]}, is not a number that represents the z coordinate!`);
+				if (typeof x !== 'number') return sender.sendMessage(`§cparam[3], ${args[4]}, is not a number that represents the x coordinate!`);
+				if (!world.scoreboard.getObjective(objective)) return sender.sendMessage(`§cparam[4], ${args[5]}, is an scoreboard objective which does not exist!`);
+				if (maxLength && typeof maxLength !== 'number' && maxLength > 0) return sender.sendMessage(`§cparam[5], ${args[6]}, is defined and is not a whole number that represents the max length!`);
+				if (format && !format.includes('${score}') && !format.includes('${score*f}')) return sender.sendMessage(`§cparam[7], ${args[8]}, is defined and does not have \${score} or \${score*f}, so the system doesn't know where to put the player's score!`);
+				if (format && !format.includes('${name}')) return sender.sendMessage(`§cparam[7], ${args[8]}, is defined and does not have \${name}, so the system doesn't know where to put the player's name!`);
 				switch (onlineOffine) {
 					case 'online': {
 						onlineOffine = true;

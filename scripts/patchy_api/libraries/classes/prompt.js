@@ -59,7 +59,7 @@ class PromptBuilder {
                 anwsers.forEach((key, value) => {
                     if (key.toLowerCase() === message.toLowerCase() || key.toLowerCase() === '%any%') {
                         // const nameTag = getChatNameTag(sender);
-                        sender.tell(`${name}: ${message}`);
+                        sender.sendMessage(`${name}: ${message}`);
                         value(sender, message);
                         bool = true;
                     }
@@ -78,7 +78,7 @@ class PromptBuilder {
     */
     ask(sender) {
         const { message } = this[id];
-        sender.tell(message);
+        sender.sendMessage(message);
     }
     /**
     * @method ask Alll command.

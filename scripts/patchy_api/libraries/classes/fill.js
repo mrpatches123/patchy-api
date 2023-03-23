@@ -1,4 +1,4 @@
-import { BlockLocation, BlockType, BlockPermutation, system, BlockAreaSize } from "@minecraft/server";
+import { BlockType, BlockPermutation, system, BlockAreaSize, Vector } from "@minecraft/server";
 import { content, isDefined, overworld, sort3DRange, sort3DVectors } from "../utilities.js";
 /**
  * @typedef {Object} BlockOptions
@@ -42,9 +42,7 @@ class Fill {
 						// content.warn({ t: 'wdwwdwd', i, done: current.done, t2: 'why not work' });
 						if (current.done) { fillThis.queue.shift(), await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => console.warn(error, error.stack)); break; }
 
-						/**
-						 * @type {BlockLocation}
-						 */
+
 						const { blockLocation, isFirstBlockOfChunk } = current.value;
 						const { x, y, z } = blockLocation;
 						if (isFirstBlockOfChunk) {
@@ -126,7 +124,7 @@ class Fill {
 	 * @method getGenerator
 	 * @param {FillOptions} fillOptions 
 	 * @param {String} type 
-	 * @returns {Generator<BlockLocation,undefined,BlockLocation>}
+	 * @returns {Generator<import('@minecraft/server').Vector3,undefined,import('@minecraft/server').Vector3>}
 	 * @private
 	 */
 	getGenerator(fillOptions) {
@@ -148,7 +146,7 @@ class Fill {
 						for (x = startX; x <= endX; x++) {
 							for (z = startZ; z <= endZ; z++) {
 								const isFirstBlockOfChunk = x === startX && y === y1 && z === startZ;
-								yield { blockLocation: new BlockLocation(x, y, z), isFirstBlockOfChunk };
+								yield { blockLocation: { x, y, z }, isFirstBlockOfChunk };
 							}
 						}
 					}
@@ -184,7 +182,7 @@ class Fill {
 	// 						else mZ = z, z = csZ, y++;
 	// 					};
 	// 					if (y >= height) y = 0;
-	// 					yield new BlockLocation(x + x1, y + y1, z + z1);
+	// 					yield {x: x + x1, y:  y + y1 z:  z + z1);
 	// 				}
 	// 			};
 	// 		case 'circle':
@@ -194,7 +192,7 @@ class Fill {
 	// 					// if (z > width) x = x1, y++;
 	// 					if (x - x1 > length / 2) continue;
 	// 					if (z - z1 > width / 2) continue;
-	// 					yield new BlockLocation(x, y, z);
+	// 					yield {x: x, y:  y z:  z);
 	// 				}
 	// 			};
 
@@ -206,7 +204,7 @@ class Fill {
 	// 					if (Math.abs(x - x1) > length / 2) continue;
 	// 					if (Math.abs(z - z1) > width / 2) continue;
 	// 					if (Math.abs(y - y1) > height / 2) continue;
-	// 					yield new BlockLocation(x, y, z);
+	// 					yield {x: x, y:  y z:  z);
 	// 				}
 	// 			};
 	// 		case 'cylinder':
@@ -216,7 +214,7 @@ class Fill {
 	// 					if (z > width) x = x1, y++;
 	// 					if (x - x1 > length / 2) continue;
 	// 					if (z - z1 > width / 2) continue;
-	// 					yield new BlockLocation(x, y, z);
+	// 					yield {x: x, y:  y z:  z);
 	// 				}
 	// 			};
 	// 	}

@@ -60,11 +60,13 @@ class ScoreboardBuilder {
 	 * @param {Number} value 
 	 */
 	set(player, objective, value) {
+
 		const { id } = player;
 		if (player.hasOwnProperty('player')) player = player.player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
 		this.players[id][objective].value = value, this.players[id][objective].gotten = true;
+		if (objective === 'skycoins') content.warn({ objective, value, player: player.name, objective: this.players[id][objective] });
 		content.warn({ objective, value, this: this });
 
 		if (!objective.startsWith('big_')) {

@@ -15,7 +15,7 @@ commandBuilder.register('help', {
     callback: (sender, args) => {
         switch (args.length) {
             case 0:
-                sender.tell(commandBuilder.listCommands(prefix, sender));
+                sender.sendMessage(commandBuilder.listCommands(prefix, sender));
                 sender.playSound('note.hat');
                 break;
             case 1:

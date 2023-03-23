@@ -53,8 +53,8 @@ commandBuilder.register('echest', {
 			return { id: foundId, amount, data, slot: i };
 		});
 
-		sender.tell(JSON.stringify(items.filter(item => item), null, 4));
-		sender.tell(JSON.stringify({ time: time.end('echestTest') }));
+		sender.sendMessage(JSON.stringify(items.filter(item => item), null, 4));
+		sender.sendMessage(JSON.stringify({ time: time.end('echestTest') }));
 	}
 });
 

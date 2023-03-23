@@ -194,10 +194,10 @@ world.events.beforeItemUseOn.subscribe((event) => {
 // 		const { location, name, rotation, dimension } = player;
 // 		const { x, y, z } = location;
 // 		if (!global.players.hasOwnProperty[name]) global.players[name] = {};
-// 		let { lastLocation = new Location(0, 100, 0), lastRotation: { x: lrx, y: lry } = rotation } = global.players[name];
+// 		let { lastLocation = {x: 0, y: 100, z: 0}, lastRotation: { x: lrx, y: lry } = rotation } = global.players[name];
 // 		const { x: lx, y: ly, z: lz } = lastLocation;
 // 		if (Math.abs(lx) > maxCord || Math.abs(ly) > maxCord || Math.abs(lz) > maxCord) {
-// 			lastLocation = new Location(0, 100, 0);
+// 			lastLocation = {x: 0, y: 100, z: 0};
 // 			console.warn('why');
 // 		};
 // 		if (Math.abs(x) > maxCord || Math.abs(y) > maxCord || Math.abs(z) > maxCord) {

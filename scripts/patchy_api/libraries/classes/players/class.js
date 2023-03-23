@@ -92,7 +92,7 @@ export class Players {
 			event.propertyRegistry.registerEntityTypeDynamicProperties(dynamicPropertiesDefinition, MinecraftEntityTypes.player);
 			playersObject.registered = true;
 		});
-		world.events.tick.subscribe(() => {
+		system.runInterval(() => {
 			if (!global.refreshBasePlayerIterator) return;
 			// content.chatFormat({ test: global.refreshBasePlayerIterator });
 			playersObject.refreshBasePlayerIterator();

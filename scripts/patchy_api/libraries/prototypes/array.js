@@ -47,7 +47,7 @@ const arrayFunctions = {
 		}
 	},
 	getRange() {
-		if (this.every(item => item instanceof BlockLocation || item instanceof Location)) {
+		if (this.every(item => isVector3(item))) {
 
 			const x = this.map(({ x }) => x).sort((a, b) => a - b);
 			const y = this.map(({ y }) => y).sort((a, b) => a - b);

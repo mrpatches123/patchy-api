@@ -1,5 +1,5 @@
-import { Block, BlockInventoryComponentContainer, BlockLocation, world } from '@minecraft/server';
-import { eventBuilder, global, content, native, overworld } from '../../patchy_api/modules.js';
+// import { Block, BlockInventoryComponentContainer, BlockLocation, world } from '@minecraft/server';
+// import { eventBuilder, global, content, native, overworld } from '../../patchy_api/modules.js';
 // const content = {
 // 	warn(...messages) {
 // 		console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
@@ -67,7 +67,7 @@ import { eventBuilder, global, content, native, overworld } from '../../patchy_a
 // 		/**
 // 		 * @type {Block}
 // 		 */
-// 		const block = overworld.getBlock(new BlockLocation(209, 104, 287));
+// 		const block = overworld.getBlock({x: 209, y:  104 z:  287));
 // 		/**
 // 		 * @type {BlockInventoryComponentContainer}
 // 		 */

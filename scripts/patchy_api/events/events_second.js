@@ -1,11 +1,13 @@
 import eventBuilder from '../libraries/classes/events/export_instance.js';
-import { BlockLocation, Location, Vector, world } from '@minecraft/server';
+import { EntityItemComponent, Vector, world } from '@minecraft/server';
 import players from '../libraries/classes/players/export_instance.js';
 import time from '../libraries/classes/time.js';
 import global from '../libraries/classes/global.js';
 import errorLogger from '../libraries/classes/error.js';
-import { content } from '../modules.js';
+import { content, hypot2, overworld } from '../modules.js';
+import { setProptotype } from '../libraries/classes/player/class.js';
 global.requestAddEvent = [];
+const items = {};
 eventBuilder.register({
 	stepOnBlock: {
 		subscription: {
@@ -15,7 +17,7 @@ eventBuilder.register({
 						try {
 							const { location: { x, y, z }, memory, dimension } = player;
 							// content.warn(y);
-							let block = dimension.getBlockFromRay(new Location(x, y, z), new Vector(0, -1, 0), { maxDistance: 1, includeLiquidBlocks: true, includePassableBlocks: true });
+							let block = dimension.getBlockFromRay({ x: x, y: y, z: z }, new Vector(0, -1, 0), { maxDistance: 1, includeLiquidBlocks: true, includePassableBlocks: true });
 							const { LastBlockStepedOn } = memory;
 							memory.LastBlockStepedOn = block;
 							// content.warn({ LastBlockStepedOn: LastBlockStepedOn?.typeId ?? 'null', currentId: block?.typeId ?? 'null' });
@@ -57,6 +59,72 @@ eventBuilder.register({
 						eventBuilder.getEvent('requestAdded').iterate(event);
 					});
 					global.requestAddEvent = [];
+				}
+			}
+		}
+	},
+	playerDeath: {
+		subscription: {
+			entityDie: {
+				function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: player }) => {
+					eventBuilder.getEvent('playerDeath').iterate({ damageSource: { killer: setProptotype(damagingEntity), projectile: damagingProjectile, cause }, player });
+				},
+				entityOptions: { entityTypes: ["minecraft:player"] }
+			}
+		}
+	},
+	entityDeath: {
+		subscription: {
+			entityDie: {
+				function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: entity }) => {
+					eventBuilder.getEvent('entityDeath').iterate({ damageSource: { killer: setProptotype(damagingEntity), projectile: damagingProjectile, cause }, entity });
+				}
+			}
+		}
+	},
+	playerJoinAwaitMove: {
+		subscription: {
+			playerSpawn: {
+				function: ({ player, initialSpawn }) => {
+					if (!initialSpawn) return;
+					content.warn({ playerJoinAwaitMove: player.name });
+					const systemRunId = system.runSchedule(() => {
+						const { rotation, memory } = player;
+						const { lastRotation = rotation } = memory;
+						const { x: rx, y: ry } = rotation;
+						const { x: lrx, y: lry } = lastRotation;
+						memory.lastRotation = rotation;
+						content.warn({ rx, ry, lrx, lry });
+						if (rx === lrx && ry === lry) return;
+						eventBuilder.getEvent('playerJoinAwaitMove').iterate({ player });
+						system.clearRunSchedule(systemRunId);
+					}, 0);
+				}
+			}
+		}
+	},
+	itemPickup: {
+		subscription: {
+			tickAfterLoad: {
+				function: () => {
+
+					const dne = Object.assign({}, items);
+					[...overworld.getEntities({ type: 'minecraft:item' })].forEach(entity => {
+						const { id, location } = entity;
+						/**
+						 * @type {EntityItemComponent}
+						 */
+						const { itemStack } = entity.getComponent('minecraft:item');
+
+						if (!items.hasOwnProperty(id)) items[id] = { location, itemStack };
+						delete dne[id];
+					});
+					Object.entries(dne).forEach(([id, { location, itemStack }]) => {
+						content.warn({ location });
+						const player = [...overworld.getPlayers({ location, closest: 1 })][0];
+						eventBuilder.getEvent('itemPickup').iterate({ player, item: itemStack });
+						delete items[id];
+					});
 				}
 			}
 		}

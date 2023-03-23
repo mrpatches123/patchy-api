@@ -1,4 +1,4 @@
-import { BlockLocation, system, world } from '@minecraft/server';
+import { MinecraftBlockTypes, system, world, Container } from '@minecraft/server';
 function startwodjopwpwdjwwpodjdwo() {
 	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
 }
@@ -6,12 +6,92 @@ startwodjopwpwdjwwpodjdwo();
 system.events.beforeWatchdogTerminate.subscribe((event) => {
 	event.cancel = true;
 });
-world.events.beforeExplosion.subscribe((event) => {
-	const { source, impactedBlocks } = event;
-	const { location: { x, y, z } } = source;
-	const impackedBlocksClone = Array.from(impactedBlocks);
-	event.impactedBlocks = impackedBlocksClone.filter(({ x: bx, y: by, z: bz }) => Math.hypot(bx - x, by - y, bz - z) < 2);
+world.events.itemUseOn.subscribe((event) => {
+	const { source } = event;
+	const blockLocation = event.getBlockLocation();
+	const block = source.dimension.getBlock(blockLocation);
+	/**
+	 * @type {Container}
+	 */
+	const container = block.getComponent('inventory').container;
+	const items = [];
+	for (let i = 0; i < container.size; i++) {
+		const slot = container.getItem(i);
+		if (!slot?.typeId) continue;
+		items.push(slot?.typeId);
+	};
+	console.warn(JSON.stringify(items, null, 4));
 });
+// function* test() {
+// 	let i = 0;
+// 	while (true) {
+// 		console.warn(i);
+// 		if (i > 3) return;
+// 		yield i++;
+// 	}
+// }
+// for (const i of test()) {
+// 	console.warn('loop', i);
+// }
+// world.events.blockBreak.subscribe(({ block, brokenBlockPermutation }) => {
+// 	// console.warn(JSON.stringify({ blockId: block.typeId, brokenBlockPermutationId: brokenBlockPermutation.type.id }));
+// 	block.setPermutation(brokenBlockPermutation);
+// });
+// const players = {};
+// world.events.itemUseOn.subscribe(event => {
+// 	const { source, lastPlaceLocation = event.getBlockLocation() } = event;
+// 	const { id } = source;
+// 	players[id] = lastPlaceLocation;
+// });
+// const blockFaceToNumber = {
+// 	"down": 0,
+// 	"east": 5,
+// 	"north": 2,
+// 	"south": 3,
+// 	"up": 1,
+// 	"west": 4,
+// };
+
+// function blockFaceToCoords(blockFace, { x, y, z }) {
+// 	blockFace = blockFaceToNumber[blockFace];
+// 	// content.warn({ blockFace });
+
+// 	let location = [x, y, z];
+// 	[
+// 		[0, -1, 0],
+// 		[0, 1, 0],
+// 		[0, 0, -1],
+// 		[0, 0, 1],
+// 		[-1, 0, 0],
+// 		[1, 0, 0]
+// 	][blockFace].forEach((coord, i) => location[i] += coord);
+// 	[x, y, z] = location;
+// 	return { x, y, z };
+// 	//return new Location(x,y,z);
+// }
+// world.events.beforeItemUseOn.subscribe(event => {
+// 	const { blockFace, source, item } = event;
+// 	const { id } = source;
+
+// 	if (!players[id]) return console.warn('returned');
+// 	const { x, y, z } = blockFaceToCoords(blockFace, players[id]);
+// 	console.warn(JSON.stringify({ x, y, z }));
+// 	if (x !== 207 || y !== 101) return;
+// 	event.cancel = true;
+// });
+// world.events.playerSpawn.subscribe(({ player }) => {
+// 	const keys = [];
+// 	for (const key in player) {
+// 		keys.push(key);
+// 	}
+// 	console.warn(JSON.stringify(keys));
+// });
+// world.events.beforeExplosion.subscribe((event) => {
+// 	const { source, impactedBlocks } = event;
+// 	const { location: { x, y, z } } = source;
+// 	const impackedBlocksClone = Array.from(impactedBlocks);
+// 	event.impactedBlocks = impackedBlocksClone.filter(({ x: bx, y: by, z: bz }) => Math.hypot(bx - x, by - y, bz - z) < 2);
+// });
 // import { world, Player, MinecraftBlockTypes, BlockLocation, ItemStack, MinecraftItemTypes, PlayerInventoryComponentContainer } from '@minecraft/server';
 
 // const cropTypes = [
@@ -78,7 +158,7 @@ world.events.beforeExplosion.subscribe((event) => {
 // 		if (excludes.includes(id)) return;
 // 		try {
 
-// 			dimension.spawnEntity(id, new Location(x, y, z));
+// 			dimension.spawnEntity(id, {x: x, y: y, z: z});
 // 		} catch (error) {
 // 			couldNotSpawn.push(id);
 // 			// console.warn( error, error.stack);
@@ -121,7 +201,7 @@ world.events.beforeExplosion.subscribe((event) => {
 // 	return permutationProperties;
 // }
 // world.events.tick.subscribe(() => {
-// 	const block = overworld.getBlock(new BlockLocation(187, 105, 228));
+// 	const block = overworld.getBlock({x: 187, y:  105 z:  228));
 // 	content.warn(permutationClone(block.permutation));
 // });
 // const prefix = "!";
@@ -212,8 +292,8 @@ world.events.beforeExplosion.subscribe((event) => {
 // 	][blockFace].forEach((coord, i) => location[i] += coord);
 // 	[x, y, z] = location;
 // 	console.warn(location);
-// 	return new BlockLocation(x, y, z);
-// 	//return new Location(x,y,z);
+// 	return {x: x, y:  y z:  z);
+// 	//return {x: x, y: y, z: z};
 // }
 // const clickableBlocks = [
 // 	"minecraft:acacia_door",
@@ -630,8 +710,8 @@ world.events.beforeExplosion.subscribe((event) => {
 // 		[1, 0, 0]
 // 	][blockFace].forEach((coord, i) => location[i] += coord);
 // 	[x, y, z] = location;
-// 	return new BlockLocation(x, y, z);
-// 	//return new Location(x,y,z);
+// 	return {x: x, y:  y z:  z);
+// 	//return {x: x, y: y, z: z};
 // }
 // const ileagalPlacementActions = {
 // 	'minecraft:mob_spawner': true,

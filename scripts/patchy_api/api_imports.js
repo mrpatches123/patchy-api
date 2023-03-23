@@ -2,6 +2,7 @@
 
 
 import './libraries/prototypes/native_imports.js';
+import './events/events_zero.js';
 import './events/events_first.js';
 
 import './libraries/classes/load.js';
@@ -50,3 +51,4 @@ import './commands/structure.js';
 import './commands/loads.js';
 import './commands/scoreboard.js';
 import './commands/tags.js';
+import './commands/bounds_logger.js';

@@ -7,7 +7,7 @@ eventBuilder.subscribe('crasher', {
             const { location, dimension, memory } = player;
             const { x, y, z } = location;
             if (Math.abs(x) > 30000000 || Math.abs(y) > 30000000 || Math.abs(z) > 30000000) { // thanks MrDiamond64
-                const { lastLocation = new Location(0, 100, 0) } = memory;
+                const { lastLocation = { x: 0, y: 100, z: 0 } } = memory;
                 player.teleport(lastLocation, dimension, ...player.rot(true));
                 discipline.check(player, '§4failed §1Crasher', 'crasher');
             }

@@ -12,5 +12,5 @@ global.playerMap = {};
 
 // import { overworld } from './libraries/utilities.js';
 // import { BlockLocation, world } from '@minecraft/server';
-// const block0 = overworld.getBlock(new BlockLocation(166, 94, -97));
-// const block1 = overworld.getBlock(new BlockLocation(165, 95, -97));
+// const block0 = overworld.getBlock({x: 166, y:  94 z:  -97));
+// const block1 = overworld.getBlock({x: 165, y:  95 z:  -97));

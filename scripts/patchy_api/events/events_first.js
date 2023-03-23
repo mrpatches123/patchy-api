@@ -4,30 +4,12 @@ import { world, EntityHurtEvent, system } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
 import errorLogger from "../libraries/classes/error.js";
 import time from '../libraries/classes/time.js';
+import { setProptotype } from "../libraries/classes/player/class.js";
 global.playerJoined = {};
 global.tickAfterLoadI = 0;
 let a = 0;
 let test = false;
 eventBuilder.register({
-	playerJoinAwaitMove: {
-		subscription: {
-			playerJoined: {
-				function: ({ player }) => {
-					const systemRunId = system.runSchedule(() => {
-						const { rotation, memory } = player;
-						const { lastRotation = rotation } = memory;
-						const { x: rx, y: ry } = rotation;
-						const { x: lrx, y: lry } = lastRotation;
-						memory.lastRotation = rotation;
-						content.warn({ rx, ry, lrx, lry });
-						if (rx === lrx && ry === lry) return;
-						eventBuilder.getEvent('playerJoinAwaitMove').iterate({ player });
-						system.clearRunSchedule(systemRunId);
-					}, 0);
-				}
-			}
-		}
-	},
 	worldLoad: {
 		subscription: {
 			tick: {
@@ -66,16 +48,12 @@ eventBuilder.register({
 					const players = world.getAllPlayers();
 					players.forEach((player, i) => {
 						const { loaded, id, name } = player;
-						// content.warn(28928282, name);
-
 						if (!loaded) return;
 						if (!global.hasOwnProperty('loading')) global.loading = true;
 						if (!global.loaded) return;
 						if (global.playerJoined.hasOwnProperty(id)) return;
-
-						eventBuilder.getEvent('playerJoined').iterate({ player }, (key, callback) => {
-							callback({ player });
-						});
+						content.warn({ t: 'iterate:"playerJoined"', name });
+						eventBuilder.getEvent('playerJoined').iterate({ player: setProptotype(player) });
 						global.playerJoined[id] = 1;
 
 						if (players.length === i + 1 && !global.hasOwnProperty('loadedPlayers')) return;
@@ -85,6 +63,12 @@ eventBuilder.register({
 					});
 
 
+				}
+			},
+			playerLeave: {
+				function: ({ playerId, playerName }) => {
+					content.warn(`deleted ${playerName}`);
+					delete global.playerJoined[playerId];
 				}
 			}
 		}
@@ -111,18 +95,6 @@ eventBuilder.register({
 			}
 		}
 	},
-	playerDeath: {
-		subscription: {
-			entityHurt: {
-				function: ({ damageSource, hurtEntity: player, damage, cause, projectile }) => {
-					// content.warn(player.name, player.getComponent('health').current);
-					if (player.getComponent('health').current > 0) return;
-					eventBuilder.getEvent('playerDeath').iterate({ damageSource, player, damage, cause, projectile });
-				},
-				entityOptions: { entityTypes: ["minecraft:player"] }
-			}
-		}
-	},
 	playerSpawned: {
 		subscription: {
 			playerSpawn: {
@@ -132,6 +104,26 @@ eventBuilder.register({
 				}
 			}
 
+		}
+	},
+	dataDrivenPlayerTriggerEvent: {
+		subscription: {
+			dataDrivenEntityTriggerEvent: {
+				function: ({ entity, modifiers, id }) => {
+					eventBuilder.getEvent('dataDrivenPlayerTriggerEvent').iterate({ player: entity, modifiers, id });
+				},
+				entityOptions: { entityTypes: ["minecraft:player"] }
+			}
+		}
+	},
+	beforeDataDrivenPlayerTriggerEvent: {
+		subscription: {
+			beforeDataDrivenEntityTriggerEvent: {
+				function: ({ entity, modifiers, id, cancel }) => {
+					eventBuilder.getEvent('beforeDataDrivenPlayerTriggerEvent').iterate({ cancel, player: entity, modifiers, id });
+				},
+				entityOptions: { entityTypes: ["minecraft:player"] }
+			}
 		}
 	},
 	scoreboardChange: {

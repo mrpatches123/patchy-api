@@ -1,4 +1,4 @@
-import { BlockLocation, system, Dimension } from '@minecraft/server';
+import { system, Dimension } from '@minecraft/server';
 import { isVector3, orArray, sort3DVectors, content, native } from "../../utilities";
 
 const saveModes = ['memory', 'disk'];
@@ -10,7 +10,7 @@ const animationModes = ['block_by_block', 'layer_by_layer'];
  * @typedef {{name: string, dimension: Dimension, location1: import('@minecraft/server').Vector3, location2: Vector3, saveMode?: 'memory' | 'disk', includesEntites?: boolean, includesBlocks?: boolean}} SaveOptions
  */
 /**
- * @typedef {Iterator< undefined, [BlockLocation, BlockLocation]>} SaveIterator
+ * @typedef {Iterator< undefined, [import('@minecraft/server').Vector3, import('@minecraft/server').Vector3]>} SaveIterator
  */
 /**
  * @typedef {{dimension: Dimension, location: import('@minecraft/server').Vector3, name: string, rotation?: '0_degrees' | '90_degrees' | '180_degrees' | '270_degrees', mirror?: 'none' | 'x' | 'xz' | 'z', animationMode?: 'block_by_block' | 'layer_by_layer', animationSeconds?: number, includesEntites?: boolean, includesBlocks?: boolean, waterlogged: boolean, integrity: Number, seed: string}} LoadOptions
@@ -95,7 +95,7 @@ export class StructureBuilder {
 	/**
 	 * @param {string} name
 	 * @param {Dimension} dimension 
-	 * @param {Iterator<[BlockLocation, BlockLocation, number, number]>} iterator 
+	 * @param {Iterator<[import('@minecraft/server').Vector3, import('@minecraft/server').Vector3, number, number]>} iterator 
 	 * @param {SaveOptions} options 
 	 */
 	queueSave(name, dimension, iterator, options, id) {
@@ -119,7 +119,7 @@ export class StructureBuilder {
 
 				if (x >= length) x = 0, c = 0, z += 64, r++;
 				// content.warn({ length, x, z, c, r });
-				yield [new BlockLocation(x1 + x, y1, z1 + z), new BlockLocation(x1 + x + 63, y2, z1 + z + 63), c, r];
+				yield [{ x: x1 + x, y: y1, z: z1 + z }, { x: x1 + x + 63, y: y2, z: z1 + z + 63 }, c, r];
 			}
 		})();
 

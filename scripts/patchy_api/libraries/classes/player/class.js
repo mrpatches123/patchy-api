@@ -61,11 +61,15 @@ export class Player {
 	get scores() {
 		const player = this.player;
 		return new Proxy({}, {
-			get(target, objectiveId, value) {
-				return scoreboardBuilder.get(player, objectiveId);
+			get(target, objectiveId) {
+
+				const value = scoreboardBuilder.get(player, objectiveId);
+				// if (objectiveId === 'skycoins') content.warn({ t: 'get', objectiveId, value });
+				return value;
 			},
 			set(target, objectiveId, value) {
 				scoreboardBuilder.set(player, objectiveId, value);
+				content.warn({ t: 'set', objectiveId, value });
 				return Reflect.set(...arguments);
 			}
 		});
@@ -116,13 +120,16 @@ export class Player {
 		return this.player.dimension;
 	}
 	get headLocation() {
-		return this.player.headLocation;
+		return this.player.getHeadLocation();
 	}
 	get id() {
 		return this.player.id;
 	}
 	get isSneaking() {
 		return this.player.isSneaking;
+	}
+	get level() {
+		return this.player.level;
 	}
 	get location() {
 		return this.player.location;
@@ -140,7 +147,7 @@ export class Player {
 		return this.player.onScreenDisplay;
 	}
 	get rotation() {
-		return this.player.rotation;
+		return this.player.getRotation();
 	}
 	get scoreboard() {
 		return this.player.scoreboard;
@@ -158,26 +165,41 @@ export class Player {
 		return this.player.typeId;
 	}
 	get velocity() {
-		return this.player.velocity;
+		return this.player.getVelocity();
 	}
 	get viewVector() {
-		const { x, y, z } = this.player.viewDirection;
+		const { x, y, z } = this.player.getViewDirection();
 		return new Vector(x, y, z);
 	}
 	get viewDirection() {
-		return this.player.viewDirection;
+		return this.player.getViewDirection();
 	}
 	applyDamage(...args) {
 		return this.player.applyDamage(...args);
 	}
+	applyImpulse(...args) {
+		return this.player.applyImpulse(...args);
+	}
+	applyKnockback(...args) {
+		return this.player.applyImpulse(...args);
+	}
 	addEffect(...args) {
 		return this.player.addEffect(...args);
+	}
+	clearSpawn() {
+		return this.player.clearSpawn();
+	}
+	clearVelocity() {
+		return this.player.clearVelocity();
 	}
 	addTag(...args) {
 		return this.player.addTag(...args);
 	}
 	getBlockFromViewVector(...args) {
-		return this.player.getBlockFromViewVector(...args);
+		return this.player.getBlockFromViewDirection(...args);
+	}
+	getBlockFromViewDirection(...args) {
+		return this.player.getBlockFromViewDirection(...args);
 	}
 	getComponent(...args) {
 		return this.player.getComponent(...args);
@@ -192,13 +214,34 @@ export class Player {
 		return this.player.getEffect(...args);
 	}
 	getEntitiesFromViewVector(...args) {
-		return this.player.getEntitiesFromViewVector(...args);
+		return this.player.getBlockFromViewDirection(...args);
+	}
+	getEntitiesFromViewVector(...args) {
+		return this.player.getBlockFromViewDirection(...args);
+	}
+	getHeadLocation(...args) {
+		return this.player.getHeadLocation(...args);
 	}
 	getItemCooldown(...args) {
 		return this.player.getItemCooldown(...args);
 	}
+	getRotation() {
+		return this.player.getRotation();
+	}
+	getSpawnPosition() {
+		return this.player.getSpawnPosition();
+	}
 	getTags(...args) {
 		return this.player.getTags(...args);
+	}
+	getTotalXp() {
+		return this.player.getTotalXp();
+	}
+	getVelocity() {
+		return this.player.getVelocity();
+	}
+	getViewDirection() {
+		return this.player.getViewDirection();
 	}
 	hasComponent(...args) {
 		return this.player.hasComponent(...args);
@@ -212,6 +255,9 @@ export class Player {
 	kill(...args) {
 		return this.player.kill(...args);
 	}
+	playAnimation(...args) {
+		return this.player.playAnimation(...args);
+	}
 	playSound(...args) {
 		return this.player.playSound(...args);
 	}
@@ -224,11 +270,17 @@ export class Player {
 	removeTag(...args) {
 		return this.player.removeTag(...args);
 	}
+	resetLevel(...args) {
+		return this.player.resetLevel(...args);
+	}
 	runCommandAsync(...args) {
 		return this.player.runCommandAsync(...args);
 	}
 	setDynamicProperty(...args) {
 		return this.player.setDynamicProperty(...args);
+	}
+	setOnFire(...args) {
+		return this.player.setOnFire(...args);
 	}
 	setOp(...args) {
 		return this.player.setOp(...args);
@@ -236,8 +288,8 @@ export class Player {
 	setRotation(...args) {
 		return this.player.setRotation(...args);
 	}
-	setVelocity(...args) {
-		return this.player.setVelocity(...args);
+	setSpawn(...args) {
+		return this.player.setSpawn(...args);
 	}
 	startItemCooldown(...args) {
 		return this.player.startItemCooldown(...args);
@@ -248,8 +300,11 @@ export class Player {
 	teleportFacing(...args) {
 		return this.player.teleportFacing(...args);
 	}
+	sendMessage(...args) {
+		return this.player.sendMessage(...args);
+	}
 	tell(...args) {
-		return this.player.tell(...args);
+		return this.player.sendMessage(...args);
 	}
 	triggerEvent(...args) {
 		return this.player.triggerEvent(...args);

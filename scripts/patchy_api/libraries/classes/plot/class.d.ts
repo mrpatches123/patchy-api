@@ -26,7 +26,7 @@ interface PlotRules<key extends string> {
 	ruleSets?: PlotRuleSet[];
 	property: boolean;
 	plotNumberIdentifier?: key;
-	defaultPermision?: 'read' | 'write';
+	defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break';
 	defaultGamemode?: 0 | 1 | 2;
 	/**
 	 * default?= false

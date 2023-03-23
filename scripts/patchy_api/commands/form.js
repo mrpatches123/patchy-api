@@ -16,11 +16,11 @@ commandBuilder.register('forms', {
 	},
 	callback: (sender, args) => {
 		const [subcommand, key] = args;
-		if (!key) return sender.tell(JSON.stringify(formBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
-		if (!formBuilder.hasOwnProperty(key)) return sender.tell(`Key: ${key}, doesn't exsist!`);
+		if (!key) return sender.sendMessage(JSON.stringify(formBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
+		if (!formBuilder.hasOwnProperty(key)) return sender.sendMessage(`Key: ${key}, doesn't exsist!`);
 		switch (subcommand) {
 			case 'print':
-				sender.tell(JSON.stringify(formBuilder.generateForm(sender, key), (key, value) => (value instanceof Function) ? '<f>' : value, 4));
+				sender.sendMessage(JSON.stringify(formBuilder.generateForm(sender, key), (key, value) => (value instanceof Function) ? '<f>' : value, 4));
 				break;
 			case 'show':
 				formBuilder.showAwait(sender, key);

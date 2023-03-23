@@ -22,12 +22,12 @@ commandBuilder.register('rename', {
         const { name, selectedSlot } = sender;
 
         if (args[0] === undefined) {
-            sender.tell('§cYou must input a itemName!');
+            sender.sendMessage('§cYou must input a itemName!');
         } else {
             let inventory = sender.getComponent('minecraft:inventory').container;
             let item = inventory.getItem(selectedSlot);
             if (!item) {
-                sender.tell('§cYou must hold a item to rename!');
+                sender.sendMessage('§cYou must hold a item to rename!');
             } else {
                 item.nameTag = args[0].replaceAll('\\n', '\n');
                 inventory.setItem(selectedSlot, item);

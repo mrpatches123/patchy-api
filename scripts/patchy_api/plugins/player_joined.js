@@ -8,13 +8,5 @@ eventBuilder.subscribe('1init_player*API', {
 		global.playerMap[id] = {};
 		global.playerMap[id].loaded = true;
 		global.players[id] = player;
-	},
-	playerLeave: () => {
-		const ids = [...world.getPlayers()].map(({ id }) => id);
-		global.players.forEach((id, player) => {
-			if (!ids.includes(id)) {
-				delete global.onlinePlayers[id];
-			}
-		});
 	}
 });

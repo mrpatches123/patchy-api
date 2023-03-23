@@ -86,7 +86,7 @@ export class EventBuilder {
 				if (!(eventProperties instanceof Object)) throw new Error(`key: ${eventKey}, in subscription in ${newEventKey} does have a value of type: Object!`);
 				const { function: subscriptionFunction, entityOptions, forceNative } = eventProperties;
 				if (!(subscriptionFunction instanceof Function)) throw new Error(`key: function, in ${eventKey} in subscription in ${newEventKey} does have a value of type: Function!`);
-				if (forceNative !== undefined && ((eventKey in world.events) || (eventKey in system.events))) throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and eventkey: ${newEventKey}, is not in world.events or system.events!`);
+				if (eventKey !== 'custom' && forceNative !== undefined && ((eventKey in world.events) || (eventKey in system.events))) throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and eventkey: ${newEventKey}, is not in world.events or system.events or "custom"!`);
 				if (forceNative !== undefined && typeof forceNative !== 'boolean') throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and does have a value of type: Boolean!`);
 				if (entityOptions !== undefined && !eventTypeProperties[eventKey].entityEvent) throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} should not be defined since that event is not an entity event!`);
 				if (entityOptions !== undefined && !(entityOptions instanceof Object)) throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} is defined and value is not of type: interface(EntityEventOptions)!`);
@@ -121,17 +121,23 @@ export class EventBuilder {
 					this.worldSubscribe(key, eventKey, null, worldSystem, null, callback);
 				} else {
 					this.initSubscribe(eventKey);
-					const { subscription } = this.registry[eventKey];
+					const { subscription, entityOptionsKey } = this.registry[eventKey];
 					const nativeSubscribeObject = {};
 					//Object.entries(subscription).forEach(([oldEventKey, { function: subscriptionFunction, entityOptions, forceNative, entityOptionsKey }]) => {
 
-					subscription.forEach((oldEventKey, { function: subscriptionFunction, entityOptions, forceNative, entityOptionsKey }) => {
-						const worldSystem = (oldEventKey in world.events) ? 'world' : (oldEventKey in system.events) ? 'system' : false;
-						if (worldSystem) {
-							this.worldSubscribe(eventKey, oldEventKey, entityOptionsKey, worldSystem, entityOptions, subscriptionFunction);
-						} else {
-							nativeSubscribeObject[oldEventKey] = subscriptionFunction;
+					subscription.forEach((oldEventKey, eventProperties) => {
+						const { function: subscriptionFunction, entityOptions, forceNative } = eventProperties;
+						if (oldEventKey === 'custom') subscriptionFunction();
+						else {
+							const worldSystem = (oldEventKey in world.events) ? 'world' : (oldEventKey in system.events) ? 'system' : false;
+							if (worldSystem) {
+								this.worldSubscribe(eventKey, oldEventKey, entityOptionsKey, worldSystem, entityOptions, subscriptionFunction);
+							} else {
+								nativeSubscribeObject[oldEventKey] = subscriptionFunction;
+							}
 						}
+
+
 					});
 					this.subscribe(eventKey, nativeSubscribeObject);
 				}
@@ -175,7 +181,7 @@ export class EventBuilder {
 		if (!eventKeys) eventKeys = Object.keys(this.subscriptions);
 		if (typeof eventKeys !== 'string' && !(eventKeys instanceof Array)) throw new Error(`eventKeys: in params[1] is not of type: String or Array!`);
 		if (!(eventKeys instanceof Array)) eventKeys = [eventKeys], string = true;
-		content.warn({ key, eventKeys });
+		// content.warn({ key, eventKeys });
 		eventKeys.forEach((eventKey, i) => {
 			if (typeof eventKey !== 'string') throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] is not of type: String!`);
 			if (!this.subscriptions.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] has no keys subscribed`);
@@ -184,14 +190,15 @@ export class EventBuilder {
 			delete this.subscriptions[eventKey].keys[key];
 			if (!(--this.subscriptions[eventKey].subscriptions)) {
 				const { native, function: subscriptionFunction, oldEventKey } = this.subscriptions[eventKey];
-				const { subscription } = this.registry[eventKey];
+				const { subscription, unsubscription } = this.registry[eventKey];
+				if (unsubscription instanceof Function) unsubscription();
 				if (native) {
 					const worldSystem = (eventKey in world.events) ? 'world' : (eventKey in system.events) ? 'system' : false;
 					worldSystemEvents[worldSystem].events[oldEventKey].unsubscribe(subscriptionFunction);
 				} else {
 					const eventkeys = [];
 					Object.entries(subscription).forEach(([oldEventKey, { function: subscriptionFunction, entityOptions, forceNative, entityOptionsKey }]) => {
-						eventkeys.push(oldEventKey ?? entityOptionsKey);
+						eventkeys.push(entityOptionsKey ?? oldEventKey);
 					});
 					this.unsubscribe(eventKey, eventkeys);
 				}
@@ -213,7 +220,7 @@ export class EventBuilder {
 	 * @private
 	 */
 	worldSubscribe(key, oldEventKey, entityOptionsKey, worldSystem, entityOptions, callback) {
-		// content.warn({ oldEventKey, bool: this.subscriptions?.[entityOptionsKey ?? oldEventKey]?.worldSubscribed ?? false });
+		content.warn(entityOptionsKey);
 		if (this.subscriptions?.[entityOptionsKey ?? oldEventKey]?.worldSubscribed ?? false) return this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key] = { suppessed: false, callback, native: true, oldEventKey };
 		// content.warn({ oldEventKey });
 		this.initSubscribe(entityOptionsKey ?? oldEventKey);
@@ -225,7 +232,7 @@ export class EventBuilder {
 		if (eventTypeProperties[oldEventKey]?.modifiables?.length) {
 			subscribedEventFunction = (event) => {
 				time.start(`Events*API*${entityOptionsKey ?? oldEventKey}`);
-				const { playerKey, playerOnly, modifiables } = eventTypeProperties[oldEventKey];
+				const { playerKey, playerOnly, modifiables = [] } = eventTypeProperties[oldEventKey] ?? {};
 				let eventClone = (playerKey) ? {} : event;
 				if (playerKey) {
 					const player = event[playerKey];
@@ -249,14 +256,14 @@ export class EventBuilder {
 					}
 				});
 				this.subscriptions[oldEventKey].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}`);
-				content.warn({ eventClone });
+				// content.warn({ eventClone });
 				modifiables.forEach(key => event[key] = eventClone[key]);
 			};
 		} else {
 			subscribedEventFunction = (event) => {
-
 				time.start(`Events*API*${entityOptionsKey ?? oldEventKey}`);
-				const { playerKey, playerOnly } = eventTypeProperties[oldEventKey];
+				// content.warn(oldEventKey);
+				const { playerKey } = eventTypeProperties?.[oldEventKey] ?? {};
 				let eventClone = (playerKey) ? {} : event;
 				if (playerKey) {
 					const player = event[playerKey];

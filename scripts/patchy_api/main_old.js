@@ -30,7 +30,7 @@ global.tickTime.tick = {};
 let oldDate;
 global.loaded = false;
 global.deltaTimeArray = [];
-//Array(256).fill('').map((item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 })).filter(coord => Boolean(overworld.getEntitiesAtBlockLocation(new BlockLocation(coord.x, -65, coord.z))));
+//Array(256).fill('').map((item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 })).filter(coord => Boolean(overworld.getEntitiesAtBlockLocation({x: coord.x, y:  -65 z:  coord.z))));
 
 global.playerMap = {};
 global.joiningPlayers = [];
@@ -153,7 +153,7 @@ world.events.tick.subscribe(event => {
         if (global.loaded) {
 
             global.tickTime.tick = {};
-            // content.warn(native.stringify(overworld.getBlock(new BlockLocation(35, 81, 97)).getComponent('inventory')));
+            // content.warn(native.stringify(overworld.getBlock({x: 35, y:  81 z:  97)).getComponent('inventory')));
             const { deltaTime } = event;
             global.databases = databases;
             deltaTimeArray.unshift(deltaTime);
@@ -323,19 +323,19 @@ world.events.beforeExplosion.subscribe(event => {
                 if (callImpactedBlocks) {
                     impactedBlocks = impactedBlocks.filter(blockLocation => callImpactedBlocks
                         .some(blockLocation1 => blockLocation1 === blockLocation))
-                        .map(({ x, y, z }) => new BlockLocation(x, y, z));;
-                }
+                        .map(({ x, y, z }) => { x: x, y:  y z:  z));;
+}
                 cancels.push(cancel);
             }
 
         } catch (error) {
-            errorBuider.log(error, error.stack, { event: 'beforeExplosion', key });
-        }
+    errorBuider.log(error, error.stack, { event: 'beforeExplosion', key });
+}
     });
-    if (cancels.some(bool => bool)) { event.cancel = true; }
+if (cancels.some(bool => bool)) { event.cancel = true; }
 
-    event.impactedBlocks = impactedBlocks;
-    global.tickTime.beforeExplosion = time.end('beforeExplosion');
+event.impactedBlocks = impactedBlocks;
+global.tickTime.beforeExplosion = time.end('beforeExplosion');
 });
 world.events.beforeItemDefinitionEvent.subscribe(event => {
     time.start('beforeItemDefinitionEvent');

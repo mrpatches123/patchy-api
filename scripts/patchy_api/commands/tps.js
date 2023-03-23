@@ -15,7 +15,7 @@ commandBuilder.register('tps', {
         } else {
             const { deltaTimes } = global;
             const tps = (1 / (deltaTimes.reduce((s, c) => s + c) / deltaTimes.length)).round(2);
-            sender.tell((tps < 20) ? tps.toString() : '19.99');
+            sender.sendMessage((tps < 20) ? tps.toString() : '19.99');
         }
     }
 });

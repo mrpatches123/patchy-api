@@ -1,4 +1,4 @@
-import { Dimension, world, BlockLocation, Location } from '@minecraft/server';
+import { Dimension, system, world } from '@minecraft/server';
 
 // function getKeys(object) {
 // 	const prototype = Object.getPrototypeOf({});
@@ -9,12 +9,6 @@ import { Dimension, world, BlockLocation, Location } from '@minecraft/server';
 // 	}
 // 	return keys;
 // };
-/**
- * @typedef {Object} {x: number, y: number, z: number}
- * @property {Number} x
- * @property {Number} y
- * @property {Number} z
- */
 const content = {
 	warn(...messages) {
 		console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
@@ -31,7 +25,7 @@ function metricNumbers(value, place = 2) {
 class LeaderboardBuilder {
 	constructor() {
 		this.entities = {};
-		world.events.tick.subscribe(() => {
+		system.runInterval(() => {
 			const players = [...world.getPlayers()];
 			const entities = [...overworld.getEntities({ type: 'patches:leaderboard' })];
 			// content.warn({ len: entities.length, mpa: entities.map(({ typeId }) => typeId) });
@@ -136,8 +130,8 @@ class LeaderboardBuilder {
 
 			const { x, y, z } = position;
 
-			let entity = [...overworld.getEntitiesAtBlockLocation(new BlockLocation(x, y, z))].filter(({ typeId }) => typeId === 'patches:leaderboard').sort(({ location: { x: aex, y: aey, z: aez } }, { location: { x: bex, y: bey, z: bez } }) => Math.hypot(bex - x, bey - y, bez - z) - Math.hypot(aex - x, aey - y, aez - z))[0];
-			if (!entity) entity = overworld.spawnEntity('patches:leaderboard', new Location(x, y, z));
+			let entity = [...overworld.getEntitiesAtBlockLocation({ x, y, z })].filter(({ typeId }) => typeId === 'patches:leaderboard').sort(({ location: { x: aex, y: aey, z: aez } }, { location: { x: bex, y: bey, z: bez } }) => Math.hypot(bex - x, bey - y, bez - z) - Math.hypot(aex - x, aey - y, aez - z))[0];
+			if (!entity) entity = overworld.spawnEntity('patches:leaderboard', { x: x, y: y, z: z });
 			const { id } = entity;
 			if (!this.entities.hasOwnProperty(id)) this.entities[id] = {};
 			const options = { position: { x, y, z }, objective, maxLength, title, format, online: isOnline };
@@ -166,7 +160,7 @@ class LeaderboardBuilder {
 	 */
 	delete(position) {
 		const { x, y, z } = position;
-		let entity = [...overworld.getEntitiesAtBlockLocation(new BlockLocation(x, y, z))].sort(({ location: { x: aex, y: aey, z: aez } }, { location: { x: bex, y: bey, z: bez } }) => Math.hypot(bex - x, bey - y, bez - z) - Math.hypot(aex - x, aey - y, aez - z))[0];
+		let entity = [...overworld.getEntitiesAtBlockLocation({ x, y, z })].sort(({ location: { x: aex, y: aey, z: aez } }, { location: { x: bex, y: bey, z: bez } }) => Math.hypot(bex - x, bey - y, bez - z) - Math.hypot(aex - x, aey - y, aez - z))[0];
 		if (!entity) return;
 		const { id } = entity;
 		delete this.entities[id];
