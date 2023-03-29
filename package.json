@@ -9,7 +9,8 @@
     "@minecraft/server-net": "^1.0.0-beta.11940b24",
     "@minecraft/server-ui": "^1.0.0-beta.release.1.19.40",
     "caller-callsite": "^5.0.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "typescript": "^5.0.2"
   },
   "type": "module"
 }

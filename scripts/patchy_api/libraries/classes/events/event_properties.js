@@ -67,6 +67,9 @@ const eventTypeProperties = {
 		]
 
 	},
+	beforePlayerScaffoldPlace: {
+		custom: true
+	},
 	beforeWatchdogTerminate: {
 		modifiables: [
 			'cancel'

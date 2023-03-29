@@ -229,8 +229,10 @@ export class PlotBuilder {
 	 * @param {string} key 
 	 */
 	setCurrent(player, key) {
+		if (!player) throw new Error('player is not defined at setCurrent');
 		player.properties.currentPlot = key;
 		player.memory.lastLocation = undefined;
+		if (!key) return;
 		const { exclusive, teleport: { key: teleportKey } } = this.plots[key].rules;
 		if (!exclusive) return;
 		if (!teleportKey) return;
@@ -375,7 +377,8 @@ export class PlotBuilder {
 			},
 			beforeItemUseOn: (event) => {
 				const { blockFace, source: player } = event;
-				const blockLocation = player.getBlockFromViewDirection();
+				const blockLocation = event.getBlockLocation() ?? player.getBlockFromViewDirection();
+				if (!blockLocation) return;
 				if (!(player instanceof Player)) return;
 				const { scores, properties, location, memory, rotation, dimension, isSneaking } = player;
 				const { ingorePlotSystem } = scores;
@@ -415,7 +418,40 @@ export class PlotBuilder {
 				}
 
 
-			}
+			},
+			beforePlayerScaffoldPlace: (event) => {
+				const { blockLocation, player } = event;
+				const { scores, properties, location, memory, rotation, dimension, isSneaking } = player;
+				const { ingorePlotSystem } = scores;
+				const { currentPlot } = properties;
+				if (!currentPlot || ingorePlotSystem) return;
+				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot].rules;
+				const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
+				let plotNumber;
+				if (exclusive) plotNumber = 0;
+				else if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
+				else if (property) plotNumber = properties[plotNumberIdentifier];
+				else plotNumber = scores[plotNumberIdentifier];
+				if (!isDefined(plotNumber)) return;
+				switch (permision) {
+					case 'place':
+					case 'write': {
+						const ruleSet = this.getRuleSet(currentPlot, plotNumber);
+						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: { x: mx = 0, y: my = 0, z: mz = 0 } = {} } = ruleSet ?? {};
+						const start = { x: sx + mx, y: sy + my, z: sz + mz };
+						const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
+						content.warn({ t: 'beforeItemUseOn', start, end, bool: betweenBlockVector3(blockLocation, start, end) });
+						if (betweenBlockVector3(blockLocation, start, end)) return;
+					}
+					case 'break':
+					case 'read': {
+						event.cancel = true;
+						break;
+					}
+				}
+
+
+			},
 		});
 		this.subscribed = true;
 	}

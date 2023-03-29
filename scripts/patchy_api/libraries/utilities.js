@@ -1,5 +1,9 @@
-import { world, Items, Player, Entity, XYRotation } from '@minecraft/server';
+import { world, Items, Player, Entity, XYRotation, BlockPermutation } from '@minecraft/server';
 import errorLogger from './classes/error.js';
+export function getXZVectorRY(ry) {
+    const rads = (ry + 180) * Math.PI / 180;
+    return { x: Math.sin(rads), y: 0, z: Math.cos(rads) };
+}
 export const content = {
     warn(...messages) {
         console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
@@ -16,6 +20,26 @@ export function isVector2(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
+
+export function rotationToDirection(rotation) {
+    let { x, y } = rotation;
+
+    x = (x / 45 + 2) | 0;
+    y = ((y + 45) / 90 + 2) | 0;
+    if (x < 1) return 'up';
+    else if ((x > 2)) return 'down';
+    switch (y) {
+        case 2:
+            return 'south';
+        case 4:
+        case 0:
+            return 'north';
+        case 1:
+            return 'east';
+        case 3:
+            return 'west';
+    }
+};
 export function isDefined(input) {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }

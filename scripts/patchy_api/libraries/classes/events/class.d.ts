@@ -79,6 +79,11 @@ export class BeforePistonActivateEvent {
 	readonly isExpanding: boolean;
 	readonly piston: BlockPistonComponent;
 }
+export class beforePlayerScaffoldPlace {
+	cancel: boolean;
+	player: Player;
+	blockLocation: Vector3;
+}
 export class BlockBreakEvent {
 	readonly block: Block;
 	readonly brokenBlockPermutation: BlockPermutation;
@@ -372,6 +377,7 @@ export interface EventKeyTypes {
 	scriptEventReceive: ScriptEventCommandMessageEvent;
 	worldLoad: undefined;
 	scoreboardChange: ScoreboardChangeEvent;
+	beforePlayerScaffoldPlace: beforePlayerScaffoldPlace;
 };
 
 type EventObject = { [key in keyof EventKeyTypes]: (arg: EventKeyTypes[key]) => {}; };

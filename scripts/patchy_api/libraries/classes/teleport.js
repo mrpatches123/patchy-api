@@ -221,8 +221,6 @@ class TeleportBuilder {
 		if (random instanceof Object) {
 			content.warn('-----generating--------------');
 			location = this.getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius);
-			const { x, y, z } = location;
-			content.warn({ location });
 			if (randomRotation) {
 				facing = undefined;
 				rotation = {};
@@ -236,6 +234,7 @@ class TeleportBuilder {
 		} else {
 			if (!rotation) { rotation = rotationPlayer; }
 			const { x: rx, y: ry } = rotation;
+			content.warn({ location, t: 'teleportlocation' });
 			player.teleport(location, dimension, rx, ry);
 		}
 	};

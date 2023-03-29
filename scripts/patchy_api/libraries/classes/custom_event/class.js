@@ -41,7 +41,7 @@ export class CustomEvent {
 				if (suppessed) return;
 				time.start(`Events*API*${this.eventKey}*${key}`);
 				// if (this.eventKey === 'tickAfterLoad' && key === 'position*API') content.warn({ key, bool2: callback instanceof Function, bool: callbackForKey instanceof Function });
-				if (callback instanceof Function) callback(key, callbackForKey, i);
+				if (callback instanceof Function) callback(key, eventResponse, callbackForKey, i);
 				else callbackForKey(eventResponse);
 				// content.warn(this.eventKey, eventBuilder.subscriptions[this.eventKey].keys);
 				eventBuilder.subscriptions[this.eventKey].keys[key].time = time.end(`Events*API*${this.eventKey}*${key}`);

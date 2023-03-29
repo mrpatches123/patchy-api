@@ -240,6 +240,10 @@ export class EventBuilder {
 					for (const key in event) {
 						if (prototype.hasOwnProperty(key)) continue;
 						if (key === playerKey) { eventClone[key] = setProptotype(player); continue; }
+						if (event[key] instanceof Function) {
+							eventClone[key] = (...args) => { return event[key](...args); };
+							continue;
+						}
 						eventClone[key] = event[key];
 					}
 				}
@@ -271,6 +275,10 @@ export class EventBuilder {
 					for (const key in event) {
 						if (prototype.hasOwnProperty(key)) continue;
 						if (key === playerKey) { eventClone[key] = setProptotype(player); continue; }
+						if (eventClone[key] instanceof Function) {
+							eventClone[key] = (...args) => { return event[key](...args); };
+							continue;
+						}
 						eventClone[key] = event[key];
 					}
 				};
