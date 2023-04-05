@@ -1,4 +1,4 @@
-import { MinecraftBlockTypes, system, world, Container } from '@minecraft/server';
+import { MinecraftBlockTypes, system, world, Container, Vector } from '@minecraft/server';
 function startwodjopwpwdjwwpodjdwo() {
 	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
 }
@@ -8,7 +8,9 @@ system.events.beforeWatchdogTerminate.subscribe((event) => {
 });
 world.events.itemUseOn.subscribe((event) => {
 	const { source } = event;
-	const blockLocation = event.getBlockLocation();
+	let blockLocation = event.getBlockLocation();
+	blockLocation = Vector.add(blockLocation, { x: 0, y: -1, z: 0 });
+	blockLocation = Vector.add(blockLocation, { x: 0, y: 1, z: 0 });
 	const block = source.dimension.getBlock(blockLocation);
 	/**
 	 * @type {Container}

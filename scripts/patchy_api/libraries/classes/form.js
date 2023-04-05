@@ -18,9 +18,9 @@ const responses = {
 
 /**
  * @typedef {Object} ObjectForm
- * @property {Array<ModalTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => {})>} modal
- * @property {Array<ActionTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => {})>} action
- * @property {Array<MessageTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => {})>} message
+ * @property {Array<ModalTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => ModalTypes)>} modal
+ * @property {Array<ActionTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => ActionTypes)>} action
+ * @property {Array<MessageTypes | ((receiver: Player, i: Number, ...extraArguments: Array<any>) => MessageTypes)>} message
  */
 
 /**
@@ -29,28 +29,28 @@ const responses = {
 
 /**
  * @typedef {Object} ModalTypes
- * @property {ModalDropdown | generationCallback} dropdown
- * @property {String | generationCallback} title
- * @property {ModalSlider | generationCallback} slider
- * @property {ModalTextField | generationCallback} textField
- * @property {Modaltoggle | generationCallback} toggle
+ * @property {ModalDropdown | (receiver: Player, i: Number, ...extraArguments: Array<any>) => ModalDropdown} dropdown
+ * @property {String | (receiver: Player, i: Number, ...extraArguments: Array<any>) => String} title
+ * @property {ModalSlider | (receiver: Player, i: Number, ...extraArguments: Array<any>) => ModalSlider} slider
+ * @property {ModalTextField | (receiver: Player, i: Number, ...extraArguments: Array<any>) => ModalTextField} textField
+ * @property {Modaltoggle | (receiver: Player, i: Number, ...extraArguments: Array<any>) => Modaltoggle} toggle
  * @property {(receiver: Player, selection: Number | String, ...extraArguments: Array<any>) => {}} callback
  */
 
 /**
  * @typedef {Object} ModalDropdown
- * @property {String | generationCallback} label
- * @property {Array<String> | generationCallback} options
- * @property {Number | generationCallback} defaultValueIndex
+ * @property {String | (receiver: Player, i: Number, ...extraArguments: Array<any>) => String} label
+ * @property {Array<String> | (receiver: Player, i: Number, ...extraArguments: Array<any>) => Array<String>} options
+ * @property {Number | (receiver: Player, i: Number, ...extraArguments: Array<any>) => Number} defaultValueIndex
  */
 
 /**
  * @typedef {Object} ModalSlider
- * @property {String | generationCallback} label
- * @property {Number | generationCallback} minimumValue
- * @property {Number | generationCallback} maximumValue
- * @property {Number | generationCallback} valueStep
- * @property {Number | generationCallback} defaultValue
+ * @property {String | (receiver: Player, i: Number, ...extraArguments: Array<any>) => String} label
+ * @property {Number | (receiver: Player, i: Number, ...extraArguments: Array<any>) => Number} minimumValue
+ * @property {Number | (receiver: Player, i: Number, ...extraArguments: Array<any>) => Number} maximumValue
+ * @property {Number | (receiver: Player, i: Number, ...extraArguments: Array<any>) => Number} valueStep
+ * @property {Number | (receiver: Player, i: Number, ...extraArguments: Array<any>) => Number} defaultValue
  */
 
 /**
@@ -413,7 +413,7 @@ class FormBuilder {
         }
         content.warn(formArray);
         formArray.forEach((object, i) => {
-
+            if (!object) return;
             object.filter(key => key !== 'callback').forEach((method, parameters, i) => {
                 // try {
                 if (method === 'toggle' && form instanceof action) {

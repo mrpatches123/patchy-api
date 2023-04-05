@@ -1,6 +1,6 @@
-import { getXZVectorRY, rotationToDirection, offsetVector3, parseCommand, metricNumbers, isVector2, betweenBlockVector3, betweenVector3, isDefined, permutationClone, RemovableTree, generateRandomString, chunkStringRegex, chunkString, obfuscate255, deobfuscate255, end, overworld, nether, andArray, assignToPath, blockFaceToCoords, combine, content, getNames, ItemsGet, hypot2, hypot3, lockedItemKey, crossHareDataKey, native, parseList, pathIsObject, pathIsSettable, rainbow, rainbowWeight, randomCoordsOutsideCircle, server, sort3DRange, sortRange, staff, toProperCase, typeOf } from './libraries/utilities.js';
+import { relativeParse, randomIntegerBetween, getXZVectorRY, rotationToDirection, offsetVector3, parseCommand, metricNumbers, isVector2, betweenBlockVector3, betweenVector3, isDefined, permutationClone, RemovableTree, generateRandomString, chunkStringRegex, chunkString, obfuscate255, deobfuscate255, end, overworld, nether, andArray, assignToPath, blockFaceToCoords, combine, content, getNames, ItemsGet, hypot2, hypot3, lockedItemKey, crossHareDataKey, native, parseList, pathIsObject, pathIsSettable, rainbow, rainbowWeight, randomCoordsOutsideCircle, server, sort3DRange, sortRange, staff, toProperCase, typeOf } from './libraries/utilities.js';
 
-export { getXZVectorRY, rotationToDirection, offsetVector3, parseCommand, metricNumbers, isVector2, betweenBlockVector3, betweenVector3, isDefined, permutationClone, RemovableTree, generateRandomString, chunkStringRegex, chunkString, obfuscate255, deobfuscate255, end, overworld, nether, andArray, assignToPath, blockFaceToCoords, combine, content, getNames, ItemsGet, hypot2, hypot3, lockedItemKey, crossHareDataKey, native, parseList, pathIsObject, pathIsSettable, rainbow, rainbowWeight, randomCoordsOutsideCircle, server, sort3DRange, sortRange, staff, toProperCase, typeOf };
+export { relativeParse, randomIntegerBetween, getXZVectorRY, rotationToDirection, offsetVector3, parseCommand, metricNumbers, isVector2, betweenBlockVector3, betweenVector3, isDefined, permutationClone, RemovableTree, generateRandomString, chunkStringRegex, chunkString, obfuscate255, deobfuscate255, end, overworld, nether, andArray, assignToPath, blockFaceToCoords, combine, content, getNames, ItemsGet, hypot2, hypot3, lockedItemKey, crossHareDataKey, native, parseList, pathIsObject, pathIsSettable, rainbow, rainbowWeight, randomCoordsOutsideCircle, server, sort3DRange, sortRange, staff, toProperCase, typeOf };
 
 import eventBuilder from './libraries/classes/events/export_instance.js';
 import players from './libraries/classes/players/export_instance.js';
@@ -27,7 +27,8 @@ import preformance from './libraries/classes/preformace.js';
 import propertyBuilder from './libraries/classes/property.js';
 import fill from './libraries/classes/fill.js';
 import structureBuilder from './libraries/classes/structure/export_instance.js';
-export { structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, ActionForm, MessageForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
+import leaderboardBuilder from './libraries/classes/leaderboard.js';
+export { leaderboardBuilder, structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, ActionForm, MessageForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
 
 
 

@@ -286,7 +286,20 @@ const blockFaceToNumber = {
     "west": 4,
 };
 
-
+export function randomIntegerBetween(min, max) {
+    return Math.floor(min + Math.random() * (max - min));
+};
+export function relativeParse(player, input, direction) {
+    if (input.includes('~')) {
+        if (input.endsWith('*')) {
+            return Math.floor((player.location[direction] + Number(input.replace(/[*~]/g, ''))) | 0) + 0.5;
+        } else {
+            return player.location[direction] + Number(input.replace('~', ''));
+        }
+    } else {
+        return Number(input);
+    }
+}
 export function blockFaceToCoords(blockFace, { x, y, z }) {
     blockFace = blockFaceToNumber[blockFace];
     content.warn({ blockFace });
@@ -654,7 +667,13 @@ export function ItemsGet(id, log = false) {
 }
 
 export const colors = ['4', 'c', '6', 'g', 'e', 'a', '2', '3', '9', '1', 'd', '5'];
-export function rainbowWeight(value, reversed) {
+/**
+ * 
+ * @param {Number} value 0-1
+ * @param {Bool} reversed 
+ * @returns {String}
+ */
+export function rainbowWeight(value, reversed = false) {
     const colorsA = (reversed) ? colors.reverseCopy() : colors;
     // content.warn({color: ~~(((value > 1) ? 1 : value) * (colors2.length - 1)), colors})
     return colorsA[~~(((value > 1) ? 1 : value) * (colorsA.length - 1))];
@@ -725,28 +744,40 @@ export function parseCommand(message, prefix) {
         switch (char) {
             case '{':
                 switch (finding) {
+                    case 'string':
+                        break;
                     case 'json':
+                        braceCount[0]++;
                         break;
                     default:
                         braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
                         output.push('');
                         o++;
                         finding = 'json';
+                        braceCount[0]++;
                         break;
 
                 }
                 output[o] += char;
-                braceCount[0]++;
+
                 break;
             case '}':
+                switch (finding) {
+                    case 'json':
+                        if (braceCount[0] !== ++braceCount[1] || bracketCount[0] !== bracketCount[1] || (quoteCount && quoteCount & 1)) break;
+                        braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
+                        break;
+                }
                 output[o] += char;
-                if (braceCount[0] !== ++braceCount[1] || bracketCount[0] !== bracketCount[1] || (quoteCount && quoteCount & 1)) break;
-                braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
                 break;
             case ']':
+                switch (finding) {
+                    case 'json':
+                        if (bracketCount[0] !== ++bracketCount[1] || braceCount[0] !== braceCount[1] || (quoteCount && quoteCount & 1)) break;
+                        braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
+                        break;
+                }
                 output[o] += char;
-                if (bracketCount[0] !== ++bracketCount[1] || braceCount[0] !== braceCount[1] || (quoteCount && quoteCount & 1)) break;
-                braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0, finding = false;
                 break;
             case '"':
                 switch (finding) {
@@ -766,7 +797,10 @@ export function parseCommand(message, prefix) {
                 break;
             case '[':
                 switch (finding) {
+                    case 'string':
+                        break;
                     case 'json':
+                        bracketCount[0]++;
                         break;
                     default:
                         output.push('');
@@ -776,7 +810,7 @@ export function parseCommand(message, prefix) {
 
                 }
                 output[o] += char;
-                bracketCount[0]++;
+
                 break;
             case ' ':
                 switch (finding) {

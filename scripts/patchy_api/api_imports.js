@@ -52,3 +52,4 @@ import './commands/loads.js';
 import './commands/scoreboard.js';
 import './commands/tags.js';
 import './commands/bounds_logger.js';
+import './commands/text.js';

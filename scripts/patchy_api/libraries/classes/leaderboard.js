@@ -1,4 +1,5 @@
 import { Dimension, system, world } from '@minecraft/server';
+import eventBuilder from './events/export_instance';
 
 // function getKeys(object) {
 // 	const prototype = Object.getPrototypeOf({});
@@ -25,65 +26,68 @@ function metricNumbers(value, place = 2) {
 class LeaderboardBuilder {
 	constructor() {
 		this.entities = {};
-		system.runInterval(() => {
-			const players = [...world.getPlayers()];
-			const entities = [...overworld.getEntities({ type: 'patches:leaderboard' })];
-			// content.warn({ len: entities.length, mpa: entities.map(({ typeId }) => typeId) });
-			entities.forEach((entity) => {
-				const { id } = entity;
-				if (!this.entities.hasOwnProperty(id)) {
-					const tags = entity.getTags();
-					if (!tags) return entity.triggerEvent('kill_lb');
-					const optionsString = tags.find(tag => tag.startsWith('options:'));
-					if (!optionsString) return entity.triggerEvent('kill_lb');
-					this.entities[id] = JSON.parse(optionsString.substring('options:'.length));
-					this.entities[id].scores = {};
-					if (!this.entities[id].online) {
-						const scoresString = tags.find(tag => tag.startsWith('scores:'));
-						if (scoresString) {
-							this.entities[id].scores = JSON.parse(scoresString.substring('scores:'.length));
+		eventBuilder.subscribe('leaderboard*API', {
+			scoreboardChange: () => {
+				const players = [...world.getPlayers()];
+				const entities = [...overworld.getEntities({ type: 'patches:leaderboard' })];
+				if (!entities.length) return;
+				// content.warn({ len: entities.length, mpa: entities.map(({ typeId }) => typeId) });
+				entities.forEach((entity) => {
+					const { id } = entity;
+					if (!this.entities.hasOwnProperty(id)) {
+						const tags = entity.getTags();
+						if (!tags) return entity.triggerEvent('kill_lb');
+						const optionsString = tags.find(tag => tag.startsWith('options:'));
+						if (!optionsString) return entity.triggerEvent('kill_lb');
+						this.entities[id] = JSON.parse(optionsString.substring('options:'.length));
+						this.entities[id].scores = {};
+						if (!this.entities[id].online) {
+							const scoresString = tags.find(tag => tag.startsWith('scores:'));
+							if (scoresString) {
+								this.entities[id].scores = JSON.parse(scoresString.substring('scores:'.length));
+							}
 						}
 					}
-				}
-				const entityStorage = this.entities[id];
-				let { scores = {}, online, objective, maxLength, format, title } = entityStorage;
-				let leaderboardPlayers = {};
-				let save = false;
-				if (!this.entities[id].hasOwnProperty('scores')) this.entities[id].scores = {};
-				players.forEach(player => {
-					const { id: playerId, name } = player;
+					const entityStorage = this.entities[id];
+					let { scores = {}, online, objective, maxLength, format, title } = entityStorage;
+					let leaderboardPlayers = {};
+					let save = false;
+					if (!this.entities[id].hasOwnProperty('scores')) this.entities[id].scores = {};
+					players.forEach(player => {
+						const { id: playerId, name } = player;
 
-					const score = getScore(player, objective);
+						const score = getScore(player, objective);
 
-					if (score === undefined) return;
+						if (score === undefined) return;
 
-					leaderboardPlayers[playerId] = { name, value: score };
-					if (online) return;
-					if (scores?.[playerId]?.value === score) return;
-					if (!this.entities[id].scores.hasOwnProperty(playerId)) this.entities[id].scores[playerId] = {};
-					this.entities[id].scores[playerId].value = score;
-					save = true;
+						leaderboardPlayers[playerId] = { name, value: score };
+						if (online) return;
+						if (scores?.[playerId]?.value === score) return;
+						if (!this.entities[id].scores.hasOwnProperty(playerId)) this.entities[id].scores[playerId] = {};
+						this.entities[id].scores[playerId].value = score;
+						save = true;
+					});
+
+					if (!online) {
+						Object.assign(scores, leaderboardPlayers);
+						leaderboardPlayers = scores;
+					}
+					// content.warn({ leaderboardPlayers, scores });
+					const leaderboard = Object.entries(leaderboardPlayers).map(([playerId, { value, name }]) => ({ id: playerId, value, name })).sort(({ value: aValue }, { value: bValue }) => bValue - aValue).slice(0, maxLength);
+
+					entity.nameTag = [title, ...leaderboard.map(({ value, name }, i) => format.replace('${#}', i + 1).replace('${name}', name).replace('${score}', value).replace('${score*f}', metricNumbers(value, 1)))].join('\n');
+					// content.warn({ tag: entity.nameTag });
+					if (!save) return;
+					const tags = entity.getTags();
+					const leaderboardObject = {};
+					leaderboard.forEach(({ id, value, name }) => {
+						leaderboardObject[id] = { value, name };
+					});
+					const scoresString = tags.find(tag => tag.startsWith('scores:'));
+					if (scoresString) entity.removeTag(scoresString);
+					entity.addTag('scores:' + JSON.stringify(leaderboardObject));
 				});
-
-				if (!online) {
-					Object.assign(scores, leaderboardPlayers);
-					leaderboardPlayers = scores;
-				}
-				// content.warn({ leaderboardPlayers, scores });
-				const leaderboard = Object.entries(leaderboardPlayers).map(([playerId, { value, name }]) => ({ id: playerId, value, name })).sort(({ value: aValue }, { value: bValue }) => bValue - aValue).slice(0, maxLength);
-
-				entity.nameTag = [title, ...leaderboard.map(({ value, name }, i) => format.replace('${#}', i + 1).replace('${name}', name).replace('${score}', value).replace('${score*f}', metricNumbers(value, 1)))].join('\n');
-				// content.warn({ tag: entity.nameTag });
-				if (!save) return;
-				const tags = entity.getTags();
-				const leaderboardObject = {};
-				leaderboard.forEach(({ id, value, name }) => {
-					leaderboardObject[id] = { value, name };
-				});
-				const scoresString = tags.find(tag => tag.startsWith('scores:'));
-				if (scoresString) entity.removeTag(scoresString);
-				entity.addTag('scores:' + JSON.stringify(leaderboardObject));
-			});
+			}
 		});
 	}
 	/**
@@ -131,7 +135,7 @@ class LeaderboardBuilder {
 			const { x, y, z } = position;
 
 			let entity = [...overworld.getEntitiesAtBlockLocation({ x, y, z })].filter(({ typeId }) => typeId === 'patches:leaderboard').sort(({ location: { x: aex, y: aey, z: aez } }, { location: { x: bex, y: bey, z: bez } }) => Math.hypot(bex - x, bey - y, bez - z) - Math.hypot(aex - x, aey - y, aez - z))[0];
-			if (!entity) entity = overworld.spawnEntity('patches:leaderboard', { x: x, y: y, z: z });
+			if (!entity) entity = overworld.spawnEntity('patches:leaderboard', { x, y, z });
 			const { id } = entity;
 			if (!this.entities.hasOwnProperty(id)) this.entities[id] = {};
 			const options = { position: { x, y, z }, objective, maxLength, title, format, online: isOnline };

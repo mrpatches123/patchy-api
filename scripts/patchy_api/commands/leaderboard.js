@@ -1,22 +1,11 @@
-
-import commandBuilder from "../libraries/classes/commands.js";
-import leaderboardBuilder from '../libraries/classes/leaderboard.js';
 import config from '../config.js';
 import { world } from "@minecraft/server";
-import { content } from "../modules.js";
+import { content, relativeParse, leaderboardBuilder, commandBuilder } from "../modules.js";
 
 const { commandPrefix: prefix } = config;
-function relativeParse(player, input, direction) {
-	if (input.includes('~')) {
-		if (input.endsWith('*')) {
-			return ((player.location[direction] + Number(input.replace(/[*~]/g, ''))) | 0) + 0.5;
-		} else {
-			return player.location[direction] + Number(input.replace('~', ''));
-		}
-	} else {
-		return Number(input);
-	}
-}
+//!lb create offline ~* ~* ~* prestige 10 "§dAll Time Presteige Leaderboard§r" "§9#${#} §7${name} - §1${score*f}§r"
+//!lb update offline ~* ~* ~* prestige 10 "§dAll Time Presteige Leaderboard§r" "§9#${#} §7${name} - §1${score*f}§r"
+
 commandBuilder.register('leaderboard', {
 	description: "Used update, delete and add a ",
 	usages: [
@@ -33,24 +22,27 @@ commandBuilder.register('leaderboard', {
 	},
 	aliases: ['lb'],
 	callback: (sender, args) => {
+		content.warn(args);
+		const [subCommand] = args;
+		if (!subCommand) return sender.sendMessage(`§csubCommand, ${subCommand}, is not defined`);
 		const params = args.slice(1);
 
 
-		switch (args[0]) {
+		switch (subCommand) {
 			case 'print': {
 				world.say(JSON.stringify(leaderboardBuilder, null, 4));
 				break;
 			}
 			case 'create': {
 
-				let [onlineOffine, x, y, z, objective, maxLength, title, format] = params;
-
+				let [onlineOffine, x, y, z, objective, maxLength, title, ...format] = params;
+				format = format.join('');
 				x = relativeParse(sender, x, 'x');
 				y = relativeParse(sender, y, 'y');
 				z = relativeParse(sender, z, 'z');
 				maxLength = (maxLength) ? Number(maxLength) | 0 : undefined;
 				if (onlineOffine !== 'online' && onlineOffine !== 'offline') sender.sendMessage(`§cparam[0], ${args[1]}, is not offline or online!`);
-				if (typeof y !== 'number') return sender.sendMessage(`§cparam[1], ${args[2]}, is not a number that represents the y coordinate!`);
+				if (typeof y !== 'number') return sender.sendMessage(`cparam[1], ${args[2]}, is not a number that represents the y coordinate!`);
 				if (typeof z !== 'number') return sender.sendMessage(`§cparam[2], ${args[3]}, is not a number that represents the z coordinate!`);
 				if (typeof x !== 'number') return sender.sendMessage(`§cparam[3], ${args[4]}, is not a number that represents the x coordinate!`);
 				if (!world.scoreboard.getObjective(objective)) return sender.sendMessage(`§cparam[4], ${args[5]}, is an scoreboard objective which does not exist!`);

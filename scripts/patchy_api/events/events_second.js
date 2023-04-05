@@ -161,9 +161,6 @@ function vectorToVector3(vector) {
 	const { x, y, z } = vector;
 	return { x, y, z };
 }
-function fpart(number) {
-	return number - Math.floor(number);
-}
 function getSign(number) {
 	const sign = Number(number) / Math.abs(Number(number));
 	return (!sign) ? 0 : sign;
