@@ -27,7 +27,7 @@ import preformance from './libraries/classes/preformace.js';
 import propertyBuilder from './libraries/classes/property.js';
 import fill from './libraries/classes/fill.js';
 import structureBuilder from './libraries/classes/structure/export_instance.js';
-import leaderboardBuilder from './libraries/classes/leaderboard.js';
+import leaderboardBuilder from './libraries/classes/leaderboard/export_instance.js';
 export { leaderboardBuilder, structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, ActionForm, MessageForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
 
 

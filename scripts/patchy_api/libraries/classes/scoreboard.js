@@ -66,8 +66,8 @@ class ScoreboardBuilder {
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
 		this.players[id][objective].value = value, this.players[id][objective].gotten = true;
-		if (objective === 'skycoins') content.warn({ objective, value, player: player.name, objective: this.players[id][objective] });
-		content.warn({ objective, value, this: this });
+		// if (objective === 'skycoins') content.warn({ objective, value, player: player.name, objective: this.players[id][objective] });
+		// content.warn({ objective, value, this: this });
 
 		if (!objective.startsWith('big_')) {
 			if (!isDefined(value)) {
@@ -110,7 +110,7 @@ class ScoreboardBuilder {
 		};
 		const quotient = server.scoreTest(`${objective}*q`, player, false);
 		const remainder = server.scoreTest(`${objective}*r`, player, false);
-		content.warn({ quotient, remainder });
+		// content.warn({ quotient, remainder });
 		const score = quotient * chunk + remainder;
 		this.players[id][objective].value = score;
 		this.players[id][objective].gotten = true;

@@ -130,6 +130,6 @@ eventBuilder.register({
 		subscription: {}
 	}
 });
-// world.say(`123 - ${JSON.stringify(eventBuilder, null, 4)}`);
+// world.sendMessage(`123 - ${JSON.stringify(eventBuilder, null, 4)}`);
 
 

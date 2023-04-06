@@ -9,7 +9,7 @@ const array = Array.from(Array(5000), (value, i) => i);
 // 		this.player = player;
 // 	}
 // 	hi() {
-// 		world.say(`[${this.name}] hi`);
+// 		world.sendMessage(`[${this.name}] hi`);
 // 	}
 // }
 

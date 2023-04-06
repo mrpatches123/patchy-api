@@ -1,5 +1,5 @@
 import { Dimension, system, world } from '@minecraft/server';
-import eventBuilder from './events/export_instance';
+import eventBuilder from '../events/export_instance';
 
 // function getKeys(object) {
 // 	const prototype = Object.getPrototypeOf({});

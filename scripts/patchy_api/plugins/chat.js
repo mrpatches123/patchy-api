@@ -15,7 +15,7 @@ eventBuilder.subscribe('commands*API', {
         //  else {
         //     if (!promptBuilder.check(sender, message)) {
         //         // const nameTag = getChatNameTag(sender);
-        //         world.say(`[§e${name}§r]: ${message}`);
+        //         world.sendMessage(`[§e${name}§r]: ${message}`);
         //     }
 
         // }

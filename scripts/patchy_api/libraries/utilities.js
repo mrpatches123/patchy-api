@@ -9,7 +9,7 @@ export const content = {
         console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
     },
     chatFormat(...messages) {
-        chunkString(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value, 4)).join(' '), 500).forEach(message => world.say(message));
+        chunkString(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value, 4)).join(' '), 500).forEach(message => world.sendMessage(message));
     }
 };
 export function isVector3(target) {
@@ -484,7 +484,7 @@ export const server = {
     },
     tellraw(message) {
         try {
-            world.say(message);
+            world.sendMessage(message);
         } catch (error) {
             console.warn('server.tellraw', error);
         }
@@ -571,7 +571,7 @@ export const server = {
      * @returns {number}
      */
     scoreSetPlayer(objective, player, value = 0, updateId) {
-        content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
+        // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
         if (!player.scoreboard) { this.setPlayerScoreboard(objective, player, value = 0, updateId); return value; }
         world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboard, value);
         if (!updateId) return value;

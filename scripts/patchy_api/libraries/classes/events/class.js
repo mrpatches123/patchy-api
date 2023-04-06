@@ -313,7 +313,7 @@ export class EventBuilder {
 
 
 // world.events.beforeChat.subscribe(() => {
-// 	world.say(JSON.stringify(eventBuilder, (key, value) => (value instanceof Function) ? '() => {}' : value, 4));
+// 	world.sendMessage(JSON.stringify(eventBuilder, (key, value) => (value instanceof Function) ? '() => {}' : value, 4));
 // });
 
 

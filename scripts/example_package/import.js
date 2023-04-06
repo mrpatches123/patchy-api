@@ -26,3 +26,5 @@ import './plugins/bench.js';
 
 //plots
 import './plots/build_battle.js';
+//leaderboards
+import './leaderboards/money.js';

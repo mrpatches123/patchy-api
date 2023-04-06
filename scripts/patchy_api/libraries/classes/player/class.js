@@ -69,7 +69,7 @@ export class Player {
 			},
 			set(target, objectiveId, value) {
 				scoreboardBuilder.set(player, objectiveId, value);
-				content.warn({ t: 'set', objectiveId, value });
+				// content.warn({ t: 'set', objectiveId, value });
 				return Reflect.set(...arguments);
 			}
 		});

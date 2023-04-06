@@ -104,7 +104,7 @@ class EventBuilder {
                 if (!global.tickTime.hasOwnProperty(eventKey)) global.tickTime[eventKey] = {};
                 if (!global.tickTime[eventKey].hasOwnProperty('keys')) global.tickTime[eventKey].keys = {};
                 if (!world.events.hasProperty(eventKey) && !this.events.hasOwnProperty(eventKey)) {
-                    world.say(`${key} - ${eventKey} - ${JSON.stringify(this, null, 4)}`);
+                    world.sendMessage(`${key} - ${eventKey} - ${JSON.stringify(this, null, 4)}`);
                     throw new Error(`Bool: ${this.events.hasOwnProperty(eventKey)}, Event: ${eventKey} does not exist`);
                 }
                 // content.warn({[key]: eventKey})

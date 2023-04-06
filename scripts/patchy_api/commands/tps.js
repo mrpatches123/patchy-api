@@ -26,6 +26,6 @@ eventBuilder.subscribe('tps', {
         if (!global.printTps) return;
         const { deltaTimes } = global;
         const tps = (1 / (deltaTimes.reduce((s, c) => s + c) / deltaTimes.length)).round(2);
-        world.say((tps < 20) ? tps.toString() : '19.99');
+        world.sendMessage((tps < 20) ? tps.toString() : '19.99');
     }
 });

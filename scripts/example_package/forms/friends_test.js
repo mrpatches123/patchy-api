@@ -13,7 +13,7 @@ formBuilder.create('friendsTest', {
 		const elementArray = [];
 		const onlineIds = players.get().ids();
 		const teleportRequests = requestBuilder.getMemoryTarget('friends', idReceiver, Object.keys(mutal), 'tpa');
-		world.say(JSON.stringify(teleportRequests));
+		world.sendMessage(JSON.stringify(teleportRequests));
 		mutal.forEach((id, { name, profilePictureId = 0 }) => elementArray.push({
 			button: {
 				text: `${(onlineIds.includes(id)) ? online : offine} ${name} ${(teleportRequests.hasOwnProperty(id)) ? `§b(1)` : ''}`,

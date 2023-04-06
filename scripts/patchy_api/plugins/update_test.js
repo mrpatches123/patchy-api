@@ -46,9 +46,9 @@
 // 	try {
 // 		let players;
 // 		players = [...world.getPlayers({ minLevel: 3000 })];
-// 		world.say('minLevel: 3000\n' + JSON.stringify({ map: players.map(({ name }) => name) }));
+// 		world.sendMessage('minLevel: 3000\n' + JSON.stringify({ map: players.map(({ name }) => name) }));
 // 		players = [...world.getPlayers({ minLevel: 5750 })];
-// 		world.say('minLevel: 5750\n' + JSON.stringify({ map: players.map(({ name }) => name) }));
+// 		world.sendMessage('minLevel: 5750\n' + JSON.stringify({ map: players.map(({ name }) => name) }));
 // 		// const player = world.getAllPlayers()[0];
 
 // 		// const test = await guessTheNumber(async (guess) => {

@@ -12,7 +12,7 @@ function isVectorInside(vectorA, vectorB, checkVector) {
 }
 eventBuilder.subscribe('bench', {
 	worldLoad: () => {
-		preformance.print(preformance.test({
+		preformance.printTime(preformance.test({
 			isVectorInside: (vector1, vector2, test) => {
 				isVectorInside(vector1, vector2, test);
 			},

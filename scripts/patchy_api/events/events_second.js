@@ -173,6 +173,6 @@ function yawToCardnalDirectionVector(ry) {
 	return { x: (xDist > zDist) ? getSign(x) : 0, y: 0, z: (zDist > xDist) ? -getSign(z) : 0 };
 }
 
-// world.say(`${JSON.stringify(eventBuilder, null, 4)}`);
+// world.sendMessage(`${JSON.stringify(eventBuilder, null, 4)}`);
 
 

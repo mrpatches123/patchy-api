@@ -28,7 +28,7 @@ class Wait {
 				const { checkCallback, thenCallback, once, remove } = this.subscriptions[key];
 
 				const test = checkCallback();
-				// world.say(checkCallback.toString());
+				// world.sendMessage(checkCallback.toString());
 				// content.warn({ key, test: (!test) ? 'false' : test });
 				if (test) {
 					thenCallback();
