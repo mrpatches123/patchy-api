@@ -1,4 +1,4 @@
-import { world, Items, Player, Entity, XYRotation, BlockPermutation } from '@minecraft/server';
+import { world, Items, Player, Entity, XYRotation, BlockPermutation, ScoreboardObjective } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function getXZVectorRY(ry) {
     const rads = (ry + 180) * Math.PI / 180;
@@ -573,7 +573,9 @@ export const server = {
     scoreSetPlayer(objective, player, value = 0, updateId) {
         // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
         if (!player.scoreboard) { this.setPlayerScoreboard(objective, player, value = 0, updateId); return value; }
-        world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboard, value);
+        const scoreboardObjective = world.scoreboard.getObjective(objective);
+        if (!(scoreboardObjective instanceof ScoreboardObjective)) throw new Error(`objective: ${objective}, at params[0] does not exist!`);
+        world.scoreboard.setScore(scoreboardObjective, player.scoreboard, value);
         if (!updateId) return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
         if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return value;
@@ -591,8 +593,15 @@ export const server = {
     },
 };
 
-
-
+/**
+ * @param {number} seconds 
+ * @returns {string}
+ */
+export function formatSeconds(seconds) {
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const hours = Math.floor(seconds / 3600);
+    return `${(hours) ? `${hours}:` : ''}${(minutes) ? `${minutes}:` : ''}${(seconds % 60).toString().padStart(2, '0')}`;
+}
 /**
  * @param {{x: number, y: number, z: number}} vector 
  * @returns {XYRotation}
@@ -719,6 +728,20 @@ export function chunkString(str, length) {
     const array = Array(++size);
     for (let i = 0, offset = 0; i < size; i++, offset += length) {
         array[i] = str.substr(offset, length);
+    }
+    return array;
+}
+/**
+ * 
+ * @param {string} str 
+ * @param {number} length 
+ * @returns 
+ */
+export function chunkStringReverse(str, length) {
+    let size = (str.length / length) | 0;
+    const array = Array(++size);
+    for (let i = size - 1, offset = string.length - length; i >= 0; i--, offset -= length) {
+        array[i] = str.substring(offset, offset + length);
     }
     return array;
 }
@@ -874,4 +897,70 @@ const types = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'N', 'D'];
 export function metricNumbers(value, place = 2) {
     const digits = ~~(log10(value) / 3);
     return (!digits) ? value : (value / 10 ** (digits * 3)).toFixed(place) + types[digits];
+}
+const ones = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const tens = [false, false, 'twenty', 'thirty', 'fourty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+const places = ['hundred', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion', 'Sextillion', 'Septillion', 'Octillion', 'Nonillion', 'Decillion', 'Undecillion', 'Duodecillion', 'Tredecillion', 'Quattuordecillion', 'Quindecillion', 'Sexdecillion', 'Septendecillion', 'Octodecillion', 'Novemdecillion'];
+
+export function formatNumber(number) {
+    const numberArray = chunkStringReverse(Math.floor(number).toString(), 3).reverse();
+    return numberArray.map((number, i) => {
+
+        number = number.padStart(3, '0');
+        const place = places[i];
+        const hundred = Number(number[0]);
+        const ten = Number(number[1]);
+        const one = Number(number[2]);
+        return `${(hundred) ? `${ones[hundred]} ${places[0]} ` : ''}${(!ten) ? ones[one] : (ten > 1 && tens[ten]) ? `${tens[ten]}-${ones[one]}` : teens[one]}${(i) ? ` ${place}` : ''}`;
+    }).reverse().join(' ');
+}
+const decimals = ['an eighth', 'a quarter', 'three eighths', 'a half', 'five eighths', 'three forths', 'seven eighths', ''];
+export function formatDecimal(number) {
+    const index = Math.floor(number % 1 * 8);
+    console.log(index);
+    return `${(index === decimals.length - 1) ? '' : ` and ${decimals[index]}`}`;
+}
+const second = 1000;
+const minute = 60000;
+const hour = 3600000;
+const day = 86400000;
+const year = 31536000000;
+const decade = 315360000000;
+const century = 3153600000000;
+const millennium = 31536000000000;
+export function formatMS(ms) {
+    ms = Number(ms);
+    if (ms < second) return `${formatNumber(ms)} millisecond${(ms === 1) ? '' : 's'}`;
+    if (ms < minute) {
+        const seconds = ms / second;
+        return `${formatNumber(seconds)} second${(Math.floor(seconds) === 1) ? '' : 's'}`;
+    }
+    if (ms < hour) {
+        const minutes = ms / minute;
+        return `${formatNumber(minutes)}${(formatDecimal(minutes))} minute${(Math.floor(minutes) === 1) ? '' : 's'}`;
+    }
+    if (ms < day) {
+        const hours = ms / hour;
+        return `${formatNumber(hours)}${(formatDecimal(hours))} hour${(Math.floor(hours) === 1) ? '' : 's'}`;
+    }
+    if (ms < year) {
+        const days = ms / day;
+        return `${formatNumber(days)}${(formatDecimal(days))} day${(Math.floor(days) === 1) ? '' : 's'}`;
+    }
+    if (ms < decade) {
+        const years = ms / year;
+        return `${formatNumber(years)}${(formatDecimal(years))} years${(Math.floor(years) === 1) ? '' : 's'}`;
+    }
+    if (ms < century) {
+        const decades = ms / decade;
+        return `${formatNumber(decades)}${(formatDecimal(decades))} decade${(Math.floor(decades) === 1) ? '' : 's'}`;
+    }
+    if (ms < millennium) {
+        const centuries = ms / century;
+        return `${formatNumber(centuries)}${(formatDecimal(centuries))} centur${(Math.floor(centuries) === 1) ? 'y' : 'ies'}`;
+    }
+    const millenniums = ms / millennium;
+    return `${formatNumber(millenniums)}${(formatDecimal(millenniums))} millennium${(Math.floor(millenniums) === 1) ? '' : 's'}`;
+
 }

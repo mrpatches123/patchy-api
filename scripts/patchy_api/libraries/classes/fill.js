@@ -40,14 +40,14 @@ class Fill {
 
 						const current = (lastValueIfNullBlock) ? lastValueIfNullBlock : iterator.next();
 						// content.warn({ t: 'wdwwdwd', i, done: current.done, t2: 'why not work' });
-						if (current.done) { fillThis.queue.shift(), await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => console.warn(error, error.stack)); break; }
+						if (current.done) { fillThis.queue.shift(), await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => { }); break; }
 
 
 						const { blockLocation, isFirstBlockOfChunk } = current.value;
 						const { x, y, z } = blockLocation;
 						if (isFirstBlockOfChunk) {
-							await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => console.warn(error, error.stack));
-							await overworld.runCommandAsync(`tickingarea add ${x} 0 ${z} ${x + 15} 0 ${z + 15} fillTickAPI true`).catch(error => console.warn(error, error.stack));
+							await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => { });
+							await overworld.runCommandAsync(`tickingarea add ${x} 0 ${z} ${x + 15} 0 ${z + 15} fillTickAPI true`).catch(error => { });
 
 						}
 

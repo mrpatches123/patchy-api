@@ -96,6 +96,7 @@ class ScoreboardBuilder {
 	 * @param {boolean} forceDisk?=false
 	 */
 	get(player, objective, forceDisk) {
+		if (!world.scoreboard.getObjective(objective)) throw new Error(`objective, ${objective} at params[1] does not Exist!`);
 		const { id } = player;
 		if (player.hasOwnProperty('player')) player = player.player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};

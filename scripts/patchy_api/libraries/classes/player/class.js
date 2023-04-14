@@ -195,6 +195,9 @@ export class Player {
 	addTag(...args) {
 		return this.player.addTag(...args);
 	}
+	extinguishFire(...args) {
+		return this.player.extinguishFire(...args);
+	}
 	getBlockFromViewVector(...args) {
 		return this.player.getBlockFromViewDirection(...args);
 	}

@@ -22,7 +22,7 @@ commandBuilder.register('error', {
                 errorLogger.forEach((key, value) => {
                     object[key] = value.length;
                 });
-                sender.tellrawStringify(object);
+                sender.sendMessage(JSON.stringify(object));
                 break;
             case 'events':
                 let eventKeys = {};
@@ -37,11 +37,11 @@ commandBuilder.register('error', {
                         eventKeys[event][key]++;
                     });
                 });
-                sender.tellrawStringify(eventKeys);
+                sender.sendMessage(eventKeys);
                 break;
             case 'bykey':
                 if (errorLogger[args[0]]) {
-                    sender.tellrawStringify(errorLogger[args[1]]);
+                    sender.sendMessage(JSON.stringify(errorLogger[args[1]]));
                 } else {
                     sender.sendMessage(`key: ${args[1]}, doesn't exist`);
                 }
@@ -58,10 +58,10 @@ commandBuilder.register('error', {
                         eventObject[key].push(eventValues);
                     }
                 });
-                sender.tellrawStringify({ [event]: eventObject });
+                sender.sendMessage(JSON.stringify({ [event]: eventObject }));
                 break;
             case undefined:
-                sender.tellrawStringify(errorLogger);
+                sender.sendMessage(JSON.stringify(errorLogger));
                 break;
         }
     }

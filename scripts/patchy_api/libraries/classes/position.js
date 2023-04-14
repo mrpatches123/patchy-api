@@ -40,16 +40,17 @@ class PositionBuilder {
 	 * @method check
 	 * @param {Player} player
 	 * @param {String} key
+	 * @returns {Boolean}
 	 */
 	check(player, key) {
 		const { location1, location2, callback } = this[key];
-		if (!this.test(player, key)) return;
+		if (!this.test(player, key)) return false;
 		if (typeof callback === 'string') {
 			teleportBuilder.teleport(player, callback);
 		} else {
 			callback(player, location1, location2);
 		}
-
+		return true;
 	}
 	/**
 	 * @typedef {Object} PostionObject
