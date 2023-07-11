@@ -1,7 +1,7 @@
-import { ItemStack, PlayerInventoryComponentContainer, EntityQueryOptions } from "@minecraft/server";
-import { Player } from "../player/class";
+import { ItemStack, Container, EntityQueryOptions } from "@minecraft/server";
+import { Player } from "../player/class.js";
 class Inventory {
-	constructor(array: ItemStack[], inventory: PlayerInventoryComponentContainer);
+	constructor(array: ItemStack[], inventory: Container);
 	iterate(callback: (item: ItemStack, i: number) => {}): void;
 }
 class PlayerIterator {
@@ -24,6 +24,7 @@ interface propertyOptionsNumberBoolean {
 }
 export class Players {
 	constructor();
+	getById(id: string): Player;
 	/**
 	 * finds the first player accorinf to the option or just the first player
 	 */
@@ -52,6 +53,6 @@ export class Players {
 	registerProperty(identifier: string, options: propertyOptionsString | propertyOptionsNumberBoolean): void;
 }
 export class Inventory {
-	constructor(array: ItemStack[], inventory: PlayerInventoryComponentContainer);
+	constructor(array: ItemStack[], inventory: Container);
 	iterate(callback: (item: ItemStack, i: Number) => {}): void;
 }

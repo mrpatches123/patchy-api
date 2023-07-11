@@ -1,4 +1,4 @@
-import { InventoryComponentContainer, PlayerInventoryComponentContainer, BlockInventoryComponentContainer } from '@minecraft/server';
+import { Container, ItemTypes } from '@minecraft/server';
 const inventoryContainerFunctions = {
 	removeItem(ItemStack) {
 		for (let i = this.size - 1; i >= 0; i--) {
@@ -18,7 +18,7 @@ const inventoryContainerFunctions = {
 			const item = this.getItem(i);
 			if (ignoreEmpty && !item) { continue; }
 			if (callback(item, i, this, container)) {
-				this.setItem(i, new ItemStack(Items.get('minecraft:air'), 0, 0));
+				this.setItem(i, new ItemStack(ItemTypes.get('minecraft:air'), 0, 0));
 				container.addItem(item);
 			}
 		}
@@ -55,8 +55,8 @@ const inventoryContainerFunctions = {
 		return Array.from(Array(this.size), (item, i) => this.getItem(i));
 	}
 };
-Object.assign(InventoryComponentContainer.prototype, inventoryContainerFunctions);
-Object.assign(PlayerInventoryComponentContainer.prototype, inventoryContainerFunctions);
-Object.assign(BlockInventoryComponentContainer.prototype, inventoryContainerFunctions);
+Object.assign(Container.prototype, inventoryContainerFunctions);
+Object.assign(Container.prototype, inventoryContainerFunctions);
+Object.assign(Container.prototype, inventoryContainerFunctions);
 
 

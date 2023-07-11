@@ -126,7 +126,7 @@ class RequestBuilder {
 
 
 
-		// content.warn('RequestBuilderwatch');
+		content.warn({ t: 'RequestBuilderwatch', id });
 		if (id instanceof String) throw new Error(`findCallback for id: ${id}, is not a String`);
 		if (!(testCallback instanceof Function)) throw new Error(`testCallback for id: ${id}, is not a Function.`);
 		if (findCallback && !(findCallback instanceof Function)) throw new Error(`findCallback for id: ${id}, is defined and not a Function`);
@@ -136,12 +136,12 @@ class RequestBuilder {
 		if (removeKey !== null && removeKey !== undefined && !(typeof removeKey === 'boolean')) throw new Error(`removeKey for options for id: ${id}, is not undefined, null or a boolean`);
 		if (!(eventKeys instanceof Array)) throw new Error(`removeKey for options for id: ${id}, is not undefined, null or a boolean`);
 
-		// content.warn(11111, 'RequestBuilderwatch');
+		content.warn(11111, 'RequestBuilderwatch');
 		const call = () => {
 			// content.warn('help');
 			let database = databases.get("requestsAPI") ?? databases.add("requestsAPI");
 			const requests = database.get(id) ?? {};
-			// content.warn({ id, requests });
+			content.warn({ id, requests });
 			if (!requests) return;
 			requests.forEach((key, targets) => {
 				targets.forEach((target, types) => {

@@ -2,7 +2,7 @@ import { blockFaceToCoords, eventBuilder, players, permutationClone, content } f
 import placements from "./placements.js";
 import clickableBlocks from "./clickable_blocks.js";
 import discipline from '../../../libraries/discipline.js';
-import { BlockInventoryComponentContainer, MinecraftBlockTypes, system } from "@minecraft/server";
+import { Container, MinecraftBlockTypes, system } from "@minecraft/server";
 
 eventBuilder.subscribe('nbt', {
 	beforeItemUseOn: (event) => {
@@ -52,7 +52,7 @@ eventBuilder.subscribe('nbt', {
 				const left = dimension.getBlock(block.location.offset(0, 0, -1));
 				if (left.typeId === blockId && left.permutation.getProperty('facing_direction').value === value) {
 					/**
-					 * @type {{container: BlockInventoryComponentContainer}}
+					 * @type {{container: Container}}
 					 */
 					const { container } = block.getComponent('inventory');
 					system.run(() => {
@@ -68,7 +68,7 @@ eventBuilder.subscribe('nbt', {
 				const right = dimension.getBlock(block.location.offset(0, 0, 1));
 				if (right.typeId === blockId && right.permutation.getProperty('facing_direction').value === value) {
 					/**
-					 * @type {{container: BlockInventoryComponentContainer}}
+					 * @type {{container: Container}}
 					 */
 					const { container } = block.getComponent('inventory');
 					system.run(() => {
@@ -82,7 +82,7 @@ eventBuilder.subscribe('nbt', {
 					break;
 				}
 				/**
-				 * @type {{container: BlockInventoryComponentContainer}}
+				 * @type {{container: Container}}
 				 */
 				const { container } = block.getComponent('inventory');
 				system.run(() => {
@@ -98,7 +98,7 @@ eventBuilder.subscribe('nbt', {
 				const right = dimension.getBlock(block.location.offset(0, 0, 1));
 				if (right.typeId === blockId && right.permutation.getProperty('facing_direction').value === value) {
 					/**
-					 * @type {{container: BlockInventoryComponentContainer}}
+					 * @type {{container: Container}}
 					 */
 					const { container } = block.getComponent('inventory');
 					system.run(() => {
@@ -114,7 +114,7 @@ eventBuilder.subscribe('nbt', {
 				const left = dimension.getBlock(block.location.offset(0, 0, -1));
 				if (left.typeId === blockId && left.permutation.getProperty('facing_direction').value === value) {
 					/**
-					 * @type {{container: BlockInventoryComponentContainer}}
+					 * @type {{container: Container}}
 					 */
 					const { container } = block.getComponent('inventory');
 					system.run(() => {
@@ -128,7 +128,7 @@ eventBuilder.subscribe('nbt', {
 					break;
 				}
 				/**
-				 * @type {{container: BlockInventoryComponentContainer}}
+				 * @type {{container: Container}}
 				 */
 				const { container } = block.getComponent('inventory');
 				system.run(() => {
@@ -144,7 +144,7 @@ eventBuilder.subscribe('nbt', {
 				const right = dimension.getBlock(block.location.offset(1, 0, 0));
 				if (right.typeId === blockId && right.permutation.getProperty('facing_direction').value === value) {
 					/**
-					 * @type {{container: BlockInventoryComponentContainer}}
+					 * @type {{container: Container}}
 					 */
 					const { container } = block.getComponent('inventory');
 					system.run(() => {
@@ -160,7 +160,7 @@ eventBuilder.subscribe('nbt', {
 				const left = dimension.getBlock(block.location.offset(-1, 0, 0));
 				if (left.typeId === blockId && left.permutation.getProperty('facing_direction').value === value) {
 					/**
-					 * @type {{container: BlockInventoryComponentContainer}}
+					 * @type {{container: Container}}
 					 */
 					const { container } = block.getComponent('inventory');
 					system.run(() => {
@@ -174,7 +174,7 @@ eventBuilder.subscribe('nbt', {
 					break;
 				}
 				/**
-				 * @type {{container: BlockInventoryComponentContainer}}
+				 * @type {{container: Container}}
 				 */
 				const { container } = block.getComponent('inventory');
 				system.run(() => {
@@ -191,7 +191,7 @@ eventBuilder.subscribe('nbt', {
 				const left = dimension.getBlock(block.location.offset(-1, 0, 0));
 				if (left.typeId === blockId && left.permutation.getProperty('facing_direction').value === value) {
 					/**
-					 * @type {{container: BlockInventoryComponentContainer}}
+					 * @type {{container: Container}}
 					 */
 					const { container } = block.getComponent('inventory');
 					system.run(() => {
@@ -207,7 +207,7 @@ eventBuilder.subscribe('nbt', {
 				const right = dimension.getBlock(block.location.offset(1, 0, 0));
 				if (right.typeId === blockId && right.permutation.getProperty('facing_direction').value === value) {
 					/**
-					 * @type {{container: BlockInventoryComponentContainer}}
+					 * @type {{container: Container}}
 					 */
 					const { container } = block.getComponent('inventory');
 					system.run(() => {
@@ -221,7 +221,7 @@ eventBuilder.subscribe('nbt', {
 					break;
 				}
 				/**
-				 * @type {{container: BlockInventoryComponentContainer}}
+				 * @type {{container: Container}}
 				 */
 				const { container } = block.getComponent('inventory');
 				system.run(() => {

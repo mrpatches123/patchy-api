@@ -1,10 +1,11 @@
 import eventBuilder from "../libraries/classes/events/export_instance.js";
 import global from '../libraries/classes/global.js';
-import { world, EntityHurtEvent, system } from '@minecraft/server';
+import { world, system } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
 import errorLogger from "../libraries/classes/error.js";
 import time from '../libraries/classes/time.js';
-import { setProptotype } from "../libraries/classes/player/class.js";
+import { Player, setProptotype } from "../libraries/classes/player/class.js";
+import loads from "../libraries/classes/load.js";
 global.playerJoined = {};
 global.tickAfterLoadI = 0;
 let a = 0;
@@ -15,6 +16,7 @@ eventBuilder.register({
 			tick: {
 				function: () => {
 					const { loaded, loading } = global;
+
 					if (loading && !loaded) {
 						eventBuilder.getEvent('worldLoad').iterate();
 						global.loadedPlayers = false;
@@ -47,9 +49,12 @@ eventBuilder.register({
 				function: ({ currentTick }) => {
 					const players = world.getAllPlayers();
 					players.forEach((player, i) => {
-						const { loaded, id, name } = player;
+
+						const { id, name } = player;
+						const loaded = loads.loads.hasOwnProperty(id);
 						if (!loaded) return;
 						if (!global.hasOwnProperty('loading')) global.loading = true;
+						if (!global.finishedInitialPlotCreate) return;
 						if (!global.loaded) return;
 						if (global.playerJoined.hasOwnProperty(id)) return;
 						content.warn({ t: 'iterate:"playerJoined"', name });
@@ -126,6 +131,7 @@ eventBuilder.register({
 			}
 		}
 	},
+
 	scoreboardChange: {
 		subscription: {}
 	}

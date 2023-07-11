@@ -1,12 +1,60 @@
 import loads from "../load.js";
-import { Player as PlayerType, PlayerInventoryComponentContainer, system, Vector } from "@minecraft/server";
+import { Player as PlayerType, Container, system, Vector, EntityEquipmentInventoryComponent, EquipmentSlot, world } from "@minecraft/server";
 import players from "../players/export_instance.js";
 import errorLogger from "../error.js";
-import { content } from "../../utilities.js";
+import { content, native } from "../../utilities.js";
 import scoreboardBuilder from "../scoreboard.js";
-import gamemode from "../gamemode.js";
-export class Player {
+import gamemode, { gamemodeIndexMap, gamemodeMap } from "../gamemode.js";
+import propertyBuilder from "../property/export_instance.js";
+const player = world.getAllPlayers()[0];
+const armorSlots = [
+	EquipmentSlot.feet,
+	EquipmentSlot.legs,
+	EquipmentSlot.chest,
+	EquipmentSlot.head
+];
+class OnScreenDisplay {
 	/**
+	 * @param {Player} player 
+	 */
+	constructor(player) {
+		this.player = player;
+	}
+	/**
+	 * @param {String} text 
+	 * @param {import("@minecraft/server").TitleDisplayOptions} options 
+	 */
+	setTitle(text, options = {}) {
+		if (!text) throw new Error(`text at params[0] is not defined`);
+		const { subtitle, fadeInSeconds, fadeOutSeconds, staySeconds } = options;
+		this.player.runCommand(`titleraw @s title {"rawtext":[{"text":"${text}"}]}`);
+		if (subtitle) this.player.runCommand(`titleraw @s subtitle {"rawtext":[{"text":"${subtitle}"}]}`);
+		if (fadeInSeconds || fadeOutSeconds || staySeconds) this.player.runCommand(`titleraw @s times ${fadeInSeconds ?? 0} ${staySeconds ?? 999999999} ${fadeOutSeconds ?? 0}`);
+	}
+	/**
+	 * @param {String} text
+	 */
+	updateSubtitle(text) {
+		if (!text) throw new Error(`text at params[0] is not defined`);
+		this.player.runCommand(`titleraw @s subtitle {"rawtext":[{"text":"${text}"}]}`);
+	}
+	/**
+	 * @param {String} text
+	 */
+	setActionBar(text) {
+		if (!text) throw new Error(`text at params[0] is not defined`);
+		this.player.runCommand(`titleraw @s actionbar {"rawtext":[{"text":"${text}"}]}`);
+	}
+	/**
+	 * @param {String} text
+	 */
+	clearTitle() {
+		this.player.clear(`titleraw @s clear`);
+	}
+}
+
+export class Player {
+	/**@
 	 * 
 	 * @param {PlayerType} player 
 	 */
@@ -16,41 +64,76 @@ export class Player {
 		 */
 		this.player = player;
 	}
+	get isSwimming() {
+		return players.objectProperties[this.player.id]?.isSwimming ?? false;
+	}
 	get gamemode() {
 		return gamemode.get(this);
 	}
 	set gamemode(value) {
-		this.player.runCommandAsync(`gamemode ${value}`);
+		this.player.runCommandAsync(`gamemode ${gamemodeIndexMap[value]}`);
 	}
 	get loaded() {
 		const { id } = this.player;
 		return loads.loads.hasOwnProperty(id);
 	}
+	get armor() {
+
+	}
+	get offhand() {
+
+		const { selectedSlot } = this.player;
+		/**
+		 * @type {EntityEquipmentInventoryComponent}
+		 */
+		const equipmentInventory = this.player.getComponent('equipment_inventory');
+
+		const offhandSlot = equipmentInventory.getEquipmentSlot(EquipmentSlot.offhand);
+
+		return new Proxy({}, {
+			set(object, key, value) {
+				const item = offhandSlot.getItem();
+				if (!item) return Reflect.set(...arguments);
+				if (key === 'amount' && value <= 0) { offhandSlot.setItem(undefined); return Reflect.set(...arguments); }
+				offhandSlot.setItem(Object.assign(item, { [key]: value }));
+				return Reflect.set(...arguments);
+			},
+			get(target, key, receiver) {
+				return offhandSlot.getItem()?.[key];
+			}
+		});
+	}
 	get mainHand() {
 		const { selectedSlot } = this.player;
 		/**
-		 * @type {PlayerInventoryComponentContainer}
+		 * @type {Container}
 		 */
-		const container = this.player.getComponent('inventory').container;
+		const container = this.player.getComponent('minecraft:inventory').container;
 		return new Proxy({}, {
 			set(object, key, value) {
+				content.warn({ t: 'mainHandSet', key, value });
 				const item = container.getItem(selectedSlot);
 				if (!item) return Reflect.set(...arguments);
+				if (key === 'amount' && value <= 0) { container.setItem(selectedSlot, undefined); return Reflect.set(...arguments); }
 				container.setItem(selectedSlot, Object.assign(item, { [key]: value }));
 				return Reflect.set(...arguments);
 			},
 			get(target, key, receiver) {
-				return container.getItem(selectedSlot)?.[key];
+				const item = container.getItem(selectedSlot);
+				const value = item?.[key];
+				content.warn({ type: value instanceof Function });
+				return (value instanceof Function) ? (...args) => { content.warn({ key, args, value: item[key](...args)?.getDamageChance(0) }); return item[key](...args); } : item?.[key];
 			}
 		});
 	}
+
 	set mainHand(value) {
 		const { selectedSlot } = this.player;
 		/**
-		 * @type {PlayerInventoryComponentContainer}
+		 * @type {Container}
 		 */
 		const container = this.player.getComponent('inventory').container;
-		system.run(() => container.setItem(selectedSlot, value));;
+		container.setItem(selectedSlot, value);
 	}
 	get container() {
 		return this.player.getComponent('inventory').container;
@@ -59,7 +142,7 @@ export class Player {
 		return players.getInventory(this.player);
 	}
 	get scores() {
-		const player = this.player;
+		const player = this;
 		return new Proxy({}, {
 			get(target, objectiveId) {
 
@@ -75,24 +158,7 @@ export class Player {
 		});
 	}
 	get properties() {
-		const player = this.player;
-		return new Proxy({}, {
-			get(target, identifier) {
-				// console.warn('38943783487847387', identifier);
-				return players.getProperty(player, identifier);
-			},
-			set(target, identifier, value) {
-				try {
-					// console.warn('38943783487847387', identifier, value, value === undefined || value === null || Number.isNaN(value));
-					if (value === undefined || value === null || Number.isNaN(value)) players.resetProperty(player, identifier);
-					else players.setProperty(player, identifier, value);
-					return Reflect.set(...arguments);
-				} catch (error) {
-					errorLogger.log(error, error.stack, { key: 'PlayerDynamicProperties', event: 'N/A' });
-				}
-			}
-
-		});
+		return propertyBuilder.get(this.player);
 	}
 	get memory() {
 		const player = this.player;
@@ -144,13 +210,16 @@ export class Player {
 		this.player.nameTag = value;
 	}
 	get onScreenDisplay() {
-		return this.player.onScreenDisplay;
+		return new OnScreenDisplay(this.player);
 	}
 	get rotation() {
 		return this.player.getRotation();
 	}
 	get scoreboard() {
-		return this.player.scoreboard;
+		return this.player.scoreboardIdentity;
+	}
+	get scoreboardIdentity() {
+		return this.player.scoreboardIdentity;
 	}
 	get selectedSlot() {
 		return this.player.selectedSlot;
@@ -181,7 +250,7 @@ export class Player {
 		return this.player.applyImpulse(...args);
 	}
 	applyKnockback(...args) {
-		return this.player.applyImpulse(...args);
+		return this.player.applyKnockback(...args);
 	}
 	addEffect(...args) {
 		return this.player.addEffect(...args);
@@ -262,7 +331,12 @@ export class Player {
 		return this.player.playAnimation(...args);
 	}
 	playSound(...args) {
-		return this.player.playSound(...args);
+		try {
+			return this.player.playSound(...args);
+		} catch (error) {
+			if (error.message.includes('have required privileges')) return system.runTimeout(() => this.player.playSound(...args), 0);
+			new Error(error.message);
+		}
 	}
 	postClientMessage(...args) {
 		return this.player.postClientMessage(...args);
@@ -278,6 +352,9 @@ export class Player {
 	}
 	runCommandAsync(...args) {
 		return this.player.runCommandAsync(...args);
+	}
+	runCommand(...args) {
+		return this.player.runCommand(...args);
 	}
 	setDynamicProperty(...args) {
 		return this.player.setDynamicProperty(...args);
@@ -299,9 +376,6 @@ export class Player {
 	}
 	teleport(...args) {
 		return this.player.teleport(...args);
-	}
-	teleportFacing(...args) {
-		return this.player.teleportFacing(...args);
 	}
 	sendMessage(...args) {
 		return this.player.sendMessage(...args);

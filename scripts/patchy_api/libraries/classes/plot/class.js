@@ -1,4 +1,4 @@
-import { BlockAreaSize, Vector, world, MinecraftBlockTypes, Dimension } from "@minecraft/server";
+import { BlockAreaSize, Vector, world, MinecraftBlockTypes, Dimension, system } from "@minecraft/server";
 import { andArray, betweenBlockVector3, blockFaceToCoords, content, isDefined, isVector2, isVector3, native, orArray, overworld, server, sort3DVectors } from "../../utilities.js";
 import eventBuilder from "../events/export_instance.js";
 import databases from "../database.js";
@@ -8,8 +8,27 @@ import { Player } from "../player/class.js";
 import gamemode from "../gamemode.js";
 import structureBuilder from "../structure/export_instance.js";
 import wait from "../wait.js";
+import scoreboardBuilder from "../scoreboard.js";
+import global from "../global.js";
+import propertyBuilder from "../property/export_instance.js";
 const gamemodes = [0, 1, 2];
-const opens = [MinecraftBlockTypes.chest.is];
+const opens = [
+	MinecraftBlockTypes.chest.id,
+];
+const buttons = [
+	MinecraftBlockTypes.stoneButton.id,
+	MinecraftBlockTypes.birchButton.id,
+	MinecraftBlockTypes.acaciaButton.id,
+	MinecraftBlockTypes.cherryButton.id,
+	MinecraftBlockTypes.jungleButton.id,
+	MinecraftBlockTypes.spruceButton.id,
+	MinecraftBlockTypes.warpedButton.id,
+	MinecraftBlockTypes.woodenButton.id,
+	MinecraftBlockTypes.bambooButton.id,
+	MinecraftBlockTypes.crimsonButton.id,
+	MinecraftBlockTypes.darkOakButton.id,
+	MinecraftBlockTypes.mangroveButton.id
+];
 export class PlotsVector3 {
 	constructor(x, y, z) {
 		this.x = x;
@@ -24,16 +43,21 @@ export class BlockVector3 {
 		this.z = z;
 	}
 }
+
+scoreboardBuilder.add('blockPlaceMarginOverideX');
+scoreboardBuilder.add('blockPlaceMarginOverideY');
+scoreboardBuilder.add('blockPlaceMarginOverideZ');
 const rotations = ['0_degrees', '90_degrees', '180_degrees', '270_degrees'];
 const mirrors = ['none', 'x', 'xz', 'z'];
 const animationModes = ['block_by_block', 'layer_by_layer'];
 const directions = ['x', '-x', 'z', '-z'];
-const permisions = ['read', 'write', 'break', 'place', 'open', 'open-break'];
+const permisions = ['read', 'write', 'break', 'place', 'open', 'open-break', 'press'];
 function objectVector3(vector3) {
 	const { x, y, z } = vector3;
 	return ({ x, y, z });
 
 }
+global.finishedInitialPlotCreate;
 export class PlotBuilder {
 	constructor() {
 		this.plots = {};
@@ -42,102 +66,118 @@ export class PlotBuilder {
 		this.registeredProperties = false;
 	}
 	runCreateQueue() {
-		// content.warn('runCreateQueue28923382782372388372278');
 		const plotThis = this;
 		if (!this.subscribedQueue) {
 			eventBuilder.subscribe('init_zplotCreateQueue', {
-				tickAfterLoad: () => {
-					const keys = Object.keys(plotThis.creates);
-					// content.warn('init_zplotCreateQueue', keys.length);
-					if (!keys.length) return console.warn('ehy'), plotThis.subscribedQueue = false, eventBuilder.unsubscribe('init_zplotCreateQueue', 'tickAfterLoad');
+				worldLoad: () => {
+					content.warn('runCreateQueue28923382782372388372278');
+					const runId = system.runInterval(() => {
+						const keys = Object.keys(plotThis.creates);
+						// content.warn('init_zplotCreateQueue', keys.length);
+						if (!keys.length) return (console.warn('ehy'), plotThis.subscribedQueue = false, system.clearRun(runId), global.finishedInitialPlotCreate = true);
 
-					// content.warn({ plotThis });
-					keys.forEach(key => {
-						// content.warn(keys);
-						const rules = plotThis.creates[key];
-						delete plotThis.creates[key];
-						const { ruleSets = [], size, start, exclusive } = rules;
-						let maxZ = 0, maxX = 0;
-						const generatedRuleSets = ruleSets.reduce((sumation, ruleSet, i) => {
-							const { count, start: startRuleSet, direction, size: sizeRuleSet } = ruleSet;
-							const { y } = start;
-							if (count) {
-								let change;
-								switch (direction) {
-									case 'x':
-										change = { x: sizeRuleSet?.x ?? size.x, z: 0 };
-										break;
-									case '-x':
-										change = { x: -(sizeRuleSet?.x ?? size.x), z: 0 };
-									case 'z':
-										change = { x: 0, z: sizeRuleSet?.z ?? size.z };
-										break;
-									case '-z':
-										change = { x: 0, z: -(sizeRuleSet?.z ?? size.z) };
-										break;
-								}
-								// content.warn({ size, change });
-								const { x, z } = startRuleSet;
-								// content.warn({ start: { x: start.x, z: start.z }, size: { x: size.x, z: size.z }, startRuleSet });
-								let lastSize = { x: start.x + x * size.x, z: start.z + z * size.z };
-								// content.warn({ lastSize });
-								for (let c = 0; c < count; c++) {
-									let currentSize;
-									if (startRuleSet instanceof PlotsVector3) {
-										currentSize = { x: ((c === 0) ? 0 : change.x) + lastSize.x, y, z: ((c === 0) ? 0 : change.z) + lastSize.z };
-										lastSize = currentSize;
+						// content.warn({ plotThis });
+						keys.forEach(key => {
+							// content.warn(keys);
+							const rules = plotThis.creates[key];
+							delete plotThis.creates[key];
+							const { ruleSets = [], size, start, exclusive } = rules;
+							let maxZ = 0, maxX = 0;
+							const generatedRuleSets = ruleSets.reduce((sumation, ruleSet, i) => {
+								const { count, start: startRuleSet, direction, size: sizeRuleSet } = ruleSet;
+								const { y } = start;
+								if (count) {
+									let change;
+									switch (direction) {
+										case 'x':
+											change = { x: sizeRuleSet?.x ?? size.x, z: 0 };
+											break;
+										case '-x':
+											change = { x: -(sizeRuleSet?.x ?? size.x), z: 0 };
+										case 'z':
+											change = { x: 0, z: sizeRuleSet?.z ?? size.z };
+											break;
+										case '-z':
+											change = { x: 0, z: -(sizeRuleSet?.z ?? size.z) };
+											break;
 									}
-									const { x: xC, z: zC } = currentSize;
-									const rX = xC - x + 1;
-									const rZ = zC - z + 1;
-									if (rX > maxX) maxX = rX;
-									if (rZ > maxZ) maxZ = rZ;
-									sumation.push({
-										...ruleSet, ...{
-											start: currentSize
-										},
-										...(sizeRuleSet ? {} : {
-											size
-										})
-									});
+									// content.warn({ size, change });
+									const { x, z } = startRuleSet;
+									// content.warn({ start: { x: start.x, z: start.z }, size: { x: size.x, z: size.z }, startRuleSet });
+									let lastSize = { x: start.x + x * size.x, z: start.z + z * size.z };
+									// content.warn({ lastSize });
+									for (let c = 0; c < count; c++) {
+										let currentSize;
+										if (startRuleSet instanceof PlotsVector3) {
+											currentSize = { x: ((c === 0) ? 0 : change.x) + lastSize.x, y, z: ((c === 0) ? 0 : change.z) + lastSize.z };
+											lastSize = currentSize;
+										}
+										const { x: xC, z: zC } = currentSize;
+										const rX = xC - x + 1;
+										const rZ = zC - z + 1;
+										if (rX > maxX) maxX = rX;
+										if (rZ > maxZ) maxZ = rZ;
+										sumation.push({
+											...ruleSet, ...{
+												start: currentSize
+											},
+											...(sizeRuleSet ? {} : {
+												size
+											})
+										});
 
+									}
+									return sumation;
 								}
-								return sumation;
-							}
 
-						}, []);
-						plotThis.plots[key] = {};
-						plotThis.plots[key].rules = rules;
-						plotThis.plots[key].rules.ruleSets = generatedRuleSets;
-						plotThis.plots[key].players = {};
-						Object.assign(plotThis.plots[key].rules, { maxX, maxZ });
-						const plots = databases.get('plots*API') ?? databases.add('plots*API');
-						// content.warn({ t: '11111111111111111', plots, databases: databases.getFromEntity('plots*API') });
-						let { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key) ?? {};
-						if (hasBeenSubscribed) plotThis.subscribe();
-						plots.set(key, (exclusive) ? { hasBeenSubscribed } : { availablePlots, currentIndex, hasBeenSubscribed });
-						databases.queueSave('plots*API');
+							}, []);
+							plotThis.plots[key] = {};
+							plotThis.plots[key].rules = rules;
+							plotThis.plots[key].rules.ruleSets = generatedRuleSets;
+							plotThis.plots[key].players = {};
+							Object.assign(plotThis.plots[key].rules, { maxX, maxZ });
+							const plots = databases.get('plots*API') ?? databases.add('plots*API');
+							// content.warn({ t: '11111111111111111', plots, databases: databases.getFromEntity('plots*API') });
+							let { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key) ?? {};
+							if (hasBeenSubscribed) plotThis.subscribe();
+							plots.set(key, (exclusive) ? { hasBeenSubscribed } : { availablePlots, currentIndex, hasBeenSubscribed });
+							databases.queueSave('plots*API');
+						});
 					});
 				}
 			});
 			// content.warn({ eventBuilder });
 			this.subscribedQueue = true;
+
 		}
 	}
 	registerOverides() {
-		players.registerProperty('currentPlot', {
-			type: 'string',
-			maxLength: 32
-		});
-		players.registerProperty('gamemodeOveride', {
-			type: 'number'
-		});
-		players.registerProperty('permisionOveride', {
-			type: 'string',
-			maxLength: 5
-		});
-		players.registerProperty('plotNumberOveride', {
-			type: 'number'
+		propertyBuilder.register({
+			player: {
+				currentPlot: {
+					type: 'string',
+					maxLength: 32
+				},
+				gamemodeOveride: {
+					type: 'number'
+				},
+				permisionOveride: {
+					type: 'string',
+					maxLength: 5
+				},
+				plotNumberOveride: {
+					type: 'number'
+				},
+				blockPlaceMarginOverideX: {
+					type: 'number'
+				},
+				blockPlaceMarginOverideY: {
+					type: 'number'
+				},
+				blockPlaceMarginOverideZ: {
+					type: 'number'
+				}
+			}
 		});
 	}
 	create(key, rules) {
@@ -189,8 +229,8 @@ export class PlotBuilder {
 			if (key && typeof key !== 'string') throw new Error('key, in rules at params[1] is defined and not of type: String!');
 			if (!key) {
 				if (!isVector3(location)) throw new Error(`location, in teleport in rules at params[1] is not of type: Vector3!`);
-				if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: XYRotation or Vector3!`);
-				if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: XYRotation or Vector3!`);
+				if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: Vector2 or Vector3!`);
+				if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: Vector2 or Vector3!`);
 			}
 		}
 
@@ -212,7 +252,8 @@ export class PlotBuilder {
 		// content.warn({ plot: this });
 	}
 	query(player, key) {
-		if (this.plots[key].rules.exclusive) throw new Error(`Cannot get list for key: ${key}, as exclusive is true`);
+		if (!this.plots.hasOwnProperty(key)) throw new Error(` key: ${key}, does not exist`);
+		if (this.plots[key]?.rules?.exclusive) throw new Error(`Cannot get list for key: ${key}, as exclusive is true`);
 		const { scores, properties } = player;
 		const { plotNumberIdentifier, property } = this.plots[key].rules;
 		return ((property) ? properties : scores)[plotNumberIdentifier];
@@ -240,27 +281,30 @@ export class PlotBuilder {
 	}
 	/**
 	 * @param {Player} player 
-	 * @param {String} key 
-	 * @param {String | Number} value 
+	 * @param {'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride'} type 
+	 * @param {number | string} value 
 	 */
-	setOveride(player, key, value) {
-		player.properties.plotOverides[key] = value;
+	setOveride(player, type, value) {
+		content.warn({ player: player.name, type, value });
+		const { properties } = player;
+		properties[type] = value;
 	}
 	getRuleSet(key, number) {
 		// content.warn({ t: 'getRuleSet', key, number });
 		if (!this.plots.hasOwnProperty(key)) throw new Error(`key: ${key}, does not exist!`);
 
-		const { ruleSets, loop, start, loopDirection, maxX, maxZ, exclusive } = this.plots[key].rules;
+		const { ruleSets, loop, start, loopDirection, maxX, maxZ, exclusive, size } = this.plots[key].rules;
 
 		if (exclusive) return ruleSets?.[0];
 		if (typeof number !== 'number') throw new Error('why is number not defined');
 		if (!loop) return ruleSets[number];
 		const row = Math.floor(number / ruleSets.length);
 		const column = number % ruleSets.length;
-		// content.warn({ t: "wwdwddwwdwd", number: number ?? number.toString(), len: ruleSets.length, number: isDefined(number), column, bool: overworld instanceof Dimension });
+		// content.warn({ row, column });
 		const ruleSet = ruleSets[column] ?? {};
 		const { start: startRuleSet, offset: { x: ox = 0, y: oy = 0, z: oz = 0 } = {} } = ruleSet;
 		let { x, y, z } = startRuleSet;
+		// content.warn({ maxX, maxZ, x, y, z, ox });
 		switch (loopDirection) {
 			case 'x': {
 				z += maxZ * row + oz * (row + 1);
@@ -272,8 +316,8 @@ export class PlotBuilder {
 				break;
 			} case 'z': {
 				// content.warn('');
-				x += maxX * row + ox * (column + 1);
-				z += oz * (row + 1);
+				x += 0;
+				z += (size.z + oz * 2) * row;
 				break;
 			} case '-z': {
 				x -= maxX * row - ox * (row + 1);
@@ -281,6 +325,7 @@ export class PlotBuilder {
 				break;
 			}
 		}
+		// content.warn({ maxX, maxZ, x, y, z, ox });
 		return { ...ruleSet, ...{ start: { x, y, z } } };
 	}
 	subscribe() {
@@ -303,6 +348,8 @@ export class PlotBuilder {
 					else if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
 					else if (property) plotNumber = properties[plotNumberIdentifier];
 					else plotNumber = scores[plotNumberIdentifier];
+					// content.warn({ currentPlot, player: player.name, plotNumberOveride: plotNumberOveride ?? 'undefined', plotNumber: plotNumber ?? 'undefined' });
+
 
 					if (!isDefined(plotNumber)) return;
 					// content.warn({ plotNumber, currentPlot });
@@ -310,7 +357,6 @@ export class PlotBuilder {
 					// content.warn({ t: 'hellodwkj', gamemodeOveride });
 					if (isDefined(gamemodeOveride)) {
 						const { gamemode: gamemodePlayer } = player;
-						// content.warn({ gamemodeOveride, gamemodePlayer });
 						if (gamemodePlayer !== gamemodeOveride) player.gamemode = gamemodeOveride;
 					}
 					const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
@@ -320,8 +366,7 @@ export class PlotBuilder {
 					if (betweenBlockVector3(location, start, end)) return;
 					if (betweenBlockVector3(lastLocation, start, end)) {
 						const { x, y, z } = lastLocation;
-						const { x: rx, y: ry } = rotation;
-						player.teleport({ x, y, z }, overworld, rx, ry);
+						player.teleport({ x, y, z }, { overworld, rotation });
 					} else {
 						// content.warn({ bool: Boolean(teleport) });
 						if (teleport) {
@@ -360,7 +405,11 @@ export class PlotBuilder {
 					case 'open-break':
 					case 'write': {
 						const ruleSet = this.getRuleSet(currentPlot, plotNumber) ?? {};
-						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: { x: mx = 0, y: my = 0, z: mz = 0 } = {} } = ruleSet;
+
+						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet;
+						const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault ?? {};
+						const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties;
+
 						const start = { x: sx + mx, y: sy + my, z: sz + mz };
 						const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
 						if (betweenBlockVector3(block.location, start, end)) return;
@@ -376,9 +425,7 @@ export class PlotBuilder {
 
 			},
 			beforeItemUseOn: (event) => {
-				const { blockFace, source: player } = event;
-				const blockLocation = event.getBlockLocation() ?? player.getBlockFromViewDirection();
-				if (!blockLocation) return;
+				const { blockFace, source: player, block: { location: blockLocation } } = event;
 				if (!(player instanceof Player)) return;
 				const { scores, properties, location, memory, rotation, dimension, isSneaking } = player;
 				const { ingorePlotSystem } = scores;
@@ -392,8 +439,13 @@ export class PlotBuilder {
 				else if (property) plotNumber = properties[plotNumberIdentifier];
 				else plotNumber = scores[plotNumberIdentifier];
 				if (!isDefined(plotNumber)) return;
+				// content.warn({ permision });
 				switch (permision) {
-
+					case 'press': {
+						if (buttons.includes(dimension.getBlock(blockLocation)?.typeId) && !isSneaking) {
+							return;
+						}
+					}
 					case 'open':
 					case 'open-break': {
 						if (opens.includes(dimension.getBlock(blockLocation)?.typeId) && !isSneaking) {
@@ -403,7 +455,9 @@ export class PlotBuilder {
 					case 'place':
 					case 'write': {
 						const ruleSet = this.getRuleSet(currentPlot, plotNumber);
-						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: { x: mx = 0, y: my = 0, z: mz = 0 } = {} } = ruleSet ?? {};
+						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault = {} } = ruleSet ?? {};
+						const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault;
+						const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties;
 						const start = { x: sx + mx, y: sy + my, z: sz + mz };
 						const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
 						// content.warn({ t: 'beforeItemUseOn', start, end });
@@ -419,45 +473,41 @@ export class PlotBuilder {
 
 
 			},
-			beforePlayerScaffoldPlace: (event) => {
-				const { blockLocation, player } = event;
-				const { scores, properties, location, memory, rotation, dimension, isSneaking } = player;
-				const { ingorePlotSystem } = scores;
-				const { currentPlot } = properties;
-				if (!currentPlot || ingorePlotSystem) return;
-				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot].rules;
-				const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
-				let plotNumber;
-				if (exclusive) plotNumber = 0;
-				else if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
-				else if (property) plotNumber = properties[plotNumberIdentifier];
-				else plotNumber = scores[plotNumberIdentifier];
-				if (!isDefined(plotNumber)) return;
-				switch (permision) {
-					case 'place':
-					case 'write': {
-						const ruleSet = this.getRuleSet(currentPlot, plotNumber);
-						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: { x: mx = 0, y: my = 0, z: mz = 0 } = {} } = ruleSet ?? {};
-						const start = { x: sx + mx, y: sy + my, z: sz + mz };
-						const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
-						content.warn({ t: 'beforeItemUseOn', start, end, bool: betweenBlockVector3(blockLocation, start, end) });
-						if (betweenBlockVector3(blockLocation, start, end)) return;
-					}
-					case 'break':
-					case 'read': {
-						event.cancel = true;
-						break;
-					}
-				}
+			// beforePlayerScaffoldPlace: (event) => {
+			// 	const { blockLocation, player } = event;
+			// 	const { scores, properties, location, memory, rotation, dimension, isSneaking } = player;
+			// 	const { ingorePlotSystem } = scores;
+			// 	const { currentPlot } = properties;
+			// 	if (!currentPlot || ingorePlotSystem) return;
+			// 	const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot].rules;
+			// 	const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
+			// 	let plotNumber;
+			// 	if (exclusive) plotNumber = 0;
+			// 	else if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
+			// 	else if (property) plotNumber = properties[plotNumberIdentifier];
+			// 	else plotNumber = scores[plotNumberIdentifier];
+			// 	if (!isDefined(plotNumber)) return;
+			// 	switch (permision) {
+			// 		case 'place':
+			// 		case 'write': {
+			// 			const ruleSet = this.getRuleSet(currentPlot, plotNumber);
+			// 			const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: { x: mx = 0, y: my = 0, z: mz = 0 } = {} } = ruleSet ?? {};
+			// 			const start = { x: sx + mx, y: sy + my, z: sz + mz };
+			// 			const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
+			// 			content.warn({ t: 'beforeItemUseOn', start, end, bool: betweenBlockVector3(blockLocation, start, end) });
+			// 			if (betweenBlockVector3(blockLocation, start, end)) return;
+			// 		}
+			// 		case 'break':
+			// 		case 'read': {
+			// 			event.cancel = true;
+			// 			break;
+			// 		}
+			// 	}
 
 
-			},
+			// },
 		});
 		this.subscribed = true;
-	}
-	setOveride(player, type, value) {
-		const { memory } = player;
-		memory[type] = value;
 	}
 	/**
 	 * @param {import('../player/class').Player} player 
@@ -501,7 +551,7 @@ export class PlotBuilder {
 		if (structure) {
 			const { start: { x, y, z } } = ruleSet;
 			const { x: sx, y: sy, z: sz } = structure.location;
-			// content.warn({ t: 'structure', sx, sy, sz, x: sx + x, y: sy + y, z: sz + z });
+			content.warn({ t: 'structure', sx, sy, sz, x: sx + x, y: sy + y, z: sz + z });
 			loadId = structureBuilder.load({ ...structure, ...{ location: { x: sx + x, y: sy + y, z: sz + z } } });
 		}
 

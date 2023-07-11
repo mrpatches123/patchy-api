@@ -43,7 +43,7 @@ class PlayersScoreboard {
 		});
 
 		//removes player from system when they leave
-		world.events.playerLeave.subscribe(({ playerName }) => {
+		world.afterEvents.playerLeave.subscribe(({ playerName }) => {
 
 			const id = this.ids[playerName];
 			delete this.scores[id];

@@ -1,5 +1,5 @@
 import { Dimension, world } from "@minecraft/server";
-import { content, isDefined, isVector3, metricNumbers, overworld, typeOf } from "../../utilities.js";
+import { chunkStringBytes, content, isDefined, isVector3, metricNumbers, overworld, typeOf } from "../../utilities.js";
 import eventBuilder from "../events/export_instance.js";
 import players from "../players/export_instance.js";
 
@@ -16,21 +16,26 @@ export class LeaderboardBuilder {
 		this.loadCreated = false;
 	}
 	initialize() {
-		content.warn({ createQueueLB: this.createQueue });
+		// content.warn('leaderboardBuilder2384975u3io9we8rhugybedinwoj');
+		// content.warn({ createQueueLB: this.createQueue });
 		this.createQueue.forEach(({ reversed, modification, type, location, objective, maxLength, title, formating }) => {
-			let entity = [...overworld.getEntitiesAtBlockLocation(location)].filter(({ typeId }) => typeId === 'patches:leaderboard').sort(({ location: { x: aex, y: aey, z: aez } }, { location: { x: bex, y: bey, z: bez } }) => Math.hypot(bex - x, bey - y, bez - z) - Math.hypot(aex - x, aey - y, aez - z))[0];
+			let entity = [...overworld.getEntities({ type: 'patches:leaderboard', location, maxDistance: 2, closest: 1, tags: [objective] })][0];
+			// content.warn({ objective, entityTags: entity.getTags() });
 			if (!entity) entity = overworld.spawnEntity('patches:leaderboard', location);
 			if (!entity.hasTag(objective)) entity.addTag(objective);
 			const { id } = entity;
 			this.entities[id] = { reversed, modification, location, objective, maxLength, title, formating, type };
 			this.entities[id].savedScores = {};
-			if (type === 'offline') {
+			if (this.entities[id].type === 'offline') {
 				const tags = entity.getTags();
-				const scoresString = tags.find(tag => tag.startsWith('scores:'));
-				if (scoresString) {
-					this.entities[id].savedScores = JSON.parse(scoresString.substring('scores:'.length));
-				}
-				content.warn({ data: this.entities[id] });
+				const scoresStrings = tags.filter(tag => tag.startsWith('scores:')) ?? [];
+				if (!scoresStrings.length) return;
+				const rawDatas = scoresStrings.map(string => {
+					const number = Number(string.match(/\d+/) ?? '0');
+					return [number, string.replace(/scores:\d+:/, '').replace('scores:', '')];
+				}).sort(([a], [b]) => a - b).map(([i, rawData]) => rawData);
+				// content.warn({ objective, data: rawDatas.join('') });
+				this.entities[id].savedScores = JSON.parse(rawDatas.join(''));
 			}
 		});
 		this.createQueue = [];
@@ -73,13 +78,17 @@ export class LeaderboardBuilder {
 				if (!tags) return entity.triggerEvent('kill_lb');
 				this.entities[id].savedScores = {};
 				if (this.entities[id].type === 'offline') {
-					const scoresString = tags.find(tag => tag.startsWith('scores:'));
-					if (scoresString) {
-						this.entities[id].savedScores = JSON.parse(scoresString.substring('scores:'.length));
-					}
-					content.warn({ data: this.entities[id] });
+					const scoresStrings = tags.filter(tag => tag.startsWith('scores:')) ?? [];
+					if (!scoresStrings.length) return;
+					const rawDatas = scoresStrings.map(string => {
+						const number = Number(string.match(/\d+/) ?? '0');
+						return [number, string.replace(/scores:\d+:/, '').replace('scores:', '')];
+					}).sort(([a], [b]) => a - b).map(([i, rawData]) => rawData);;
+					this.entities[id].savedScores = JSON.parse(rawDatas.join(''));
 				}
+				// content.warn({ data: this.entities[id] });
 			}
+
 
 			const entityStorage = this.entities[id];
 			let { modification, reversed, savedScores = {}, type, objective, maxLength, formating, title } = entityStorage;
@@ -117,9 +126,15 @@ export class LeaderboardBuilder {
 			leaderboard.forEach(({ id, value, name }) => {
 				leaderboardObject[id] = { value, name };
 			});
-			const scoresString = tags.find(tag => tag.startsWith('scores:'));
-			if (scoresString) entity.removeTag(scoresString);
-			entity.addTag('scores:' + JSON.stringify(leaderboardObject));
+			const scoresStrings = tags.filter(tag => tag.startsWith('scores:'));
+			if (scoresStrings.length) scoresStrings.forEach(scoresString => entity.removeTag(scoresString));
+			const stringifiedScores = JSON.stringify(leaderboardObject);
+			const chunks = chunkStringBytes(stringifiedScores, 240);
+			chunks.forEach((chunk, i) => {
+				const string = `scores:${i}:${chunk}`;
+				content.warn({ objective, i, len: string.length });
+				entity.addTag(string);
+			});
 		});
 	}
 	create({ type = 'online', reversed = false, modification, location, objective, maxLength, title = objective, formating = '${#} ${name} ${score*f}' }) {
@@ -130,8 +145,8 @@ export class LeaderboardBuilder {
 		if (!isVector3(location)) throw new Error('postion in params[] is not of type: Vector3!');
 
 		if (typeof objective !== 'string') throw new Error('objective in params[0] is not of type: String!');
-		if (!world.scoreboard.getObjective(objective)) throw new Error('objective in params[0] does not exist!');
-		// content.warn({ maxLength });
+		if (!world.scoreboard.getObjective(objective)) throw new Error(`objective: ${objective}, in params[0] does not exist!`);
+		// content.warn({ maxLength });wq
 		if (typeof maxLength !== 'number') throw new Error('maxLength in params[2] is not of type: Whole Number!');
 		if (maxLength < 1) throw new Error('maxLength in params[2] is not of type: Whole Number!');
 		if (modification && !(modification instanceof Function)) throw new Error('modification in params[2] is not of type: Function!');
@@ -140,7 +155,7 @@ export class LeaderboardBuilder {
 		if (typeof reversed !== 'boolean') throw new Error('reversed in params[0] is defined and not of type: Boolean!');
 		this.createQueue.push({ modification, reversed, type, location, objective, maxLength, title, formating });
 		this.subscribe();
-		content.warn(this.loadCreated);
+		// content.warn(this.loadCreated);
 		if (this.loadCreated) this.initialize();
 	}
 	/**

@@ -1,4 +1,4 @@
-import { Block, Dimension, XYRotation, MinecraftBlockTypes, Vector } from '@minecraft/server';
+import { Block, Dimension, MinecraftBlockTypes, Vector } from '@minecraft/server';
 import { content, isVector2, isVector3, native, offsetVector3, randomCoordsOutsideCircle } from '../utilities.js';
 import { Player } from './player/class.js';
 import time from './time.js';
@@ -41,7 +41,7 @@ class TeleportBuilder {
 	 * @typedef {Object} TeleportOptions
 	 * @property {{x: number, y: number, z: number}} location
 	 * @property {Dimension} dimension
-	 * @property {XYRotation} rotation
+	 * @property {{x: number, y: number}} rotation
 	 * @property {{x: number, y: number, z: number}} face
 	 * @property {Boolean} keepVelocity
 	 * @property {RandomOptions} random
@@ -164,7 +164,7 @@ class TeleportBuilder {
 	/**
 	 * @typedef {Object} TeleportObjectOnce
 	 * @property {import('@minecraft/server').Vector3 | RelitiveOffset} location
-	 * @property {import('@minecraft/server').XYRotation | import('@minecraft/server').Vector3 | RelitiveOffset} face
+	 * @property {{x: number, y: number} | import('@minecraft/server').Vector3 | RelitiveOffset} face
 	 * @property {Dimension} dimension
 	 */
 	/**
@@ -193,15 +193,9 @@ class TeleportBuilder {
 		let rotation = (isVector3(face)) ? undefined : face;
 		let facing = (rotation) ? undefined : face;
 		content.warn({ facing: objectVector3(facing), location: objectVector3(location) });
-		if (facing && !rotation) return player.teleportFacing(location, dimension, facing);
+		if (facing && !rotation) return player.teleport(location, { dimension, facingLocation: facing });
 		if (!isVector2(rotation)) { rotation = rotationPlayer; }
-		const { x: rx, y: ry } = rotation;
-		player.teleport(
-			location,
-			dimension,
-			rx,
-			ry
-		);
+		player.teleport(location, { dimension, rotation });
 
 	};
 	/**
@@ -230,12 +224,11 @@ class TeleportBuilder {
 		}
 		// content.warn({ facing: { x: facing.x, y: facing.y, z: facing.z } });
 		if (facing && !rotation) {
-			player.teleportFacing(location, dimension, facing, keepVelocity);
+			player.teleport(location, { dimension, facingLocation: facing });
 		} else {
-			if (!rotation) { rotation = rotationPlayer; }
-			const { x: rx, y: ry } = rotation;
+			if (!rotation) { rotation = rotationPlayer; };
 			content.warn({ location, t: 'teleportlocation' });
-			player.teleport(location, dimension, rx, ry);
+			player.teleport(location, { dimension, rotation });
 		}
 	};
 }

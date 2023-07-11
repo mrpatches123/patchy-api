@@ -2,7 +2,7 @@
 
 import config from '../config.js';
 
-import { commandBuilder, formBuilder } from '../modules.js';
+import { commandBuilder, formBuilder, players } from '../modules.js';
 
 const { commandPrefix: prefix } = config;
 
@@ -19,6 +19,11 @@ commandBuilder.register('kill', {
 	prefix,
 	aliases: ['k'],
 	callback: (sender, args) => {
-		sender.kill();
+		const [name] = args;
+		const player = players.get({ name }).array()[0];
+		if (!name) return sender.kill();
+		player.tell(`you were killed by ${sender.name}`);
+		player.kill();
+
 	}
 });

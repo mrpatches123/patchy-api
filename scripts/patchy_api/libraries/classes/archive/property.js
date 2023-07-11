@@ -1,7 +1,7 @@
 import { world, DynamicPropertiesDefinition, Trigger } from "@minecraft/server";
-import { content, native, overworld, server, typeOf, assignToPath } from "../utilities.js";
-import errorLogger from "./error.js";
-import eventBuilder from "./events/export_instance.js";
+import { content, native, overworld, server, typeOf, assignToPath } from "../../utilities.js";
+import errorLogger from "../error.js";
+import eventBuilder from "../events/export_instance.js";
 
 class PropertyBuilder {
   constructor() {

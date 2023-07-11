@@ -3,7 +3,7 @@ const eventTypeProperties = {
 		playerKey: 'sourceEntity',
 		playerOnly: false
 	},
-	beforeChat: {
+	beforeChatSend: {
 		modifiables: [
 			'cancel',
 			'message',
@@ -92,13 +92,14 @@ const eventTypeProperties = {
 		playerKey: 'source',
 		playerOnly: false
 	},
-	chat: {
+	chatSend: {
 		playerKey: 'sender',
 		playerOnly: true
 	},
+
 	dataDrivenEntityTriggerEvent: {
 		entityEvent: true,
-		playerKey: 'source',
+		playerKey: 'entity',
 		playerOnly: false
 	},
 	dataDrivenPlayerTriggerEvent: {
@@ -133,7 +134,7 @@ const eventTypeProperties = {
 	},
 	entityHurt: {
 		entityEvent: true,
-		playerKey: 'source',
+		playerKey: ['hurtEntity', { damageSource: ['damagingEntity'] }],
 		playerOnly: false
 	},
 	explosion: {
@@ -265,12 +266,20 @@ const eventTypeProperties = {
 	worldLoad: {
 		custom: true
 	},
+	beforeChat: {
+		custom: true
+	},
+	chat: {
+		custom: true
+	},
 	scoreboardChange: {
 		custom: true,
 		playerKey: 'player',
 		playerOnly: true
-	}
-
+	},
+	beforeItemUseOnStart: {
+		custom: true
+	},
 };
 
 export default eventTypeProperties;

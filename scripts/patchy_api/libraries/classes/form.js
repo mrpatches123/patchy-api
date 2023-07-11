@@ -241,8 +241,8 @@ class FormBuilder {
         try {
             const form = new message();
             form.body(body);
-            form.button1('Yes');
-            form.button2('No');
+            form.button2('Yes');
+            form.button1('No');
             const { selection, canceled, cancelationReason } = await form.show(receiver.player);
             if (canceled) return cancelationReason;
             if (selection) {
@@ -266,8 +266,8 @@ class FormBuilder {
 
             const form = new message();
             form.body(body);
-            form.button1('Yes');
-            form.button2('No');
+            form.button2('Yes');
+            form.button1('No');
             let response;
             while (true) {
                 response = await form.show(receiver);
@@ -350,16 +350,18 @@ class FormBuilder {
             const object = formArray[i];
             // content.warn({ formArray, i, type: typeof object, array: isArray(object), extraArguments });
             let objectClone;
-            if (typeof object === 'function') {
+            if (object instanceof Array) {
+                formArray = [...formArray.delete(i).merge(--i, object)];
+            } else if (typeof object === 'function') {
                 let objectGenerated = object(receiver, i, ...extraArguments);
                 if (typeof objectGenerated === 'object') {
                     if (isArray(objectGenerated)) {
                         formArray = [...formArray.delete(i).merge(--i, objectGenerated)];
-                        // content.warn({ test: formArray });
+                        content.warn({ test: formArray });
                         continue;
                     } else if (objectGenerated) {
                         objectClone = objectGenerated;
-                        // content.warn({ testTwo: formArray });
+                        content.warn({ testTwo: formArray });
                     }
                 }
             } else if (object) {
@@ -501,7 +503,7 @@ class FormBuilder {
         // content.warn({ t: 'response', canceled, cancelationReason, timeMS: time.end('form') });
         if (this.__awaitingPlayers.hasOwnProperty(id) && this.__awaitingPlayers[id].hasOwnProperty(key)) delete this.__awaitingPlayers[id][key];
         // content.warn({ text: this[key][type] });
-        const responsibleObjects = formArray.filter(object => object.some((key, value) => typeof value === 'object'));
+        const responsibleObjects = formArray.filter(object => (object ?? {}).some((key, value) => typeof value === 'object'));
         if (responses[type] === 'selection') {
             const i = (type === 'message') ? Number(!response[responses[type]]) : response[responses[type]];
             content.warn({ response: response[responses[type]], i });
@@ -513,11 +515,11 @@ class FormBuilder {
             if (object?.toggle && form instanceof action) {
                 const { options, scoreboardName, dependency = 'receiver', postfix = true, prefix = false, reopen = false } = object.toggle;
                 let index = 0;
-                // content.warn({ hwjd: 'test252', lengthOptions: options.length });
+                content.warn({ hwjd: 'test252', lengthOptions: options.length, index });
                 if (scoreboardName) {
                     if (dependency === 'receiver') {
                         index = scores[scoreboardName] ?? 0;
-                        if (index < options.length) {
+                        if (index < options.length - 1) {
                             scores[scoreboardName] = ++index;
                         } else {
                             index = 0;
@@ -525,7 +527,7 @@ class FormBuilder {
                         }
                     } else {
                         index = server.scoreTest(scoreboardName, 'world') ?? 0;
-                        if (index < options.length) {
+                        if (index < options.length - 1) {
                             index = server.scoreSet(scoreboardName, ++index);
                         } else {
                             index = 0;

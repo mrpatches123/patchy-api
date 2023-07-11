@@ -5,6 +5,8 @@ import { content } from "../../utilities.js";
 export class CustomEvent {
 	constructor(eventKey) {
 		this.eventKey = eventKey;
+		eventBuilder.subscriptions[eventKey] ??= {};
+		eventBuilder.subscriptions[eventKey].keys ??= {};
 		this.subscriptions = eventBuilder.subscriptions[eventKey];
 	};
 	// [Symbol.iterator]() {
@@ -44,7 +46,10 @@ export class CustomEvent {
 				if (callback instanceof Function) callback(key, eventResponse, callbackForKey, i);
 				else callbackForKey(eventResponse);
 				// content.warn(this.eventKey, eventBuilder.subscriptions[this.eventKey].keys);
-				eventBuilder.subscriptions[this.eventKey].keys[key].time = time.end(`Events*API*${this.eventKey}*${key}`);
+				const endTime = time.end(`Events*API*${this.eventKey}*${key}`);
+				if (!eventBuilder.subscriptions.hasOwnProperty(this.eventKey)) return;
+				if (!eventBuilder.subscriptions[this.eventKey].keys.hasOwnProperty(key)) return;
+				eventBuilder.subscriptions[this.eventKey].keys[key].time = endTime;
 			} catch (error) {
 				errorLogger.log(error, error.stack, { event: this.eventKey, key });
 			}

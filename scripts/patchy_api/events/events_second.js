@@ -67,9 +67,9 @@ eventBuilder.register({
 		subscription: {
 			entityDie: {
 				function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: player }) => {
+					if (!(player instanceof Player)) return;
 					eventBuilder.getEvent('playerDeath').iterate({ damageSource: { killer: setProptotype(damagingEntity), projectile: damagingProjectile, cause }, player });
-				},
-				entityOptions: { entityTypes: ["minecraft:player"] }
+				}
 			}
 		}
 	},
@@ -133,8 +133,7 @@ eventBuilder.register({
 		subscription: {
 			beforeItemUseOn: {
 				function: (event) => {
-					const eventBlockLocation = event.getBlockLocation();
-					const { source, } = event;
+					const { source, block: { location: eventBlockLocation } } = event;
 
 					const player = setProptotype(source);
 					if (!(player instanceof Player)) return;
@@ -155,7 +154,37 @@ eventBuilder.register({
 				}
 			}
 		}
-	}
+	},
+	beforeItemUseOnStart: {
+		subscription: {
+			beforeItemUseOn: {
+				function: (event) => {
+					const { source } = event;
+					if (!(source instanceof Player)) return;
+					const { memory } = source;
+					const { usedOn } = memory;
+					if (!usedOn) {
+						eventBuilder.getEvent('beforeItemUseOnStart').iterate(event);
+						memory.usedOn = true;
+					}
+					memory.usingOn = true;
+
+				}
+			},
+			tickAfterLoad: {
+				function: () => {
+					players.get().iterate((player) => {
+						const { memory } = player;
+						const { usingOn } = memory;
+						if (!usingOn) {
+							memory.usedOn = false;
+						}
+						memory.usingOn = false;
+					});
+				}
+			}
+		}
+	},
 });
 function vectorToVector3(vector) {
 	const { x, y, z } = vector;

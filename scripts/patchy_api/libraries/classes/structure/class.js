@@ -15,6 +15,13 @@ const animationModes = ['block_by_block', 'layer_by_layer'];
 /**
  * @typedef {{dimension: Dimension, location: import('@minecraft/server').Vector3, name: string, rotation?: '0_degrees' | '90_degrees' | '180_degrees' | '270_degrees', mirror?: 'none' | 'x' | 'xz' | 'z', animationMode?: 'block_by_block' | 'layer_by_layer', animationSeconds?: number, includesEntites?: boolean, includesBlocks?: boolean, waterlogged: boolean, integrity: Number, seed: string}} LoadOptions
  */
+/**
+ * @param {{x: number, y: number, z: number}} vector3
+ */
+function floorVector3(vector3) {
+	const { x, y, z } = vector3;
+	return { x: Math.floor(x), y: Math.floor(y), z: Math.floor(z) };
+};
 export class StructureBuilder {
 	constructor() {
 		/**
@@ -53,13 +60,17 @@ export class StructureBuilder {
 	 */
 	save(options) {
 
-		const { name, dimension, location1, location2, saveMode, includesEntites, includesBlocks } = options;
+		let { name, dimension, location1, location2, saveMode, includesEntites, includesBlocks } = options;
 		if (!(dimension instanceof Dimension)) throw new Error('dimension in saveOptions at params[0] is not of type: Dimension!');
 		if (!isVector3(location1)) throw new Error('location1 in saveOptions at params[0] is not of type: Vector3!');
 		if (!isVector3(location2)) throw new Error('location2 in saveOptions at params[0] is not of type: Vector3!');
 		if (saveMode && !saveModes.includes(saveMode)) throw new Error(`saveMode in saveOptions at params[0] is defined and not one of the following: ${orArray(saveModes)}!`);
 		if (includesEntites && typeof includesEntites !== 'boolean') throw new Error(`includesEntites in saveOptions at params[0] is defined and not of type: Boolean!`);
 		if (includesBlocks && typeof includesBlocks !== 'boolean') throw new Error(`includesBlocks in saveOptions at params[0] is defined and not of type: Boolean!`);
+		location1 = floorVector3(location1);
+		location2 = floorVector3(location2);
+		options.location1 = location1;
+		options.location2 = location2;
 		const iterator = this.getSaveIterator(...sort3DVectors(location1, location2));
 		this.queueSave(name, dimension, iterator, options, id);
 		return this.saveId++;
@@ -131,7 +142,6 @@ export class StructureBuilder {
 		function tick() {
 			const systemIdNumber = system.run(async () => {
 				try {
-
 					const currentLoad = thisStructure.loadQueue[0];
 					if (!currentLoad) return (system.clearRun(systemIdNumber), thisStructure.subscribedLoadQueue = false);
 					if (!thisStructure.vars.hasOwnProperty('init')) {
@@ -140,22 +150,28 @@ export class StructureBuilder {
 						thisStructure.vars.c = 0;
 						thisStructure.vars.r = 0;
 						thisStructure.vars.newRow = false;
+						thisStructure.vars.tickCleared = false;
 					}
 					thisStructure.vars.init = true;
 					const { x, z, c, r, newRow } = thisStructure.vars;
 					const [{ name, dimension, location: { x: x1, y, z: z1 } }, id] = currentLoad;
 					thisStructure.loads[id].started = true;
-					let shouldReturn = false;
-					await dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).then(() => shouldReturn = true, error => console.warn(error, error.stack));
-					if (shouldReturn) return (shouldReturn = false, tick());
-					content.warn({ x1, z1, command: `structure load ${name}_${c}_${r} ${x + x1} ${y} ${z + z1}`, name, dimension: dimension.id, x, z, c, r });
-					await dimension.runCommandAsync(`tickingarea add ${x + x1} ${y} ${z + z1} ${x + x1 + 63} ${y} ${z + z1 + 63} StructureSaveAPI true`).catch(error => console.warn(error, error.stack));
-					await dimension.runCommandAsync(`structure load ${name}_${c}_${r} ${x + x1} ${y} ${z + z1}`).then(() => {
+
+					const tickRemoveResult = (thisStructure.vars.tickCleared) ? 0 : await dimension.runCommandAsync(`tickingarea remove StructureSaveAPI`).catch(error => console.warn(error, error.stack));
+					if (tickRemoveResult.successCount) return (tick(), thisStructure.vars.tickCleared = true);
+					content.warn({ tickRemoveResult: tickRemoveResult.successCount });
+					// content.warn({ x1, z1, command: `structure load ${name}_${c}_${r} ${x + x1} ${y} ${z + z1}`, name, dimension: dimension.id, x, z, c, r });
+					const tickAddResult = await dimension.runCommandAsync(`tickingarea add ${x + x1} ${y} ${z + z1} ${x + x1 + 63} ${y} ${z + z1 + 63} StructureSaveAPI true`).catch(error => console.warn(error, error.stack));
+					content.warn({ tickAddResult: tickAddResult.successCount });
+					if (tickAddResult.successCount) return tick();
+					const structureLoadResult = await dimension.runCommandAsync(`structure load ${name}_${c}_${r} ${x + x1} ${y} ${z + z1}`).catch(error => console.warn(error, error.stack));
+					content.warn({ structureLoadResult: structureLoadResult.successCount });
+					if (structureLoadResult.successCount) {
 						tick();
 						thisStructure.vars.newRow = false;
 						thisStructure.vars.x += 64, thisStructure.vars.c++;
-					}, () => {
-
+						thisStructure.vars.tickCleared = false;
+					} else {
 						if (newRow || (!x && !z)) {
 							tick();
 							thisStructure.loads[id].done = true;
@@ -169,10 +185,11 @@ export class StructureBuilder {
 							thisStructure.vars.c = 0;
 							thisStructure.vars.x = 0;
 							thisStructure.vars.newRow = true;
+							thisStructure.vars.tickCleared = false;
 							tick();
 							return;
 						}
-					}).catch(error => console.warn(error, error.stack));
+					}
 
 				} catch (error) {
 					console.warn(error, error.stack);
@@ -207,6 +224,7 @@ export class StructureBuilder {
 		if (includesBlocks && typeof includesBlocks !== 'boolean') throw new Error(`includesBlocks in loadOptions at params[0] is defined and not of type: Boolean!`);
 		if (waterlogged && typeof waterlogged !== 'boolean') throw new Error(`waterlogged in loadOptions at params[0] is defined and not of type: Boolean!`);
 		if (seed && typeof seed !== 'string') throw new Error(`seed in loadOptions at params[0] is defined and not of type: String!`);
+		options.location = floorVector3(location);
 		this.queueLoad(options, this.loadId++);
 	}
 }

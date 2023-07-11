@@ -1,5 +1,6 @@
 import { content, isDefined, orArray, server } from "../utilities.js";
-import { Player, world } from "@minecraft/server";
+import { world, Player as PlayerType } from "@minecraft/server";
+import { Player } from './player/class.js';
 import eventBuilder from "./events/export_instance.js";
 const chunk = 2147483646;
 const displaySlotIds = ['list', 'sidebar', 'belowName'];
@@ -60,9 +61,12 @@ class ScoreboardBuilder {
 	 * @param {Number} value 
 	 */
 	set(player, objective, value) {
+		if (player instanceof PlayerType) throw new Error(`Player, at params[0] is of type: PlayerType(world player)!`);
+		if (!(player instanceof Player)) throw new Error(`Player, at params[0] is not of type: Player(not world player)!`);
+		if (!world.scoreboard.getObjective(objective)) throw new Error(`objective, ${objective} at params[1] does not Exist!`);
+		if (isDefined(value) && typeof value !== 'number') throw new Error(`value, ${value} at params[2] is not of type: Number!`);
 
 		const { id } = player;
-		if (player.hasOwnProperty('player')) player = player.player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
 		this.players[id][objective].value = value, this.players[id][objective].gotten = true;
@@ -96,9 +100,10 @@ class ScoreboardBuilder {
 	 * @param {boolean} forceDisk?=false
 	 */
 	get(player, objective, forceDisk) {
+		if (!(player instanceof Player)) throw new Error(`Player, at params[1] is not the correct type of player!`);
 		if (!world.scoreboard.getObjective(objective)) throw new Error(`objective, ${objective} at params[1] does not Exist!`);
 		const { id } = player;
-		if (player.hasOwnProperty('player')) player = player.player;
+		// if (player.hasOwnProperty('player')) player = player.player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
 		const { value, gotten } = this.players[id][objective];

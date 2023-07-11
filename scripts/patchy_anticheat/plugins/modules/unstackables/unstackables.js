@@ -1,4 +1,4 @@
-import { world, MinecraftItemTypes, ItemStack, Items } from '@minecraft/server';
+import { world, MinecraftItemTypes, ItemStack, ItemTypes } from '@minecraft/server';
 import { unstackableItems, stackable16Items } from './unstackable_items.js';
 import { players, eventBuilder, overworld, andArray } from '../../../../patchy_api/modules.js';
 eventBuilder.subscribe('unstackables', {

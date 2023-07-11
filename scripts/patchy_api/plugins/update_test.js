@@ -1,4 +1,4 @@
-// import { Block, BlockInventoryComponentContainer, BlockLocation, world } from '@minecraft/server';
+// import { Block, Container, BlockLocation, world } from '@minecraft/server';
 // import { eventBuilder, global, content, native, overworld } from '../../patchy_api/modules.js';
 // const content = {
 // 	warn(...messages) {
@@ -69,7 +69,7 @@
 // 		 */
 // 		const block = overworld.getBlock({x: 209, y:  104 z:  287));
 // 		/**
-// 		 * @type {BlockInventoryComponentContainer}
+// 		 * @type {Container}
 // 		 */
 // 		const container = block.getComponent('minecraft:inventory').container;
 // 		content.warn({ size: container.size });

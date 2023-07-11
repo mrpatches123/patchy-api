@@ -1,5 +1,5 @@
-import { ItemStack, Player as PlayerType } from '@minecraft/server';
-import { PlayAnimationOptions, EntityDamageSource, Vector3, PlayerInventoryComponentContainer, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, XYRotation, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions } from '@minecraft/server';
+import { EntityEffectOptions, EntityEquipmentInventoryComponent, ItemStack, Player as PlayerType, Vector2 } from '@minecraft/server';
+import { PlayAnimationOptions, EntityDamageSource, Vector3, Container, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions, TeleportOptions } from '@minecraft/server';
 import { EntityOnFireComponent, EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
 import { Inventory } from "../players/export_instance.js";
 interface PlayerEntity {
@@ -25,6 +25,8 @@ interface EntityComponents {
 	'can_power_jump': EntityCanPowerJumpComponent;
 	'minecraft:color': EntityColorComponent;
 	'color': EntityColorComponent;
+	'minecraft:equipment_inventory': EntityEquipmentInventoryComponent;
+	'equipment_inventory': EntityEquipmentInventoryComponent;
 	'minecraft:fire_immune': EntityFireImmuneComponent;
 	'fire_immune': EntityFireImmuneComponent;
 	'minecraft:floats_in_liquid': EntityFloatsInLiquidComponent;
@@ -155,14 +157,24 @@ export declare class Player extends Entity {
 	 * proxy with get and set on the main hand of the player even the item properties have a get and set
 	 * @throws This property can throw when used.
 	 */
-	readonly container: PlayerInventoryComponentContainer;
+	readonly container: Container;
+	/**
+	 * returns an array of ItemStack proxies with get and set for a ItemStack with chaching so the inventory is only gotten once per tick
+	 * @throws This property can throw when used.
+	 */
+	armor: ItemStack[];
+	/**
+	 * proxy with get and set on the main hand of the player even the item properties have a get and set
+	 * @throws This property can throw when used.
+	 */
+	offhand: ItemStack;
 	/**
 	 * proxy with get and set on the main hand of the player even the item properties have a get and set
 	 * @throws This property can throw when used.
 	 */
 	mainHand: ItemStack;
 	/**
-	 * returns and array of itemstacks with chaching so the inventory is only gotten once per tick
+	 * returns an array of ItemStack proxies with get and set for a ItemStack with chaching so the inventory is only gotten once per tick
 	 * @throws This property can throw when used.
 	 */
 	inventory: Inventory;
@@ -184,10 +196,15 @@ export declare class Player extends Entity {
 	 * @throws This property can throw when used.
 	 */
 	readonly id: string;
+
 	/**
 	 * True if the player is currently using a sneaking movement.
 	 */
 	isSneaking: boolean;
+	/**
+	  * sees if the player is swimming
+	  */
+	readonly isSwimming: boolean;
 	/**
 	 * Current location of the player.
 	 * @throws This property can throw when used.
@@ -211,7 +228,7 @@ export declare class Player extends Entity {
 	 * Main rotation of the entity.
 	 * @throws This property can throw when used.
 	 */
-	readonly rotation: XYRotation;
+	readonly rotation: Vector2;
 	/**
 	 * Returns a scoreboard identity that represents this entity.
 	 * @throws This property can throw when used.
@@ -266,7 +283,7 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	applyDamage(amount: number, source?: EntityDamageSource): boolean;
-	addEffect(effectType: EffectType, duration: number, amplifier?: number, showParticles?: boolean): void;
+	addEffect(effectType: EffectType, duration: number, options?: EntityEffectOptions): void;
 	/**
 	* @beta
 	* @remarks
@@ -387,7 +404,7 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	getItemCooldown(itemCategory: string): number;
-	getRotation(): XYRotation;
+	getRotation(): Vector2;
 	getSpawnPosition(): Vector3 | undefined;
 	getTotalXp(): number;
 	getVelocity(): Vector3;
@@ -526,36 +543,13 @@ export declare class Player extends Entity {
 	 * Teleports the selected player to a new location
 	 * @param location
 	 * New location for the player.
-	 * @param dimension
-	 * Dimension to move the selected player to.
-	 * @param xRotation
-	 * X rotation of the player after teleportation.
-	 * @param yRotation
-	 * Y rotation of the player after teleportation.
-	 * @param keepVelocity
+	 * @param TeleportOptions
 	 * @throws This function can throw errors.
 	 */
 	teleport(
 		location: { x: number, y: number, z: number; },
-		dimension: Dimension,
-		xRotation: number,
-		yRotation: number,
-		keepVelocity?: boolean,
+		options: TeleportOptions
 	): void;
-	/**
-	 * @remarks
-	 * Teleports the selected player to a new location, and will
-	 * have the player facing a specified location.
-	 * @param location
-	 * New location for the player.
-	 * @param dimension
-	 * Dimension to move the selected player to.
-	 * @param facingLocation
-	 * Location that this player will be facing.
-	 * @param keepVelocity
-	 * @throws This function can throw errors.
-	 */
-	teleportFacing(location: { x: number, y: number, z: number; }, dimension: Dimension, facingLocation: { x: number, y: number, z: number; }, keepVelocity?: boolean): void;
 	/**
 	 * @remarks
 	 * Sends a message that is displayed on the connected client

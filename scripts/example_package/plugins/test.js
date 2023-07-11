@@ -1,4 +1,4 @@
-// import { world, InventoryComponentContainer, Enchantment } from "@minecraft/server";
+// import { world, Container, Enchantment } from "@minecraft/server";
 // import { content, eventBuilder, players, preformance } from "../../patchy_api/modules.js";
 
 
@@ -6,7 +6,7 @@
 // // 	playerJoined: ({ player }) => {
 // // 		const { name,  } = player;
 // // 		/**
-// // 		 * @type {InventoryComponentContainer}
+// // 		 * @type {Container}
 // // 		 */
 // // 		const container = player.getComponent('inventory').container;
 

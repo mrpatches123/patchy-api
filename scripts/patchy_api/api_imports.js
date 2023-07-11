@@ -1,7 +1,9 @@
 
 
 
+import './libraries/prototypes/permission_fix.js';
 import './libraries/prototypes/native_imports.js';
+
 import './events/events_zero.js';
 import './events/events_first.js';
 
@@ -13,8 +15,11 @@ import './libraries/prototypes/minecraft_imports.js';
 
 import './main.js';
 //events
-
-
+//forms
+import './forms/test/main.js';
+import './forms/test/static_modal.js';
+import './forms/test/action_gen.js';
+import './forms/test/message_static.js';
 //plugins
 import './plugins/chat.js';
 import './plugins/database_queue.js';
@@ -28,7 +33,6 @@ import './commands/form.js';
 import './commands/plot.js';
 import './commands/error.js';
 import './commands/global.js';
-import './commands/property.js';
 import './commands/databases.js';
 import './commands/events.js';
 import './commands/disconnect.js';
@@ -53,3 +57,8 @@ import './commands/scoreboard.js';
 import './commands/tags.js';
 import './commands/bounds_logger.js';
 import './commands/text.js';
+import './commands/playsound.js';
+import './commands/clear_objective.js';
+import './commands/key.js';
+import './commands/properties.js';
+import './commands/test_form.js';

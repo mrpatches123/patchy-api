@@ -1,21 +1,47 @@
-import { Player, DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, PlayerInventoryComponentContainer, system } from "@minecraft/server";
+import { DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, Container, system } from "@minecraft/server";
 import { content, native } from "../../utilities.js";
 import global from "../global.js";
 import loads from "../load.js";
-const typeDefinitionFunctions = { number: 'defineNumber', string: 'defineString', boolean: 'defineBoolean' };
-const types = Object.keys(typeDefinitionFunctions);
+import propertyBuilder from "../property/export_instance.js";
+import { Player } from "../player/class.js";
 function isDefined(input) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
 }
+
 export class Inventory {
+	/**
+	 * 
+	 * @param {ItemStack[]} array 
+	 * @param {Container} inventory 
+	 */
 	constructor(array, inventory) {
+		/**
+		 * @type {ItemStack[]}
+		 */
 		this.array = array;
+		/**
+		 * @type {Container}
+		 */
 		this.container = inventory;
 	}
+	/**
+	 * @param {(item: ItemStack, i: number)} callback 
+	 */
 	iterate(callback) {
 		if (!(callback instanceof Function)) throw new Error('Not a function at args[0]');
+		const thisInv = this;
 		this.array.forEach((item, i) => {
-			const newItem = callback(item, i);
+			const newItem = callback((item) ? new Proxy({}, {
+				set(target, property, value) {
+					if (property === 'amount' && value <= 0) { thisInv.container.setItem(i, undefined); return Reflect.set(...arguments); }
+					item[property] = value;
+					thisInv.container.setItem(i, item);
+					return Reflect.set(...arguments);
+				},
+				get(target, property) {
+					return (item[property] instanceof Function) ? (...args) => item[property](...args) : item[property];
+				}
+			}) : item, i);
 			this.array[i] = item;
 			if (newItem === undefined) return;
 			this.array[i] = newItem;
@@ -60,6 +86,23 @@ class PlayerIterator {
 }
 export class Players {
 	constructor() {
+		this.objectProperties = {};
+		world.afterEvents.dataDrivenEntityTriggerEvent.subscribe(({ entity, id }) => {
+			if (!(entity instanceof Player)) return;
+			const { id: playerId } = entity;
+			content.warn(id);
+			if (!this.objectProperties.hasOwnProperty(id)) this.objectProperties[id] = {};
+			switch (id) {
+				case 'patches:is_swimming': {
+					this.objectProperties[playerId].isSwimming = true;
+					break;
+				}
+				case 'patches:is_not_swimming': {
+					this.objectProperties[playerId].isSwimming = false;
+					break;
+				}
+			}
+		});
 		this.propertyStorage = {};
 		this.properties = {};
 		this.memory = {};
@@ -73,33 +116,15 @@ export class Players {
 		 * @type {({[key: String]: Player})}
 		 */
 		this.inventorys = {};
-		this.registered = false;
 		this.ran = false;
-		world.events.worldInitialize.subscribe((event) => {
-			const dynamicPropertiesDefinition = new DynamicPropertiesDefinition();
-			playersObject.propertyStorage.forEach((identifier, { type, maxLength }) => {
-				switch (type) {
-					case 'number':
-						dynamicPropertiesDefinition.defineNumber(identifier);
-						break;
-					case 'string':
-						dynamicPropertiesDefinition.defineString(identifier, maxLength);
-						break;
-					case 'boolean':
-						dynamicPropertiesDefinition.defineBoolean(identifier);
-						break;
-				}
-			});
-			event.propertyRegistry.registerEntityTypeDynamicProperties(dynamicPropertiesDefinition, MinecraftEntityTypes.player);
-			playersObject.registered = true;
-		});
+
 		system.runInterval(() => {
 			if (!global.refreshBasePlayerIterator) return;
 			// content.chatFormat({ test: global.refreshBasePlayerIterator });
 			playersObject.refreshBasePlayerIterator();
 			global.refreshBasePlayerIterator = false;
 		});
-		world.events.playerLeave.subscribe(() => {
+		world.afterEvents.playerLeave.subscribe(() => {
 			playersObject.refreshBasePlayerIterator();
 		});
 	}
@@ -115,6 +140,13 @@ export class Players {
 	find(entityQueryOptions, cache) {
 		return this.get(entityQueryOptions, cache).array()[0];
 	}
+	/**
+	 * @type {String} 
+	 * @returns {import('../player/class.js').Player}
+	 */
+	getById(id) {
+		return loads?.players?.[id];
+	};
 	/**
 	 * @param {import('@minecraft/server').EntityQueryOptions} entityQueryOptions 
 	 * @param {boolean} cache 
@@ -160,59 +192,22 @@ export class Players {
 		return ({ id: foundPlayers[id] });
 	}
 	getProperty(player, identifier, forceDisk = false) {
-		const { id } = player;
-		if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player! `);
-		if (!this.propertyStorage.hasOwnProperty(identifier)) throw new Error(`DynamicProperty: ${identifier}, does not exist! `);
-		if (!this.properties.hasOwnProperty(id)) this.properties[id] = {};
-		if (!this.properties[id].hasOwnProperty(identifier)) this.properties[id][identifier] = {};
-		let { value, gotten } = this.properties[id][identifier];
-		if (forceDisk || !gotten) {
-			value = player.getDynamicProperty(identifier);
-			this.properties[id][identifier].value = value;
-			this.properties[id][identifier].gotten = true;
-		}
-		return value;
+		return propertyBuilder.get(player)[identifier];
 	};
 	setProperty(player, identifier, value) {
-		const { id } = player;
-		content.warn({ constructor: player.constructor.name, bool: player instanceof Player });
-		if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player! `);
-		if (!this.propertyStorage.hasOwnProperty(identifier)) throw new Error(`DynamicProperty: ${identifier}, does not exist! `);
-		const { type } = this.propertyStorage[identifier];
-		if (isDefined(value) && type !== typeof value) throw new Error(`value at params[2] is not of type: ${type}!`);
-		if (!this.properties.hasOwnProperty(id)) this.properties[id] = {};
-		if (!this.properties[id].hasOwnProperty(identifier)) this.properties[id][identifier] = {};
-		player.setDynamicProperty(identifier, value);
-		// content.warn(1, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) });
-		this.properties[id][identifier].value = value;
-		// content.warn(2, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) });
-		// system.run(() => content.warn(3, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) }));
-		this.properties[id][identifier].gotten = true;
+		const properties = propertyBuilder.get(player);
+		properties[identifier] = value;
 	};
 	resetProperty(player, identifier) {
-		content.warn(player.name, identifier);
-		const { id } = player;
-		if (!(player instanceof Player)) throw new Error(`player at params[0] is not a Player! `);
-		if (!this.propertyStorage.hasOwnProperty(identifier)) throw new Error(`DynamicProperty: ${identifier}, does not exist! `);
-		if (!this.properties.hasOwnProperty(id)) this.properties[id] = {};
-		if (!this.properties[id].hasOwnProperty(identifier)) this.properties[id][identifier] = {};
-		player.removeDynamicProperty(identifier);
-		// content.warn(1, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) });
-		this.properties[id][identifier].value = undefined;
-		// content.warn(2, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) });
-		// system.run(() => content.warn(3, { now: Date.now() - value, value, mem: this.properties[id][identifier].value, disk: player.getDynamicProperty(identifier) }));
-		this.properties[id][identifier].gotten = true;
+		const properties = propertyBuilder.get(player);
+		properties[identifier] = undefined;
 	}
 	registerProperty(identifier, options) {
-		if (this.registered) throw new Error(`Register Property: ${identifier} in before all scripts load`);
-		if (typeof identifier !== 'string') throw new Error(`identifier, ${identifier}, at param[0] is not a string!`);
-		if (!(options instanceof Object)) throw new Error(`options at param[1] is not a object!`);
-		const { type, maxLength } = options;
-		if (!types.includes(type)) throw new Error(`type, ${type}, in options at param[1] is not 'string', 'number', or 'boolean'!`);
-		// content.warn({ type, maxLength, });
-		if (type === 'string' && !isDefined(maxLength)) throw new Error(`maxLength, in options at param[1] should not be defined since type is not 'string'!`);
-		if (type === 'string' && !Number.isInteger(maxLength) || maxLength <= 0) throw new Error(`maxLength, in options at param[1] is not a integer greater than 0!`);
-		this.propertyStorage[identifier] = options;
+		propertyBuilder.register({
+			player: {
+				[identifier]: options
+			}
+		});
 	};
 }
 

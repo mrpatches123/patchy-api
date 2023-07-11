@@ -24,7 +24,6 @@ commandBuilder.register('tags', {
                 player.getTags().forEach(tag => {
                     player.removeTag(tag);
                 });
-
             });
             tagDatabases.initalizeAll();
         } else {

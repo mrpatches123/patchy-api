@@ -1,4 +1,4 @@
-import { MinecraftBlockTypes, system, world, Container, Vector } from '@minecraft/server';
+import { MinecraftBlockTypes, system, world, Container } from '@minecraft/server';
 function startwodjopwpwdjwwpodjdwo() {
 	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
 }
@@ -6,24 +6,9 @@ startwodjopwpwdjwwpodjdwo();
 system.events.beforeWatchdogTerminate.subscribe((event) => {
 	event.cancel = true;
 });
-world.events.itemUseOn.subscribe((event) => {
-	const { source } = event;
-	let blockLocation = event.getBlockLocation();
-	blockLocation = Vector.add(blockLocation, { x: 0, y: -1, z: 0 });
-	blockLocation = Vector.add(blockLocation, { x: 0, y: 1, z: 0 });
-	const block = source.dimension.getBlock(blockLocation);
-	/**
-	 * @type {Container}
-	 */
-	const container = block.getComponent('inventory').container;
-	const items = [];
-	for (let i = 0; i < container.size; i++) {
-		const slot = container.getItem(i);
-		if (!slot?.typeId) continue;
-		items.push(slot?.typeId);
-	};
-	console.warn(JSON.stringify(items, null, 4));
-});
+// String.fromCodePoint(`0xF4${colors[progressColor]}${(i % barFramesCount).toString(16)}`)
+
+
 // function* test() {
 // 	let i = 0;
 // 	while (true) {
@@ -94,7 +79,7 @@ world.events.itemUseOn.subscribe((event) => {
 // 	const impackedBlocksClone = Array.from(impactedBlocks);
 // 	event.impactedBlocks = impackedBlocksClone.filter(({ x: bx, y: by, z: bz }) => Math.hypot(bx - x, by - y, bz - z) < 2);
 // });
-// import { world, Player, MinecraftBlockTypes, BlockLocation, ItemStack, MinecraftItemTypes, PlayerInventoryComponentContainer } from '@minecraft/server';
+// import { world, Player, MinecraftBlockTypes, BlockLocation, ItemStack, MinecraftItemTypes, Container } from '@minecraft/server';
 
 // const cropTypes = [
 // 	MinecraftBlockTypes.wheat.id,
@@ -126,7 +111,7 @@ world.events.itemUseOn.subscribe((event) => {
 // 	console.warn(block?.type?.id, "hi", JSON.stringify(permutationClone(block.permutation)));
 // 	if (!cropTypes.includes(block?.type?.id)) return;
 // 	/**
-// 	 * @type {PlayerInventoryComponentContainer}
+// 	 * @type {Container}
 // 	 */
 // 	const container = player.getComponent("inventory").container;
 // 	container.addItem(cropItems[block.typeId]);

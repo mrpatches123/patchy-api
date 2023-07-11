@@ -1,5 +1,5 @@
 import { Player } from "../player/class.js";
-import { Entity, MessageSourceType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation, Vector3 } from '@minecraft/server';
+import { Entity, MessageSourceType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation, Vector3, Vector2 } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
 export class ScriptEventCommandMessageEvent {
 	readonly id: string;
@@ -20,6 +20,14 @@ export interface EntityDeathSource {
 	projectile?: Entity;
 }
 export class BeforeChatEvent {
+	cancel: boolean;
+	message: string;
+	sender: Player;
+	sendToTargets: boolean;
+	getTargets(): Player[];
+	setTargets(players: Player[]): void;
+}
+export class BeforeChatSendEvent {
 	cancel: boolean;
 	message: string;
 	sender: Player;
@@ -60,16 +68,15 @@ export class BeforeItemDefinitionTriggeredEvent {
 }
 export class BeforeItemUseEvent {
 	cancel: boolean;
-	item: ItemStack;
+	itemStack: ItemStack;
 	readonly source: Entity;
 }
 export class BeforeItemUseOnEvent {
 	readonly blockFace: Direction;
-	getBlockLocation(): Vector3;
+	block: Block;
 	cancel: boolean;
-	readonly faceLocationX: number;
-	readonly faceLocationY: number;
-	item: ItemStack;
+	readonly faceLocation: Vector3;
+	itemStack: ItemStack;
 	readonly source: Entity;
 }
 export class BeforePistonActivateEvent {
@@ -106,6 +113,12 @@ export class ButtonPushEvent {
 	readonly source: Entity;
 }
 export class ChatEvent {
+	message: string;
+	sender: Player;
+	sendToTargets: boolean;
+	getTargets(): Player[];
+}
+export class ChatSendEvent {
 	message: string;
 	sender: Player;
 	sendToTargets: boolean;
@@ -193,16 +206,14 @@ export class ItemStopUseOnEvent {
 }
 export class ItemUseEvent {
 	cancel: boolean;
-	item: ItemStack;
+	itemStack: ItemStack;
 	readonly source: Entity;
 }
 export class ItemUseOnEvent {
 	readonly blockFace: Direction;
-	getBlockLocation(): Vector3;
-	cancel: boolean;
-	readonly faceLocationX: number;
-	readonly faceLocationY: number;
-	item: ItemStack;
+	block: Block;
+	readonly faceLocation: Vector3;
+	itemStack: ItemStack;
 	readonly source: Entity;
 }
 export class ItemPickupEvent {
@@ -325,18 +336,21 @@ export class ScoreboardChangeEvent {
 }
 export interface EventKeyTypes {
 	beforeChat: BeforeChatEvent;
+	beforeChatSend: BeforeChatEvent;
 	beforeDataDrivenEntityTriggerEvent: BeforeDataDrivenEntityTriggerEvent;
 	beforeDataDrivenPlayerTriggerEvent: BeforeDataDrivenPlayerTriggerEvent;
 	beforeExplosion: BeforeExplosionEvent;
 	beforeItemDefinitionEvent: BeforeItemDefinitionTriggeredEvent;
 	beforeItemUse: BeforeItemUseEvent;
 	beforeItemUseOn: BeforeItemUseOnEvent;
+	beforeItemUseOnStart: BeforeItemUseOnEvent;
 	beforePistonActivate: BeforePistonActivateEvent;
 	blockBreak: BlockBreakEvent;
 	blockExplode: BlockExplodeEvent;
 	blockPlace: BlockPlaceEvent;
 	buttonPush: ButtonPushEvent;
 	chat: ChatEvent;
+	chatSend: ChatEvent;
 	dataDrivenEntityTriggerEvent: DataDrivenEntityTriggerEvent;
 	dataDrivenPlayerTriggerEvent: DataDrivenPlayerTriggerEvent;
 	effectAdd: EffectAddEvent;

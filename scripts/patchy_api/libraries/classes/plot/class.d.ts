@@ -1,4 +1,4 @@
-import { BlockAreaSize, Vector, Vector3, XYRotation, Dimension } from '@minecraft/server';
+import { BlockAreaSize, Vector, Vector3, Dimension, Vector2 } from '@minecraft/server';
 import { Player } from '../player/class.js';
 import { StructureLoadOptions } from '../structure/class';
 export class PlotsVector3 extends Vector {
@@ -17,7 +17,7 @@ interface PlotRuleSet {
 }
 interface Teleport {
 	location: Vector3;
-	face?: XYRotation | Vector3;
+	face?: Vector2 | Vector3;
 	dimension: Dimension;
 }
 interface PlotRules<key extends string> {
@@ -38,7 +38,7 @@ interface PlotRules<key extends string> {
 }
 export class PlotBuilder {
 	constructor();
-	setOveride(player: Player, type: string, value: any): void;
+	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride' | 'blockPlaceMarginOverideX' | 'blockPlaceMarginOverideY' | 'blockPlaceMarginOverideZ', value: string | number): void;
 	setCurrent(player: Player, key: string): void;
 	query(player: Player, key: string): number;
 	create<key extends string>(key: string, rules: PlotRules<key>): void;

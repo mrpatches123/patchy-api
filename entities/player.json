@@ -1,54 +1,59 @@
+//bridge-file-version: #2
 {
-	"format_version": "1.16.100",
+	"format_version": "1.18.20",
 	"minecraft:entity": {
 		"description": {
 			"identifier": "minecraft:player",
 			"is_spawnable": false,
 			"is_summonable": false,
-			"is_experimental": false
+			"is_experimental": false,
+			"animations": {
+				"swimming": "controller.animation.is_swimming"
+			},
+			"scripts": {
+				"animate": [
+					"swimming"
+				]
+			}
 		},
 		"component_groups": {
-			"minecraft:add_bad_omen": {
-				"minecraft:spell_effects": {
-					"add_effects": [
+			"patches:spawn": {
+				"minecraft:damage_sensor": {
+					"triggers": [
 						{
-							"effect": "bad_omen",
-							"duration": 6000,
-							"display_on_screen_animation": true
+							"on_damage": {
+								"filters": {
+									"all_of": [
+										{
+											"test": "has_component",
+											"subject": "damager",
+											"value": "minecraft:damage_sensor"
+										},
+										{
+											"test": "is_family",
+											"subject": "damager",
+											"value": "player"
+										}
+									]
+								}
+							},
+							"deals_damage": false
 						}
 					]
-				},
-				"minecraft:timer": {
-					"time": [
-						0,
-						0
-					],
-					"looping": false,
-					"time_down_event": {
-						"event": "minecraft:clear_add_bad_omen",
-						"target": "self"
-					}
 				}
 			},
-			"minecraft:clear_bad_omen_spell_effect": {
-				"minecraft:spell_effects": {}
-			},
-			"minecraft:raid_trigger": {
-				"minecraft:raid_trigger": {
-					"triggered_event": {
-						"event": "minecraft:remove_raid_trigger",
-						"target": "self"
-					}
-				},
-				"minecraft:spell_effects": {
-					"remove_effects": "bad_omen"
+			"patches:hunger": {
+				"minecraft:player.saturation": {
+					"value": 0,
+					"max": 20,
+					"min": 0
 				}
 			},
-			"patches:disconnect": {
-				"minecraft:explode": {
-					"power": 0,
-					"fuse_lit": true,
-					"breaks_blocks": false
+			"patches:saturation": {
+				"minecraft:player.saturation": {
+					"value": 20,
+					"max": 20,
+					"min": 20
 				}
 			}
 		},
@@ -90,12 +95,24 @@
 			"minecraft:attack": {
 				"damage": 1
 			},
+			"minecraft:exhaustion_values": {
+				"heal": 6,
+				"jump": 0.05,
+				"sprint_jump": 0.2,
+				"mine": 0.005,
+				"attack": 0.1,
+				"damage": 0.1,
+				"walk": 0,
+				"sprint": 0.1,
+				"swim": 0.01
+			},
 			"minecraft:player.saturation": {
-				"value": 20
+				"value": 5,
+				"max": 20
 			},
 			"minecraft:player.exhaustion": {
 				"value": 0,
-				"max": 4
+				"max": 20
 			},
 			"minecraft:player.level": {
 				"value": 0,
@@ -115,7 +132,9 @@
 				"always_show": true,
 				"allow_name_tag_renaming": false
 			},
-			"minecraft:physics": {},
+			"minecraft:physics": {
+				"push_towards_closest_space": true
+			},
 			"minecraft:pushable": {
 				"is_pushable": false,
 				"is_pushable_by_piston": true
@@ -153,176 +172,49 @@
 				]
 			},
 			"minecraft:conditional_bandwidth_optimization": {},
-			"minecraft:scaffolding_climber": {},
-			"minecraft:environment_sensor": {
-				"triggers": [
-					{
-						"filters": {
-							"all_of": [
-								{
-									"test": "has_mob_effect",
-									"subject": "self",
-									"value": "bad_omen"
-								},
-								{
-									"test": "is_in_village",
-									"subject": "self",
-									"value": true
-								}
-							]
-						},
-						"event": "minecraft:trigger_raid"
-					},
-					{
-						"filters": {
-							"test": "has_container_open",
-							"value": true
-						},
-						"event": "patches:container_open"
-					},
-					{
-						"filters": {
-							"test": "has_container_open",
-							"value": false
-						},
-						"event": "patches:not_container_open"
-					}
-				]
-			},
-			"minecraft:damage_sensor": {
-				"triggers": [
-					{
-						"deals_damage": false,
-						"on_damage": {
-							"filters": {
-								"value": "no_fall",
-								"test": "has_tag"
-							}
-						},
-						"cause": "fall"
-					},
-					{
-						"on_damage": {
-							"filters": {
-								"test": "has_tag",
-								"value": "spawn"
-							}
-						},
-						"deals_damage": false,
-						"cause": "all"
-					},
-					{
-						"on_damage": {
-							"filters": {
-								"test": "has_damage",
-								"value": "fatal"
-							},
-							"event": "patches:kill"
-						},
-						"cause": "entity_attack"
-					},
-					{
-						"on_damage": {
-							"filters": {
-								"test": "has_damage",
-								"value": "fatal"
-							},
-							"event": "patches:kill"
-						},
-						"cause": "projectile"
-					},
-					{
-						"on_damage": {
-							"filters": {
-								"test": "has_damage",
-								"value": "fatal"
-							},
-							"event": "patches:kill"
-						},
-						"cause": "thorns"
-					}
-				]
-			},
-			"minecraft:inventory": {
-				"restrict_to_owner": true,
-				"private": true,
-				"inventory_size": 36,
-				"container_type": "inventory",
-				"can_be_siphoned_from": false
-			}
+			"minecraft:block_climber": {}
 		},
 		"events": {
-			"minecraft:gain_bad_omen": {
+			"patches:spawn": {
 				"add": {
 					"component_groups": [
-						"minecraft:add_bad_omen"
+						"patches:spawn"
 					]
 				}
 			},
-			"minecraft:clear_add_bad_omen": {
+			"patches:is_not_swimming": {},
+			"patches:is_swimming": {},
+			"patches:pvp": {
 				"remove": {
 					"component_groups": [
-						"minecraft:add_bad_omen"
-					]
-				},
-				"add": {
-					"component_groups": [
-						"minecraft:clear_bad_omen_spell_effect"
+						"patches:spawn"
 					]
 				}
 			},
-			"minecraft:trigger_raid": {
+			"patches:hunger": {
 				"add": {
 					"component_groups": [
-						"minecraft:raid_trigger"
-					]
-				}
-			},
-			"minecraft:remove_raid_trigger": {
-				"remove": {
-					"component_groups": [
-						"minecraft:raid_trigger"
-					]
-				}
-			},
-			"patches:disconnect": {
-				"add": {
-					"component_groups": [
-						"patches:disconnect"
+						"patches:hunger"
 					]
 				},
 				"remove": {
 					"component_groups": [
-						"patches:disconnect"
+						"patches:saturation"
 					]
 				}
 			},
-			"patches:kill": {
-				"sequence": [
-					{
-						"run_command": {
-							"command": [
-								"say killer",
-								"scoreboard players random @s RandKillId -2147483648 2147483645",
-								"scoreboard players set @s Killed 1"
-							],
-							"target": "other"
-						}
-					},
-					{
-						"run_command": {
-							"command": [
-								"say dead",
-								"scoreboard players operation @s RandKillId = @a[scores={Killed=1}] RandKillId",
-								"scoreboard players set @a Killed 0"
-							],
-							"target": "self"
-						}
-					}
-				]
-			},
-			"patches:container_open": {},
-			"patches:not_container_open": {}
+			"patches:saturation": {
+				"add": {
+					"component_groups": [
+						"patches:saturation"
+					]
+				},
+				"remove": {
+					"component_groups": [
+						"patches:hunger"
+					]
+				}
+			}
 		}
 	}
 }

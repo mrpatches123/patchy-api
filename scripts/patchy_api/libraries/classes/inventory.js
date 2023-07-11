@@ -1,9 +1,9 @@
-import { world, ItemStack, Items } from "@minecraft/server";
+import { world, ItemStack, ItemTypes } from "@minecraft/server";
 import { content, native, toProperCase, lockedItemKey } from "../utilities.js";
 import eventBuilder from "./events/export_instance.js";
 import global from './global.js';
-const air = new ItemStack(Items.get('air'), 0, 0);
-const itemTest = new ItemStack(Items.get('apple'), 5, 0);
+const air = new ItemStack(ItemTypes.get('air'), 0, 0);
+const itemTest = new ItemStack(ItemTypes.get('apple'), 5, 0);
 const defaultObject = {
     item: air,
     restock: true

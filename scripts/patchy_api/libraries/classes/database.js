@@ -4,8 +4,12 @@ import time from "./time.js";
 // const overworld = world.getDimension('overworld');
 const chunkSize = 32763;
 // import { compress, decompress } from '../zip_255cs.js';
-
-
+/**
+ * @param {Entity} entity 
+ */
+function removeAllTags(entity) {
+    entity.getTags().forEach(tag => entity.removeTag(tag));
+}
 export class Database {
     constructor(json = {}) {
         Object.assign(this, json);
@@ -299,7 +303,7 @@ export class Databases {
             if (entities.length) {
                 entities.forEach((entity, i) => {
                     entity.nameTag = database[i];
-                    entity.removeAllTags();
+                    removeAllTags(entity);
                     entity.addTag(`dbOrder:${i}`);
                     entity.addTag(`dbName:${name}`);
                 });

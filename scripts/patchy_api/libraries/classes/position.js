@@ -26,7 +26,8 @@ class PositionBuilder {
 	 * @param {String} key
 	 */
 	test(player, key) {
-		const { location: { x, y, z } } = player;
+		const { location: { x, y, z }, gamemode } = player;
+		if (gamemode === 5) return false;
 		const { location1, location2, callback } = this[key];
 		const { x: x1, y: y1, z: z1 } = location1;
 		if (!location2) {

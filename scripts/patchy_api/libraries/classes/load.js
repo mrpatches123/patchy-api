@@ -11,18 +11,18 @@ class Loads {
 	constructor() {
 		this.loads = {};
 		this.loaded = false;
-		world.events.playerSpawn.subscribe(({ player, initialSpawn }) => {
+		world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
 			if (!initialSpawn) return;
 			this.awaitLoad(player);
 		});
-		world.events.worldInitialize.subscribe(() => {
+		world.afterEvents.worldInitialize.subscribe(() => {
 			this.loads = {};
 			world.getAllPlayers().forEach(player => {
 				content.warn('Loads', player.name);
 				this.awaitLoad(player);
 			});
 		});
-		world.events.playerLeave.subscribe(() => {
+		world.afterEvents.playerLeave.subscribe(() => {
 			const oldIds = Object.keys(this.loads);
 			const currentIds = world.getAllPlayers().map(({ id }) => id);
 			const leftIds = oldIds.filter(oldId => !currentIds.some((currentId) => currentId === oldId));

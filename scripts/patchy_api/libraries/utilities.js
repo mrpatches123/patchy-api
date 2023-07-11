@@ -1,4 +1,4 @@
-import { world, Items, Player, Entity, XYRotation, BlockPermutation, ScoreboardObjective } from '@minecraft/server';
+import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function getXZVectorRY(ry) {
     const rads = (ry + 180) * Math.PI / 180;
@@ -20,7 +20,11 @@ export function isVector2(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
-
+/**
+ * 
+ * @param {{x: number, y: number}} rotation 
+ * @returns {Direction}
+ */
 export function rotationToDirection(rotation) {
     let { x, y } = rotation;
 
@@ -28,6 +32,34 @@ export function rotationToDirection(rotation) {
     y = ((y + 45) / 90 + 2) | 0;
     if (x < 1) return 'up';
     else if ((x > 2)) return 'down';
+    switch (y) {
+        case 2:
+            return 'south';
+        case 4:
+        case 0:
+            return 'north';
+        case 1:
+            return 'east';
+        case 3:
+            return 'west';
+    }
+};
+export const reverseDirection = {
+    "down": "up",
+    "east": "west",
+    "north": "south",
+    "south": "north",
+    "up": "down",
+    "west": "east"
+};
+/**
+ * 
+ * @param {{x: number, y: number}} rotation 
+ * @returns {Direction}
+ */
+export function rotationToHorizontalDirection(rotation) {
+    let { x, y } = rotation;
+    y = ((y + 45) / 90 + 2) | 0;
     switch (y) {
         case 2:
             return 'south';
@@ -169,6 +201,17 @@ export function randomCoordsOutsideCircle(minRadius, maxRadius) {
     const r = hypot(x, z);
     return { x, z, r };
 }
+/**
+ * 
+ * @param {[{x: number, y: number,z: number},{x: number, y: number,z: number}]} bounds 
+ * @returns {{x: number, y: number,z: number}}
+ */
+export function randomCoordsInsideRectangle(bounds) {
+    const [{ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }] = sort3DVectors(...bounds);
+    const xSize = x2 - x1 + 1;
+    const zSize = z2 - z1 + 1;
+    return { x: Math.floor(Math.random() * xSize) + x1, y: y2, z: Math.floor(Math.random() * zSize) + z1 };
+}
 // function randomCoordsOutsideCircle(minRadius, maxRadius) {
 //     const angle = random() * PI * 2;
 //     const radius = minRadius + (maxRadius - minRadius);
@@ -277,7 +320,7 @@ export function orArray(array = []) {
             return `${copy.join(', ')} ${array[array.length - 1]}`;
     }
 }
-const blockFaceToNumber = {
+export const blockFaceToNumber = {
     "down": 0,
     "east": 5,
     "north": 2,
@@ -285,7 +328,54 @@ const blockFaceToNumber = {
     "up": 1,
     "west": 4,
 };
-
+export const clickableBlocks = [
+    "minecraft:acacia_door",
+    "minecraft:acacia_trapdoor",
+    "minecraft:acacia_button",
+    "minecraft:birch_door",
+    "minecraft:birch_trapdoor",
+    "minecraft:birch_button",
+    "minecraft:crimson_door",
+    "minecraft:crimson_trapdoor",
+    "minecraft:crimson_button",
+    "minecraft:dark_oak_door",
+    "minecraft:dark_oak_trapdoor",
+    "minecraft:dark_oak_button",
+    "minecraft:jungle_door",
+    "minecraft:jungle_trapdoor",
+    "minecraft:jungle_button",
+    "minecraft:mangrove_door",
+    "minecraft:mangrove_trapdoor",
+    "minecraft:mangrove_button",
+    "minecraft:spruce_door",
+    "minecraft:spruce_trapdoor",
+    "minecraft:spruce_button",
+    "minecraft:warped_door",
+    "minecraft:warped_trapdoor",
+    "minecraft:warped_button",
+    "minecraft:wooden_door",
+    "minecraft:wooden_button",
+    "minecraft:trapdoor",
+    "minecraft:iron_door",
+    "minecraft:iron_trapdoor",
+    "minecraft:polished_blackstone_button",
+    "minecraft:lever",
+    "minecraft:chest",
+    "minecraft:ender_chest",
+    "minecraft:barrel",
+    "minecraft:trapped_chest",
+    "minecraft:dispenser",
+    "minecraft:dropper",
+    "minecraft:furnace",
+    "minecraft:blast_furnace",
+    "minecraft:lit_furnace",
+    "minecraft:lit_blast_furnace",
+    "minecraft:hopper",
+    "minecraft:shulker_box",
+    "minecraft:undyed_shulker_box",
+    "minecraft:lit_smoker",
+    "minecraft:smoker"
+];
 export function randomIntegerBetween(min, max) {
     return Math.floor(min + Math.random() * (max - min));
 };
@@ -300,9 +390,21 @@ export function relativeParse(player, input, direction) {
         return Number(input);
     }
 }
+/**
+ * @typedef {Object} Vector3
+ * @property {number} x
+ * @property {number} y
+ * @property {number} z
+ */
+/**
+ * 
+ * @param {Direction} blockFace 
+ * @param {Vector3} blockLocation 
+ * @returns {Vector3}
+ */
 export function blockFaceToCoords(blockFace, { x, y, z }) {
     blockFace = blockFaceToNumber[blockFace];
-    content.warn({ blockFace });
+    // content.warn({ blockFace });
 
     let location = [x, y, z];
     [
@@ -447,6 +549,9 @@ export { native };
 export function toProperCase(string) {
     return string.replace(/_/g, ' ').replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 }
+export function toCamelCase(str) {
+    return str.replace(/(?:^\w|[A-Z]|(\b|_)\w)/g, (word, index) => word.toUpperCase()).replace(/[\s_]+/g, '').replace(/\w/, (world) => world.toLowerCase());
+}
 export const staff = {
     sendMessage(message, exludePlayer) {
         [...world.getPlayers({ scoreOptions: [{ exclude: true, maxScore: 1, minScore: 1, objective: 'staff' }] })]
@@ -472,7 +577,7 @@ export const server = {
     async setPlayerScoreboard(objective, player, value, updateId) {
         try {
             await player.runCommandAsync('scoreboard players set @s scoreIdentityInit 0');
-            world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboard, value);
+            world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboardIdentity, value);
             if (!updateId) return;
             const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
             if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return;
@@ -505,7 +610,7 @@ export const server = {
         try { scoreboardObjective = world.scoreboard.getObjective(objective); } catch (error) { /*console.warn(error, error.stack);*/ }
         if (((target?.player ?? target) instanceof Player || target instanceof Entity) && !findParticipant) {
 
-            scoreboardIdentity = target.scoreboard;
+            scoreboardIdentity = target.scoreboardIdentity;
             if (!target['scoreboard']) return;
             // content.warn({ score });
         } else {
@@ -556,7 +661,9 @@ export const server = {
      */
     scoreResetPlayer(objective, player, updateId) {
         try {
-            world.scoreboard.getObjective(objective).removeParticipant(player.scoreboard);
+            if (!player?.scoreboardIdentity) return false;
+            world.scoreboard.getObjective(objective)
+                .removeParticipant(player.scoreboardIdentity);
             return true;
         } catch (error) {
             console.warn(error, error.stack);
@@ -572,10 +679,10 @@ export const server = {
      */
     scoreSetPlayer(objective, player, value = 0, updateId) {
         // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
-        if (!player.scoreboard) { this.setPlayerScoreboard(objective, player, value = 0, updateId); return value; }
+        if (!player.scoreboardIdentity) { this.setPlayerScoreboard(objective, player, value = 0, updateId); return value; }
         const scoreboardObjective = world.scoreboard.getObjective(objective);
         if (!(scoreboardObjective instanceof ScoreboardObjective)) throw new Error(`objective: ${objective}, at params[0] does not exist!`);
-        world.scoreboard.setScore(scoreboardObjective, player.scoreboard, value);
+        world.scoreboard.setScore(scoreboardObjective, player.scoreboardIdentity, value);
         if (!updateId) return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
         if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return value;
@@ -604,13 +711,13 @@ export function formatSeconds(seconds) {
 }
 /**
  * @param {{x: number, y: number, z: number}} vector 
- * @returns {XYRotation}
+ * @returns {{x: number, y: number}}
  */
 export function vector3ToRotation(vector) {
     return { x: Math.asin(-vector.y) * 180 / Math.PI, y: -Math.atan2(vector.x, vector.z) * 180 / Math.PI };
 }
 /**
- * @param {XYRotation} rotation 
+ * @param {{x: number, y: number}} rotation 
  * @returns {{x: number, y: number, z: number}}
  */
 // export function rotationToVector3(rotation) {
@@ -658,7 +765,7 @@ export function combine(target, source) {
 
 
 export function ItemsGet(id, log = false) {
-    const item = Items.get(id);
+    const item = ItemTypes.get(id);
     if (!item) {
         let stack;
         try {
@@ -669,7 +776,7 @@ export function ItemsGet(id, log = false) {
         if (log) {
             errorLogger.log({ message: `Item: ${id}, does not exist!` }, stack, { key: 'chests', event: 'tick' });
         }
-        return Items.get('air');
+        return ItemTypes.get('air');
     } else {
         return item;
     }
@@ -704,11 +811,23 @@ export function createArrayBetween(min, max) {
     }
     return array;
 }
-const charArray = [...createArrayBetween(33, 126), ...createArrayBetween(161, 321)].map(value => String.fromCharCode(value));
+const numberCharCodes = [...createArrayBetween(33, 126), ...createArrayBetween(161, 321)];//createArrayBetween(33, 321);
+const charArray = numberCharCodes.map(value => String.fromCharCode(value));
 const charObject = {};
 charArray.forEach((char, i) => charObject[char] = i);
 const valueUndefined = charArray[0];
-
+// const errors = [];
+// world.afterEvents.worldInitialize.subscribe(() => {
+//     const player = world.getAllPlayers()[0];
+//     numberCharCodes.forEach(value => {
+//         try {
+//             player.addTag(String.fromCharCode(value).repeat(255));
+//         } catch (error) {
+//             errors.push(value);
+//         }
+//     });
+//     content.warn({ errors });
+// });
 export function obfuscate255(string) {
     return [...string].map(value => charArray[value.charCodeAt()] ?? valueUndefined).join('');
 }
@@ -732,6 +851,36 @@ export function chunkString(str, length) {
     return array;
 }
 /**
+ * @param {String} str 
+ * @param {Number} length 
+ * @returns {Array}
+ */
+export function chunkStringBytes(str, length) {
+    const chunks = [];
+    let chunk = '';
+    let byteCount = 0;
+
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        const charCode = char.charCodeAt();
+
+        if (byteCount + (charCode > 127 ? 2 : 1) > length) {
+            chunks.push(chunk);
+            chunk = '';
+            byteCount = 0;
+        }
+
+        chunk += char;
+        byteCount += charCode > 127 ? 2 : 1;
+    }
+
+    if (chunk.length > 0) {
+        chunks.push(chunk);
+    }
+
+    return chunks;
+}
+/**
  * 
  * @param {string} str 
  * @param {number} length 
@@ -740,7 +889,7 @@ export function chunkString(str, length) {
 export function chunkStringReverse(str, length) {
     let size = (str.length / length) | 0;
     const array = Array(++size);
-    for (let i = size - 1, offset = string.length - length; i >= 0; i--, offset -= length) {
+    for (let i = size - 1, offset = str.length - length; i >= 0; i--, offset -= length) {
         array[i] = str.substring(offset, offset + length);
     }
     return array;
@@ -903,23 +1052,52 @@ const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'si
 const tens = [false, false, 'twenty', 'thirty', 'fourty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
 const places = ['hundred', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion', 'Sextillion', 'Septillion', 'Octillion', 'Nonillion', 'Decillion', 'Undecillion', 'Duodecillion', 'Tredecillion', 'Quattuordecillion', 'Quindecillion', 'Sexdecillion', 'Septendecillion', 'Octodecillion', 'Novemdecillion'];
 
-export function formatNumber(number) {
-    const numberArray = chunkStringReverse(Math.floor(number).toString(), 3).reverse();
-    return numberArray.map((number, i) => {
+export function fixSciNumberString(string) {
+    if (typeof string !== 'string') string = string.toString();
+    let [number, power] = string.split('e');
+    number = number.split('.');
+    if (number.length === 1) number.push('');
+    power = Number(power);
+    if (!power) return (number.length > 1) ? number[0] : number.join('.');
+    if (power > 0) {
+        number[0] += number[1].substring(0, power).padEnd(power, '0');
+        number[1] = number[1].substring(power);
+    } else {
+        throw new Error('power cannot be negitive');
+    }
+    if (number[1] === '') number.pop();
+    return number.join('.');
+}
 
+export function formatNumber(number) {
+    if (typeof number === 'number') number = Math.floor(number).toString();
+    let negitive = false;
+    if (Number(number) < 0) number = number.replaceAll('-', ''), negitive = true;
+    number = fixSciNumberString(number);
+    if (number === '0') return 'zero';
+    const numberArray = chunkStringReverse(number.toString(), 3).reverse();
+    const output = numberArray.map((number, i) => {
         number = number.padStart(3, '0');
         const place = places[i];
         const hundred = Number(number[0]);
         const ten = Number(number[1]);
         const one = Number(number[2]);
-        return `${(hundred) ? `${ones[hundred]} ${places[0]} ` : ''}${(!ten) ? ones[one] : (ten > 1 && tens[ten]) ? `${tens[ten]}-${ones[one]}` : teens[one]}${(i) ? ` ${place}` : ''}`;
+        return (!hundred && !ten && !one) ? '' : `${(hundred) ? `${ones[hundred]} ${places[0]} ` : ''}${(!ten) ? (!one) ? '' : ones[one] : (ten > 1 && tens[ten]) ? `${tens[ten]}${(one) ? `-${ones[one]}` : ''}` : teens[one]}${(i) ? ` ${place}` : ''}`;
     }).reverse().join(' ');
+    console.log(output);
+    return ((negitive) ? 'negtive ' : '') + output;
 }
-const decimals = ['an eighth', 'a quarter', 'three eighths', 'a half', 'five eighths', 'three forths', 'seven eighths', ''];
+const decimals = ['', 'an eighth', 'a quarter', 'three eighths', 'a half', 'five eighths', 'three forths', 'seven eighths'];
 export function formatDecimal(number) {
     const index = Math.floor(number % 1 * 8);
     console.log(index);
     return `${(index === decimals.length - 1) ? '' : ` and ${decimals[index]}`}`;
+}
+/**
+ * @param {Array} array 
+ */
+export function randomValue(array) {
+    return array[Math.floor(Math.random() * array.length)];
 }
 const second = 1000;
 const minute = 60000;
@@ -929,38 +1107,39 @@ const year = 31536000000;
 const decade = 315360000000;
 const century = 3153600000000;
 const millennium = 31536000000000;
-export function formatMS(ms) {
+export function formatMS(ms, formal = false) {
     ms = Number(ms);
+    // content.warn(ms);
     if (ms < second) return `${formatNumber(ms)} millisecond${(ms === 1) ? '' : 's'}`;
     if (ms < minute) {
         const seconds = ms / second;
-        return `${formatNumber(seconds)} second${(Math.floor(seconds) === 1) ? '' : 's'}`;
+        return `${(!formal) ? Math.floor(seconds) : formatNumber(seconds)} second${(Math.floor(seconds) === 1) ? '' : 's'}`;
     }
     if (ms < hour) {
         const minutes = ms / minute;
-        return `${formatNumber(minutes)}${(formatDecimal(minutes))} minute${(Math.floor(minutes) === 1) ? '' : 's'}`;
+        console.log(minutes);
+        return `${(!formal) ? Math.floor(minutes) : `${formatNumber(minutes)}${(formatDecimal(minutes))}`} minute${(Math.floor(minutes) === 1) ? '' : 's'}`;
     }
     if (ms < day) {
         const hours = ms / hour;
-        return `${formatNumber(hours)}${(formatDecimal(hours))} hour${(Math.floor(hours) === 1) ? '' : 's'}`;
+        return `${(!formal) ? Math.floor(hours) : `${formatNumber(hours)}${(formatDecimal(hours))}`} hour${(Math.floor(hours) === 1) ? '' : 's'}`;
     }
     if (ms < year) {
         const days = ms / day;
-        return `${formatNumber(days)}${(formatDecimal(days))} day${(Math.floor(days) === 1) ? '' : 's'}`;
+        return `${(!formal) ? Math.floor(days) : `${formatNumber(days)}${(formatDecimal(days))}`} day${(Math.floor(days) === 1) ? '' : 's'}`;
     }
     if (ms < decade) {
         const years = ms / year;
-        return `${formatNumber(years)}${(formatDecimal(years))} years${(Math.floor(years) === 1) ? '' : 's'}`;
+        return `${(!formal) ? Math.floor(years) : `${formatNumber(years)}${(formatDecimal(years))}`} years${(Math.floor(years) === 1) ? '' : 's'}`;
     }
     if (ms < century) {
         const decades = ms / decade;
-        return `${formatNumber(decades)}${(formatDecimal(decades))} decade${(Math.floor(decades) === 1) ? '' : 's'}`;
+        return `${(!formal) ? Math.floor(decades) : `${formatNumber(centuries)}${(formatDecimal(centuries))}`} decade${(Math.floor(decades) === 1) ? '' : 's'}`;
     }
     if (ms < millennium) {
         const centuries = ms / century;
-        return `${formatNumber(centuries)}${(formatDecimal(centuries))} centur${(Math.floor(centuries) === 1) ? 'y' : 'ies'}`;
+        return `${(!formal) ? Math.floor(centuries) : `${formatNumber(centuries)}${(formatDecimal(centuries))}`} centur${(Math.floor(centuries) === 1) ? 'y' : 'ies'}`;
     }
     const millenniums = ms / millennium;
-    return `${formatNumber(millenniums)}${(formatDecimal(millenniums))} millennium${(Math.floor(millenniums) === 1) ? '' : 's'}`;
-
+    return `${(!formal) ? Math.floor(millenniums) : `${formatNumber(millenniums)}${(formatDecimal(millenniums))}`} millennium${(Math.floor(millenniums) === 1) ? '' : 's'}`;
 }

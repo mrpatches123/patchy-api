@@ -3,7 +3,7 @@ import { preformance, native, blockFaceToCoords, content, eventBuilder, players,
 
 import {
 	MinecraftEnchantmentTypes,
-	InventoryComponentContainer,
+	Container,
 	EnchantmentList,
 	Enchantment,
 	world,
@@ -16,7 +16,7 @@ system.run(function enchantCheck() {
 	world.getAllPlayers().forEach((player) => {
 		if (player.hasTag(byPassTag)) return;
 		/**
-		 * @type {{container: InventoryComponentContainer}}
+		 * @type {{container: Container}}
 		 */
 		const { container } = player.getComponent("inventory");
 		if (container.size === container.emptySlotsCount) return;
@@ -53,7 +53,7 @@ system.run(function enchantCheck() {
 // 		const { selectedSlot } = player;
 // 		content.warn({ selectedSlot });
 // 		/**
-// 		 * @type {{container: InventoryComponentContainer}}
+// 		 * @type {{container: Container}}
 // 		 */
 // 		const { container } = player.getComponent('inventory');
 // 		const mainHand = container.getItem(selectedSlot);
@@ -217,7 +217,7 @@ world.events.beforeItemUseOn.subscribe((event) => {
 // 	[...world.getPlayers()].forEach((player) => {
 // 		const { selectedSlot } = player;
 // 		/**
-// 		 * @type InventoryComponentContainer
+// 		 * @type Container
 // 		 */
 
 

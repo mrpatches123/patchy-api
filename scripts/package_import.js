@@ -11,6 +11,6 @@
 
 import './start.js';
 import './patchy_api/api_imports.js';
-import './example_package/import.js';
+// import './example_package/import.js';
 // import './patchy_anticheat/import.js'
 

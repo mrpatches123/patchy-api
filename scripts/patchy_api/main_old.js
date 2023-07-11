@@ -20,7 +20,7 @@ import { native, overworld, server } from "./libraries/utilities.js";
 import eventBuilder from "./libraries/classes/events/export_instance.js";
 import '../package_import.js';
 import './plugins/api_imports.js';
-import propertyBuilder from './libraries/classes/property.js';
+// import propertyBuilder from './libraries/classes/property.js';
 // for (const key in Player.prototype) {
 //     console.warn(key);
 // }

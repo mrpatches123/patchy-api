@@ -10,7 +10,7 @@ eventBuilder.subscribe('commands*API', {
         if (prefix) {
             commandBuilder.check(message, sender, prefix);
             event.sendToTargets = true;
-            event.targets = [];
+            event.setTargets([]);
         }
         //  else {
         //     if (!promptBuilder.check(sender, message)) {
