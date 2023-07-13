@@ -321,12 +321,12 @@ export function orArray(array = []) {
     }
 }
 export const blockFaceToNumber = {
-    "down": 0,
-    "east": 5,
-    "north": 2,
-    "south": 3,
-    "up": 1,
-    "west": 4,
+    "Down": 0,
+    "East": 5,
+    "North": 2,
+    "South": 3,
+    "Up": 1,
+    "West": 4,
 };
 export const clickableBlocks = [
     "minecraft:acacia_door",
@@ -405,7 +405,7 @@ export function relativeParse(player, input, direction) {
 export function blockFaceToCoords(blockFace, { x, y, z }) {
     if (!isDefined(blockFace)) throw new Error('blockFace at params[0] is not defined');
     blockFace = blockFaceToNumber[blockFace];
-    // content.warn({ blockFace });
+    content.warn({ blockFace });
 
     let location = [x, y, z];
     [

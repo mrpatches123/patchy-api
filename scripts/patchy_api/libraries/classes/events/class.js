@@ -98,7 +98,7 @@ export class EventBuilder {
 				const { function: subscriptionFunction, entityOptions, forceNative } = eventProperties;
 				if (!(subscriptionFunction instanceof Function)) throw new Error(`key: function, in ${eventKey} in subscription in ${newEventKey} does have a value of type: Function!`);
 				const fixedEventKey = this.removeBeforeInKey(eventKey);
-				if (eventKey !== 'custom' && forceNative !== undefined && ((eventKey.includes('before') && fixedEventKey in world.beforeEvents) || (eventKey in world.afterEvents) || (eventKey in system.events))) throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and eventkey: ${newEventKey}, is not in world.afterEvents, world.beforeEvents, or system.events or is "custom"!`);
+				if (eventKey !== 'custom' && forceNative !== undefined && ((eventKey.includes('before') && fixedEventKey in world.beforeEvents) || (eventKey in world.afterEvents) || (eventKey in system.afterEvents) || (eventKey in system.beforeEvents))) throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and eventkey: ${newEventKey}, is not in world.afterEvents, world.beforeEvents, system.afterEvents, or system.beforeEvents or is "custom"!`);
 				if (forceNative !== undefined && typeof forceNative !== 'boolean') throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and does have a value of type: Boolean!`);
 				if (entityOptions !== undefined && !eventTypeProperties[eventKey].entityEvent) throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} should not be defined since that event is not an entity event!`);
 				if (entityOptions !== undefined && !(entityOptions instanceof Object)) throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} is defined and value is not of type: interface(EntityEventOptions)!`);
@@ -141,7 +141,7 @@ export class EventBuilder {
 			if (typeof eventKey !== "string") throw new Error(`key: ${eventKey}, in params[1] is not of type: String!`);
 			if (!(callback instanceof Function)) throw new Error(`key: ${eventKey}, in params[1] does not have value of type: Function!`);
 			const fixedEventKey = this.removeBeforeInKey(eventKey);
-			if (!this.registry.hasOwnProperty(eventKey) && !(eventKey.includes('before') && fixedEventKey in world.beforeEvents) && !(eventKey in world.afterEvents) && !(eventKey in system.events)) throw new Error(`eventKey: ${eventKey}, in subscribeObject at params[1] is not a custom, system, or world event!`);
+			if (!this.registry.hasOwnProperty(eventKey) && !(eventKey.includes('before') && fixedEventKey in world.beforeEvents) && !(eventKey in world.afterEvents) && !(eventKey in system.beforeEvents) && !(eventKey in system.afterEvents)) throw new Error(`eventKey: ${eventKey}, in subscribeObject at params[1] is not a custom, system, or world event!`);
 
 			if (!this.subscriptions.hasOwnProperty(eventKey)) {
 				const worldSystem = this.getNativeEventSignalKey(eventKey);

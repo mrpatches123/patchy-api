@@ -1,9 +1,9 @@
 import { content, isDefined, orArray, server } from "../utilities.js";
-import { world, Player as PlayerType } from "@minecraft/server";
+import { world, Player as PlayerType, ObjectiveSortOrder, DisplaySlotId } from "@minecraft/server";
 import { Player } from './player/class.js';
 import eventBuilder from "./events/export_instance.js";
 const chunk = 2147483646;
-const displaySlotIds = ['list', 'sidebar', 'belowName'];
+const displaySlotIds = [DisplaySlotId.List, DisplaySlotId.Sidebar, DisplaySlotId.BelowName];
 
 class ScoreboardBuilder {
 	constructor() {
@@ -15,14 +15,16 @@ class ScoreboardBuilder {
 	}
 	/**
 	 * @param {string} objective 
-	 * @param {'list' | 'sidebar' | 'belowName'} displaySlotId
+	 * @param {'List' | 'Sidebar' | 'BelowName'} displaySlotId
 	 */
-	setObjectiveDisplaySlot(objective, displaySlotId) {
+	setObjectiveDisplaySlot(objective, displaySlotId, sortOrder = ObjectiveSortOrder.Ascending) {
 		if (typeof objective !== 'string') throw new Error(`objective: ${objective}, at params[0] is of type: String!`);
 		if (objective.startsWith('big_')) throw new Error(`objective: ${objective}, at params[0] starts with 'big_' so it cannot be displayed in a scoreboardDisplay!`);
 		if (!displaySlotIds.includes(displaySlotId)) throw new Error(`displaySlotId: ${displaySlotId}, at params[1] is not one of the following: ${orArray(displaySlotIds)}!`);
+		if (sortOrder && sortOrder !== ObjectiveSortOrder.Ascending && sortOrder !== ObjectiveSortOrder.Descending) throw new Error(`sortOrder: ${sortOrder}, at params[2] is not one of the following: ${orArray([ObjectiveSortOrder.Ascending, ObjectiveSortOrder.Descending])}!`);
 		const scoreboardObjective = world.scoreboard.getObjective(objective);
 		if (!scoreboardObjective) throw new Error(`objective: ${objective}, at params[0] does not exist!`);
+		content.warn({ scoreboardObjective: scoreboardObjective.id, displaySlotId });
 		world.scoreboard.setObjectiveAtDisplaySlot(displaySlotId, { objective: scoreboardObjective });
 		if (!this.objectives.hasOwnProperty(objective)) this.objectives[objective] = {};
 		this.objectives[objective].displaySlot = displaySlotId;

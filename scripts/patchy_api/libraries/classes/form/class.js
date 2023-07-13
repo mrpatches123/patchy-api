@@ -1,5 +1,5 @@
 import { world, Player } from '@minecraft/server';
-import { ActionFormData as action, ModalFormData as modal, MessageFormData as message, FormResponse } from '@minecraft/server-ui';
+import { ActionFormData as action, ModalFormData as modal, MessageFormData as message, FormResponse, FormCancelationReason } from '@minecraft/server-ui';
 import schema, { ArrayType } from './schema.js';
 /**
  * @type {{[typeKey: String]: {[elementKey: String]: Boolean}}}
@@ -391,7 +391,8 @@ export class FormBuilder {
 			while (true) {
 				response = await form.show(receiver?.player ?? receiver);
 				const { cancelationReason } = response;
-				if (!awaitShow || cancelationReason !== 'userBusy') {
+				// content.warn({ awaitShow, cancelationReason, key });
+				if (!awaitShow || cancelationReason !== FormCancelationReason.UserBusy) {
 					if (awaitShow && this.playerData[id]?.awaiting?.[key]) delete this.playerData[id].awaiting[key];
 					break;
 				};
