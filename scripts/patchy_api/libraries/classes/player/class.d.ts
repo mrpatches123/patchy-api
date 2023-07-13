@@ -1,4 +1,4 @@
-import { EntityEffectOptions, EntityEquipmentInventoryComponent, ItemStack, Player as PlayerType, Vector2 } from '@minecraft/server';
+import { EntityEffectOptions, EntityEquipmentInventoryComponent, EntityLifetimeState, ItemStack, Player as PlayerType, Vector2 } from '@minecraft/server';
 import { PlayAnimationOptions, EntityDamageSource, Vector3, Container, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions, TeleportOptions } from '@minecraft/server';
 import { EntityOnFireComponent, EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
 import { Inventory } from "../players/export_instance.js";
@@ -133,6 +133,115 @@ interface EntityComponents {
 export declare class Player extends Entity {
 	gamemode: number;
 	constructor(player: PlayerType);
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the player is flying. For example, in Creative or
+	 * Spectator mode.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly isFlying: boolean;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the player is gliding with Elytra.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly isGliding: boolean;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the player is jumping. This will remain true while
+	 * the player is holding the jump action.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly isJumping: boolean;
+	/**
+	* @beta
+	* @remarks
+	* The distance an entity has fallen. The value is reset when
+	* the entity is teleported. The value is always 1 when gliding
+	* with Elytra.
+	*
+	* @throws This property can throw when used.
+	*/
+	readonly fallDistance: number;
+	/**
+	 * @beta
+	 * @remarks
+	 * The current overall level for the player, based on their
+	 * experience.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly level: number;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the entity is touching a climbable block. For
+	 * example, a player next to a ladder or a spider next to a
+	 * stone wall.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly isClimbing: boolean;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the entity has a fall distance greater than 0, or
+	 * greater than 1 while gliding.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly isFalling: boolean;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether any part of the entity is inside a water block.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly isInWater: boolean;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the entity is on top of a solid block.
+	 *
+	 * @throws This property can addExperience when used.
+	 */
+	readonly isOnGround: boolean;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the entity is sprinting. For example, a player using
+	 * the sprint action, an ocelot running away or a pig boosting
+	 * with Carrot on a Stick.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly isSprinting: boolean;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the entity is in the swimming state. For example, a
+	 * player using the swim action or a fish in water.
+	 *
+	 * @throws This property can throw when used.
+	 */
+	readonly isSwimming: boolean;
+	/**
+	 * @beta
+	 * @remarks
+	 * Whether the entity reference that you have is valid or not.
+	 * For example, an entity may be unloaded if it moves into a
+	 * chunk that is unloaded, but may be reactivated if the chunk
+	 * it is within gets reloaded.
+	 *
+	 */
+	readonly lifetimeState: EntityLifetimeState;
 	/**
 	 * if the player can have commands ran on them
 	 * @throws This property can throw when used.
@@ -405,6 +514,28 @@ export declare class Player extends Entity {
 	 */
 	getItemCooldown(itemCategory: string): number;
 	getRotation(): Vector2;
+	/**
+	* @beta
+	* @remarks
+	* Gets the current spawn point of the player.
+	*
+	* @throws This function can throw errors.
+	*/
+	/**
+	 * @beta
+	 * @remarks
+	 * Gets the current spawn point of the player.
+	 *
+	 * @throws This function can throw errors.
+	 */
+	getSpawnPoint(): DimensionLocation | undefined;
+	/**
+	 * @beta
+	 * @remarks
+	 * Gets the current spawn point of the player.
+	 *
+	 * @throws This function can throw errors.
+	 */
 	getSpawnPosition(): Vector3 | undefined;
 	getTotalXp(): number;
 	getVelocity(): Vector3;

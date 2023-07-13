@@ -403,6 +403,7 @@ export function relativeParse(player, input, direction) {
  * @returns {Vector3}
  */
 export function blockFaceToCoords(blockFace, { x, y, z }) {
+    if (!isDefined(blockFace)) throw new Error('blockFace at params[0] is not defined');
     blockFace = blockFaceToNumber[blockFace];
     // content.warn({ blockFace });
 
@@ -682,7 +683,7 @@ export const server = {
         if (!player.scoreboardIdentity) { this.setPlayerScoreboard(objective, player, value = 0, updateId); return value; }
         const scoreboardObjective = world.scoreboard.getObjective(objective);
         if (!(scoreboardObjective instanceof ScoreboardObjective)) throw new Error(`objective: ${objective}, at params[0] does not exist!`);
-        world.scoreboard.setScore(scoreboardObjective, player.scoreboardIdentity, value);
+        scoreboardObjective.setScore(player.scoreboardIdentity, value);
         if (!updateId) return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
         if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return value;

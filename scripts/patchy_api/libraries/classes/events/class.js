@@ -8,6 +8,8 @@ import eventTypeProperties from './event_properties.js';
 import errorLogger from '../error.js';
 let keystest = [];
 let clearedKeyTest = false;
+
+
 /**
  * @param {String} lower 
  * @returns {String}
@@ -66,7 +68,8 @@ function arrayClone(array) {
 const worldSystemEvents = {
 	afterEvents: world.afterEvents,
 	beforeEvents: world.beforeEvents,
-	systemEvents: system.events
+	systemAfterEvents: system.afterEvents,
+	systemBeforeEvents: system.beforeEvents
 };
 
 export class EventBuilder {
@@ -125,7 +128,7 @@ export class EventBuilder {
 	 */
 	getNativeEventSignalKey(eventKey) {
 		const fixedEventKey = this.removeBeforeInKey(eventKey);
-		return (eventKey.includes('before') && fixedEventKey in world.beforeEvents) ? 'beforeEvents' : (eventKey in world.afterEvents) ? 'afterEvents' : (eventKey in system.events) ? 'systemEvents' : false;
+		return (eventKey.includes('before') && fixedEventKey in world.beforeEvents) ? 'beforeEvents' : (eventKey in world.afterEvents) ? 'afterEvents' : (eventKey in system.afterEvents) ? 'systemAfterEvents' : (eventKey in system.beforeEvents) ? 'systemBeforeEvents' : false;
 	}
 	subscribe(key, subscribeObject) {
 		if (typeof key !== "string") throw new Error(`key: ${key}, at params[0] is not of type: String!`);

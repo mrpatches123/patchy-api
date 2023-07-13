@@ -17,12 +17,15 @@ eventBuilder.register({
 						try {
 							const { location: { x, y, z }, memory, dimension } = player;
 							// content.warn(y);
-							let block = dimension.getBlockFromRay({ x: x, y: y, z: z }, new Vector(0, -1, 0), { maxDistance: 1, includeLiquidBlocks: true, includePassableBlocks: true });
+							let rayCastHit = dimension.getBlockFromRay({ x: x, y: y, z: z }, new Vector(0, -1, 0), { maxDistance: 1, includeLiquidBlocks: true, includePassableBlocks: true });
+
+							const { block } = rayCastHit ?? {};
+							if (!block) return;
 							const { LastBlockStepedOn } = memory;
 							memory.LastBlockStepedOn = block;
 							// content.warn({ LastBlockStepedOn: LastBlockStepedOn?.typeId ?? 'null', currentId: block?.typeId ?? 'null' });
 
-							if (!block || (LastBlockStepedOn && block.location.equals(LastBlockStepedOn.location))) return;
+							if (LastBlockStepedOn && block.location.equals(LastBlockStepedOn.location)) return;
 							eventBuilder.getEvent('stepOnBlock').iterate({ block, player });
 						} catch (error) {
 							console.warn(error, error.stack);
@@ -142,7 +145,7 @@ eventBuilder.register({
 					if (blockLocation) return;
 					const { rotation } = player;
 					const direction = yawToCardnalDirectionVector(rotation.y);
-					const blockGround = player.dimension.getBlockFromRay(player.location, { x: 0, y: -1, z: 0 });
+					const { block: blockGround } = player.dimension.getBlockFromRay(player.location, { x: 0, y: -1, z: 0 }) ?? {};
 					if (!blockGround) return;
 					const newLocation = vectorToVector3(Vector.add(blockGround.location, direction));
 					eventBuilder.getEvent('beforePlayerScaffoldPlace').iterate({ player, blockLocation: newLocation, cancel: false }, (key, eventResponse, callbackForKey) => {

@@ -194,6 +194,45 @@ export class Player {
 	get isSneaking() {
 		return this.player.isSneaking;
 	}
+	get isFlying() {
+		return this.player.isFlying;
+	}
+	get isGliding() {
+		return this.player.isGliding;
+	}
+	get isJumping() {
+		return this.player.isJumping;
+	}
+	get fallDistance() {
+		return this.player.fallDistance;
+	}
+	get isFlying() {
+		return this.player.isFlying;
+	}
+	get isClimbing() {
+		return this.player.isClimbing;
+	}
+	get isFlying() {
+		return this.player.isFlying;
+	}
+	get isInWater() {
+		return this.player.isInWater;
+	}
+	get isOnGround() {
+		return this.player.isOnGround;
+	}
+	get isSprinting() {
+		return this.player.isSprinting;
+	}
+	get isSwimming() {
+		return this.player.isSwimming;
+	}
+	get lifetimeState() {
+		return this.player.lifetimeState;
+	}
+	isValid() {
+		return this.player.isValid();
+	}
 	get level() {
 		return this.player.level;
 	}
@@ -210,7 +249,7 @@ export class Player {
 		this.player.nameTag = value;
 	}
 	get onScreenDisplay() {
-		return new OnScreenDisplay(this.player);
+		return this.player.onScreenDisplay;
 	}
 	get rotation() {
 		return this.player.getRotation();
@@ -226,6 +265,18 @@ export class Player {
 	}
 	set selectedSlot(value) {
 		this.player.selectedSlot = value;
+	}
+	get target() {
+		return this.player.target;
+	}
+	get totalXpNeededForNextLevel() {
+		return this.player.totalXpNeededForNextLevel;
+	}
+	get xpEarnedAtCurrentLevel() {
+		return this.player.xpEarnedAtCurrentLevel;
+	}
+	get target() {
+		return this.player.target;
 	}
 	get target() {
 		return this.player.target;
@@ -254,6 +305,9 @@ export class Player {
 	}
 	addEffect(...args) {
 		return this.player.addEffect(...args);
+	}
+	addLevels(...args) {
+		return this.player.addLevels(...args);
 	}
 	clearSpawn() {
 		return this.player.clearSpawn();
@@ -300,8 +354,11 @@ export class Player {
 	getRotation() {
 		return this.player.getRotation();
 	}
+	getSpawnPoint() {
+		return this.player.getSpawnPoint();
+	}
 	getSpawnPosition() {
-		return this.player.getSpawnPosition();
+		return this.player.getSpawnPoint();
 	}
 	getTags(...args) {
 		return this.player.getTags(...args);
@@ -314,6 +371,9 @@ export class Player {
 	}
 	getViewDirection() {
 		return this.player.getViewDirection();
+	}
+	getSpawnPoint() {
+		this.player.getSpawnPoint();
 	}
 	hasComponent(...args) {
 		return this.player.hasComponent(...args);
@@ -340,6 +400,12 @@ export class Player {
 	}
 	postClientMessage(...args) {
 		return this.player.postClientMessage(...args);
+	}
+	removeEffect(...args) {
+		return this.player.removeEffect(...args);
+	}
+	removeAllEffects() {
+		return this.player.getEffects().forEach(({ typeId }) => this.player.removeEffect(typeId));
 	}
 	removeDynamicProperty(...args) {
 		return this.player.removeDynamicProperty(...args);
@@ -369,13 +435,19 @@ export class Player {
 		return this.player.setRotation(...args);
 	}
 	setSpawn(...args) {
-		return this.player.setSpawn(...args);
+		return this.player.setSpawnPoint(...args);
+	}
+	setSpawnPoint(...args) {
+		return this.player.setSpawnPoint(...args);
 	}
 	startItemCooldown(...args) {
 		return this.player.startItemCooldown(...args);
 	}
 	teleport(...args) {
 		return this.player.teleport(...args);
+	}
+	tryTeleport(...args) {
+		return this.player.tryTeleport(...args);
 	}
 	sendMessage(...args) {
 		return this.player.sendMessage(...args);

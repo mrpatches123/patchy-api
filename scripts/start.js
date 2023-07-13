@@ -3,7 +3,7 @@ function startwodjopwpwdjwwpodjdwo() {
 	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
 }
 startwodjopwpwdjwwpodjdwo();
-system.events.beforeWatchdogTerminate.subscribe((event) => {
+system.beforeEvents.watchdogTerminate.subscribe((event) => {
 	event.cancel = true;
 });
 // String.fromCodePoint(`0xF4${colors[progressColor]}${(i % barFramesCount).toString(16)}`)

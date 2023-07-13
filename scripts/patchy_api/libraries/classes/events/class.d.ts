@@ -1,5 +1,5 @@
 import { Player } from "../player/class.js";
-import { Entity, MessageSourceType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation, Vector3, Vector2 } from '@minecraft/server';
+import { Entity, MessageSourceType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation, Vector3, Vector2, ScriptEventSource } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
 export class ScriptEventCommandMessageEvent {
 	readonly id: string;
@@ -7,7 +7,7 @@ export class ScriptEventCommandMessageEvent {
 	readonly message: string;
 	readonly sourceBlock: Block;
 	readonly sourceEntity: Entity | Player;
-	readonly sourceType: MessageSourceType;
+	readonly sourceType: ScriptEventSource;
 }
 export interface EntityDamageSource {
 	cause: EntityDamageCause;
@@ -145,9 +145,33 @@ export class EntitySpawnEvent {
 	 */
 	entity: Entity;
 }
-export class EntityHitEvent {
-	readonly entity: Entity;
-	readonly hitEntity: Entity | Player;
+export class EntityHitEntityEvent {
+	/**
+	 * @remarks
+	 * Entity that made a hit/melee attack.
+	 *
+	 */
+	readonly damagingEntity: Entity;
+	/**
+	 * @remarks
+	 * Entity that was hit by the attack.
+	 *
+	 */
+	readonly hitEntity: Entity;
+}
+export class EntityHitBlockEvent {
+	readonly blockFace: Direction;
+	/**
+	 * @remarks
+	 * Entity that made the attack.
+	 *
+	 */
+	readonly damagingEntity: Entity;
+	/**
+	 * @remarks
+	 * Block that was hit by the attack.
+	 *
+	 */
 	readonly hitBlock: Block;
 }
 export class EntityHurtEvent {
@@ -334,6 +358,127 @@ export class ScoreboardChangeEvent {
 	objective: string;
 	value: number;
 }
+export class PressurePlatePushEvent {
+	/**
+	 * @remarks
+	 * Block impacted by this event.
+	 *
+	 */
+	readonly block: Block;
+	/**
+	 * @remarks
+	 * Dimension that contains the block that is the subject of
+	 * this event.
+	 *
+	 */
+	readonly dimension: Dimension;
+	/**
+	 * @remarks
+	 * The redstone power of the pressure plate before it was
+	 * pushed.
+	 *
+	 */
+	readonly previousRedstonePower: number;
+	/**
+	 * @remarks
+	 * The redstone power of the pressure plate at the time of the
+	 * push.
+	 *
+	 */
+	readonly redstonePower: number;
+	/**
+	 * @remarks
+	 * Source that triggered the pressure plate push.
+	 *
+	 */
+	readonly source: Entity;
+}
+class TargetBlockHitEvent {
+	/**
+	 * @remarks
+	 * Block impacted by this event.
+	 *
+	 */
+	readonly block: Block;
+	/**
+	 * @remarks
+	 * Dimension that contains the block that is the subject of
+	 * this event.
+	 *
+	 */
+	readonly dimension: Dimension;
+	/**
+	 * @remarks
+	 * The position where the source hit the block.
+	 *
+	 */
+	readonly hitVector: Vector3;
+	/**
+	 * @remarks
+	 * The redstone power before the block is hit.
+	 *
+	 */
+	readonly previousRedstonePower: number;
+	/**
+	 * @remarks
+	 * The redstone power at the time the block is hit.
+	 *
+	 */
+	readonly redstonePower: number;
+	/**
+	 * @remarks
+	 * Optional source that hit the target block.
+	 *
+	 */
+	readonly source: Entity;
+}
+class TripWireTripEvent {
+	/**
+	 * @remarks
+	 * Block impacted by this event.
+	 *
+	 */
+	readonly block: Block;
+	/**
+	 * @remarks
+	 * Dimension that contains the block that is the subject of
+	 * this event.
+	 *
+	 */
+	readonly dimension: Dimension;
+	/**
+	 * @remarks
+	 * Whether or not the block has redstone power.
+	 *
+	 */
+	readonly isPowered: boolean;
+	/**
+	 * @remarks
+	 * The sources that triggered the trip wire to trip.
+	 *
+	 */
+	readonly sources: Entity[];
+}
+class EntityHealthChangedEvent {
+	/**
+	* @remarks
+	* Entity whose health changed.
+	*
+	*/
+	readonly entity: Entity;
+	/**
+	 * @remarks
+	 * New health value of the entity.
+	 *
+	 */
+	readonly newValue: number;
+	/**
+	 * @remarks
+	 * Old health value of the entity.
+	 *
+	 */
+	readonly oldValue: number;
+}
 export interface EventKeyTypes {
 	beforeChat: BeforeChatEvent;
 	beforeChatSend: BeforeChatEvent;
@@ -357,6 +502,7 @@ export interface EventKeyTypes {
 	entityDie: EntityDieEvent;
 	entityDeath: EntityDeathEvent;
 	entitySpawn: EntitySpawnEvent;
+	entityHealthChanged: EntityHealthChangedEvent;
 	entityHit: EntityHitEvent;
 	entityHurt: EntityHurtEvent;
 	explosion: ExplosionEvent;
@@ -370,8 +516,11 @@ export interface EventKeyTypes {
 	itemUse: ItemUseEvent;
 	itemUseOn: ItemUseOnEvent;
 	itemPickup: ItemPickupEvent;
-	leverActivate: LeverActionEvent;
+	leverAction: LeverActionEvent;
 	pistonActivate: PistonActivateEvent;
+	pressurePlatePush: PressurePlatePushEvent;
+	targetBlockHit: TargetBlockHitEvent;
+	tripWireTrip: TripWireTripEvent;
 	playerJoin: PlayerJoinEvent;
 	playerLeave: PlayerLeaveEvent;
 	projectileHit: ProjectileHitEvent;

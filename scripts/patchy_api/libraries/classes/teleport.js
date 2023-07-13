@@ -132,7 +132,7 @@ class TeleportBuilder {
 		cz = Math.floor(cz) + 0.5;
 		location = { x: cx, y: yMax, z: cz };
 
-		const blockFloor = dimension.getBlockFromRay(location, new Vector(0, -1, 0), { maxDistance: yRange, includeLiquidBlocks: true, includePassableBlocks: true });
+		const { block: blockFloor } = dimension.getBlockFromRay(location, new Vector(0, -1, 0), { maxDistance: yRange, includeLiquidBlocks: true, includePassableBlocks: true }) ?? {};
 		location = { x: cx, y: blockFloor.location.y + 1, z: cz };
 		const out = { location, blockFloor, blockAbove: dimension.getBlock(offsetVector3(blockFloor.location, { x: 0, y: 1, z: 0 })) };
 		content.warn({ tpTest: time.end('tpTest') });

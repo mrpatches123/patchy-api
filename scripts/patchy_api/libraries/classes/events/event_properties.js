@@ -127,9 +127,20 @@ const eventTypeProperties = {
 		playerKey: 'entity',
 		playerOnly: false
 	},
-	entityHit: {
+	entityHealthChanged: {
+		playerKey: 'entity',
 		entityEvent: true,
-		playerKey: 'source',
+		playerKey: 'entity',
+		playerOnly: false
+	},
+	entityHitBlock: {
+		entityEvent: true,
+		playerKey: 'damagingEntity',
+		playerOnly: false
+	},
+	entityHitEntity: {
+		entityEvent: true,
+		playerKey: ['hitEntity', 'damagingEntity'],
 		playerOnly: false
 	},
 	entityHurt: {
@@ -189,12 +200,24 @@ const eventTypeProperties = {
 		playerKey: 'player',
 		playerOnly: true,
 	},
-	leverActivate: {
+	leverAction: {
 		playerKey: 'player',
 		playerOnly: true
 	},
 	pistonActivate: {
 
+	},
+	pressurePlatePush: {
+		playerKey: 'source',
+		playerOnly: false
+	},
+	targetBlockHit: {
+		playerKey: 'source',
+		playerOnly: false
+	},
+	tripWireTrip: {
+		playerKey: 'source',
+		playerOnly: false
 	},
 	playerJoin: {
 		playerKey: 'player',
