@@ -1,9 +1,9 @@
 {
 	"format_version": 2,
 	"header": {
-		"name": "patchy-api",
-		"description": "0.0.1",
-		"uuid": "c73cf88d-2fae-4bc8-b1d3-d3cca9715123",
+		"name": "patchy-api-stable",
+		"description": "1.0.1",
+		"uuid": "6c67cbeb-31b9-47a6-926a-ba8174765af1",
 		"version": [
 			1,
 			0,
@@ -18,7 +18,7 @@
 	"modules": [
 		{
 			"type": "data",
-			"uuid": "5f8fae03-f205-432b-8c59-3092454aa839",
+			"uuid": "79201c2f-9880-4efc-a598-9fdda066f7b0",
 			"version": [
 				1,
 				0,
@@ -28,20 +28,19 @@
 		{
 			"type": "script",
 			"language": "javascript",
-			"uuid": "6dc2819b-4e3a-4bb5-b727-a2eb23a9734e",
-			"description": "mojang-minecraft module, required to use the mojang-minecraft module",
+			"uuid": "486a0762-b921-4ec9-aa96-0c0321c8258c",
 			"entry": "package_import.js",
-			"version": "1.0.0-beta"
+			"version": "1.3.0"
 		}
 	],
 	"dependencies": [
 		{
 			"module_name": "@minecraft/server-ui",
-			"version": "1.2.0-beta"
+			"version": "1.1.0"
 		},
 		{
 			"module_name": "@minecraft/server",
-			"version": "1.4.0-beta"
+			"version": "1.3.0"
 		}
 	],
 	"capabilities": [

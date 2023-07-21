@@ -78,28 +78,6 @@ eventBuilder.register({
 			}
 		}
 	},
-	playerHit: {
-		subscription: {
-			entityHit: {
-				function: event => {
-					const { entity, hitBlock, hitEntity } = event;
-					eventBuilder.getEvent('playerHit').iterate({ player: entity, hitBlock, hitEntity });
-				},
-				options: { entityTypes: ["minecraft:player"] }
-			}
-		}
-	},
-	playerHurt: {
-		subscription: {
-			entityHurt: {
-				function: event => {
-					const { hurtEntity, damagingEntity, cause, damage, projectile } = event;
-					eventBuilder.getEvent('playerHurt').iterate({ player: hurtEntity, damagingEntity, cause, damage, projectile });
-				},
-				options: { entityTypes: ["minecraft:player"] }
-			}
-		}
-	},
 	playerSpawned: {
 		subscription: {
 			playerSpawn: {
@@ -110,30 +88,6 @@ eventBuilder.register({
 			}
 
 		}
-	},
-	dataDrivenPlayerTriggerEvent: {
-		subscription: {
-			dataDrivenEntityTriggerEvent: {
-				function: ({ entity, modifiers, id }) => {
-					eventBuilder.getEvent('dataDrivenPlayerTriggerEvent').iterate({ player: entity, modifiers, id });
-				},
-				entityOptions: { entityTypes: ["minecraft:player"] }
-			}
-		}
-	},
-	beforeDataDrivenPlayerTriggerEvent: {
-		subscription: {
-			beforeDataDrivenEntityTriggerEvent: {
-				function: ({ entity, modifiers, id, cancel }) => {
-					eventBuilder.getEvent('beforeDataDrivenPlayerTriggerEvent').iterate({ cancel, player: entity, modifiers, id });
-				},
-				entityOptions: { entityTypes: ["minecraft:player"] }
-			}
-		}
-	},
-
-	scoreboardChange: {
-		subscription: {}
 	}
 });
 // world.sendMessage(`123 - ${JSON.stringify(eventBuilder, null, 4)}`);

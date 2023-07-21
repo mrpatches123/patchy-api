@@ -1,5 +1,5 @@
 import { EntityEffectOptions, EntityEquipmentInventoryComponent, EntityLifetimeState, ItemStack, Player as PlayerType, Vector2 } from '@minecraft/server';
-import { PlayAnimationOptions, EntityDamageSource, Vector3, Container, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions, TeleportOptions } from '@minecraft/server';
+import { EntityDamageSource, Vector3, Container, Entity, Block, Dimension, SoundOptions, Location, ScreenDisplay, ScoreboardIdentity, Vector, EffectType, BlockRaycastOptions, CommandResult, Effect, IEntityComponent, IRawMessage, EntityRaycastOptions, TeleportOptions } from '@minecraft/server';
 import { EntityOnFireComponent, EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
 import { Inventory } from "../players/export_instance.js";
 interface PlayerEntity {
@@ -131,132 +131,14 @@ interface EntityComponents {
 	'wants_jockey': EntityWantsJockeyComponent;
 }
 export declare class Player extends Entity {
-	gamemode: number;
+
 	constructor(player: PlayerType);
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the player is flying. For example, in Creative or
-	 * Spectator mode.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly isFlying: boolean;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the player is gliding with Elytra.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly isGliding: boolean;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the player is jumping. This will remain true while
-	 * the player is holding the jump action.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly isJumping: boolean;
-	/**
-	* @beta
-	* @remarks
-	* The distance an entity has fallen. The value is reset when
-	* the entity is teleported. The value is always 1 when gliding
-	* with Elytra.
-	*
-	* @throws This property can throw when used.
-	*/
-	readonly fallDistance: number;
-	/**
-	 * @beta
-	 * @remarks
-	 * The current overall level for the player, based on their
-	 * experience.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly level: number;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the entity is touching a climbable block. For
-	 * example, a player next to a ladder or a spider next to a
-	 * stone wall.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly isClimbing: boolean;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the entity has a fall distance greater than 0, or
-	 * greater than 1 while gliding.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly isFalling: boolean;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether any part of the entity is inside a water block.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly isInWater: boolean;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the entity is on top of a solid block.
-	 *
-	 * @throws This property can addExperience when used.
-	 */
-	readonly isOnGround: boolean;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the entity is sprinting. For example, a player using
-	 * the sprint action, an ocelot running away or a pig boosting
-	 * with Carrot on a Stick.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly isSprinting: boolean;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the entity is in the swimming state. For example, a
-	 * player using the swim action or a fish in water.
-	 *
-	 * @throws This property can throw when used.
-	 */
-	readonly isSwimming: boolean;
-	/**
-	 * @beta
-	 * @remarks
-	 * Whether the entity reference that you have is valid or not.
-	 * For example, an entity may be unloaded if it moves into a
-	 * chunk that is unloaded, but may be reactivated if the chunk
-	 * it is within gets reloaded.
-	 *
-	 */
-	readonly lifetimeState: EntityLifetimeState;
+	gamemode: number;
 	/**
 	 * if the player can have commands ran on them
 	 * @throws This property can throw when used.
 	 */
 	readonly loaded: boolean;
-	/**
-	 * scores that are defined can be get and set within this property
-	 * @throws This property can throw when used.
-	 */
-	readonly scores: { [objective: string]: number; };
-	/**
-	 * dynamic properties that are defined can be get and set within this property
-	 * @throws This property can throw when used.
-	 */
-	readonly properties: { [identifier: string]: number | boolean | string; };
 	/**
 	 * a object that saves until worldload and is stored in Players
 	 * @throws This property can throw when used.
@@ -267,21 +149,6 @@ export declare class Player extends Entity {
 	 * @throws This property can throw when used.
 	 */
 	readonly container: Container;
-	/**
-	 * returns an array of ItemStack proxies with get and set for a ItemStack with chaching so the inventory is only gotten once per tick
-	 * @throws This property can throw when used.
-	 */
-	armor: ItemStack[];
-	/**
-	 * proxy with get and set on the main hand of the player even the item properties have a get and set
-	 * @throws This property can throw when used.
-	 */
-	offhand: ItemStack;
-	/**
-	 * proxy with get and set on the main hand of the player even the item properties have a get and set
-	 * @throws This property can throw when used.
-	 */
-	mainHand: ItemStack;
 	/**
 	 * returns an array of ItemStack proxies with get and set for a ItemStack with chaching so the inventory is only gotten once per tick
 	 * @throws This property can throw when used.
@@ -305,15 +172,6 @@ export declare class Player extends Entity {
 	 * @throws This property can throw when used.
 	 */
 	readonly id: string;
-
-	/**
-	 * True if the player is currently using a sneaking movement.
-	 */
-	isSneaking: boolean;
-	/**
-	  * sees if the player is swimming
-	  */
-	readonly isSwimming: boolean;
 	/**
 	 * Current location of the player.
 	 * @throws This property can throw when used.
@@ -328,36 +186,11 @@ export declare class Player extends Entity {
 	 * Optional name tag of the player.
 	 */
 	nameTag: string;
-	/**
-	 * Contains methods for manipulating the on-screen display of a
-	 * Player.
-	 */
-	readonly onScreenDisplay: ScreenDisplay;
-	/**
-	 * Main rotation of the entity.
-	 * @throws This property can throw when used.
-	 */
-	readonly rotation: Vector2;
-	/**
-	 * Returns a scoreboard identity that represents this entity.
-	 * @throws This property can throw when used.
-	 */
-	readonly scoreboard: ScoreboardIdentity;
-	readonly spawnDimension?: Dimension;
-	/**
-	 * Manages the selected slot in the player's hotbar.
-	 */
-	selectedSlot: number;
-	/**
-	 * Retrieves or sets an entity that is used as the target of
-	 * AI-related behaviors, like attacking. For players, which
-	 * don't use any AI semantics, this property does not do
-	 * anything.
-	 * @throws This property can throw when used.
-	 */
-	readonly target: Entity;
-	readonly totalXpNeededForNextLevel: number;
-	readonly xpEarnedAtCurrentLevel: number;
+
+
+
+
+
 	/**
 	 * Unique identifier of the type of the entity - for example,
 	 * 'minecraft:player'.
@@ -405,19 +238,8 @@ export declare class Player extends Entity {
 	* @throws This function can throw errors.
 	*/
 	addExperience(amount: number): number;
-	/**
-	 * @beta
-	 * @remarks
-	 *  Adds/removes level to/from the Player and returns the
-	 * current level of the Player.
-	 * @param amount
-	 * Amount to add to the player.
-	 * @returns
-	 * Returns the current level of the Player.
-	 * @throws This function can throw errors.
-	 */
-	addLevels(amount: number): number;
-	resetLevel(): void;
+
+
 	/**
 	 * @remarks
 	 * Adds a specified tag to an entity.
@@ -494,50 +316,10 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	getEffect(effectType: EffectType): Effect;
-	/**
-	 * @remarks
-	 * Gets the first entity that intersects with the vector of the
-	 * view of this entity.
-	 * @param options
-	 * Additional options for processing this raycast query.
-	 * @throws This function can throw errors.
-	 */
-	getEntitiesFromViewDirection(options?: EntityRaycastOptions): Entity[];
-	/**
-	 * @remarks
-	 * Gets the current item cooldown time for a particular
-	 * cooldown category.
-	 * @param itemCategory
-	 * Specifies the cooldown category to retrieve the current
-	 * cooldown for.
-	 * @throws This function can throw errors.
-	 */
-	getItemCooldown(itemCategory: string): number;
-	getRotation(): Vector2;
-	/**
-	* @beta
-	* @remarks
-	* Gets the current spawn point of the player.
-	*
-	* @throws This function can throw errors.
-	*/
-	/**
-	 * @beta
-	 * @remarks
-	 * Gets the current spawn point of the player.
-	 *
-	 * @throws This function can throw errors.
-	 */
-	getSpawnPoint(): DimensionLocation | undefined;
-	/**
-	 * @beta
-	 * @remarks
-	 * Gets the current spawn point of the player.
-	 *
-	 * @throws This function can throw errors.
-	 */
-	getSpawnPosition(): Vector3 | undefined;
-	getTotalXp(): number;
+
+
+
+
 	getVelocity(): Vector3;
 	getViewDirection(): Vector3;
 	/**
@@ -565,7 +347,7 @@ export declare class Player extends Entity {
 	 */
 	hasTag(tag: string): boolean;
 
-	isOp(): boolean;
+
 	/**
 	 * @remarks
 	 * Kills this entity. The entity will drop loot as normal.
@@ -582,15 +364,7 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	playSound(soundID: string, soundOptions?: SoundOptions): void;
-	playAnimation(animationName: string, options?: PlayAnimationOptions): void;
-	postClientMessage(id: string, value: string): void;
-	/**
-	 * @remarks
-	 * Removes a specified property.
-	 * @param identifier
-	 * @throws This function can throw errors.
-	 */
-	removeDynamicProperty(identifier: string): boolean;
+
 	/**
 	 * @remarks
 	 * Removes a specified tag from an entity.
@@ -613,62 +387,11 @@ export declare class Player extends Entity {
 	 * @throws This function can throw errors.
 	 */
 	runCommandAsync(commandString: string): Promise<CommandResult>;
-	/**
-	 * @remarks
-	 * Sets a specified property to a value.
-	 * @param identifier
-	 * @param value
-	 * Data value of the property to set.
-	 * @throws This function can throw errors.
-	 */
-	setDynamicProperty(identifier: string, value: boolean | number | string): void;
-	/**
-	 * @beta
-	 * @remarks
-	 * Will change the specified players permissions, and whether
-	 * they are operator or not.
-	 * @param isOp
-	 * @throws This function can throw errors.
-	 */
-	setOnFire(seconds: number, useEffects?: boolean): boolean;
-	/**
-	 * @remarks
-	 * Gets the first block that intersects with the vector of the
-	 * view of this entity.
-	 * @param options
-	 * Additional options for processing this raycast query.
-	 * @throws This function can throw errors.
-	 */
-	setOp(isOp: boolean): void;
-	/**
-	 * @remarks
-	 * Sets the main rotation of the entity.
-	 * @param degreesX
-	 * @param degreesY
-	 * @throws This function can throw errors.
-	 */
-	setRotation(degreesX: number, degreesY: number): void;
-	setSpawn(spawnPosition: Vector3, spawnDimension: Dimension): void;
 
-	/**
-	 * @remarks
-	 * Sets a velocity for the entity to move with.
-	 * @param velocity
-	 * X/Y/Z components of the velocity.
-	 * @throws This function can throw errors.
-	 */
-	/**
-	 * @remarks
-	 * Sets the item cooldown time for a particular cooldown
-	 * category.
-	 * @param itemCategory
-	 * Specifies the cooldown category to retrieve the current
-	 * cooldown for.
-	 * @param tickDuration
-	 * Duration in ticks of the item cooldown.
-	 * @throws This function can throw errors.
-	 */
-	startItemCooldown(itemCategory: string, tickDuration: number): void;
+
+
+
+
 	/**
 	 * @remarks
 	 * Teleports the selected player to a new location

@@ -32,23 +32,5 @@ eventBuilder.register({
 		unsubscription: () => {
 			system.clearRun(runId);
 		}
-	},
-	beforeChat: {
-		subscription: {
-			beforeChatSend: {
-				function: (event) => {
-					eventBuilder.getEvent('beforeChat').iterate(event);
-				}
-			}
-		}
-	},
-	chatSend: {
-		subscription: {
-			chatSend: {
-				function: (event) => {
-					eventBuilder.getEvent('chat').iterate(event);
-				}
-			}
-		}
 	}
 });

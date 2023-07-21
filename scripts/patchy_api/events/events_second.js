@@ -9,32 +9,6 @@ import { Player, setProptotype } from '../libraries/classes/player/class.js';
 global.requestAddEvent = [];
 const items = {};
 eventBuilder.register({
-	stepOnBlock: {
-		subscription: {
-			tickAfterLoad: {
-				function: () => {
-					players.get().iterate((player) => {
-						try {
-							const { location: { x, y, z }, memory, dimension } = player;
-							// content.warn(y);
-							let rayCastHit = dimension.getBlockFromRay({ x: x, y: y, z: z }, new Vector(0, -1, 0), { maxDistance: 1, includeLiquidBlocks: true, includePassableBlocks: true });
-
-							const { block } = rayCastHit ?? {};
-							if (!block) return;
-							const { LastBlockStepedOn } = memory;
-							memory.LastBlockStepedOn = block;
-							// content.warn({ LastBlockStepedOn: LastBlockStepedOn?.typeId ?? 'null', currentId: block?.typeId ?? 'null' });
-
-							if (LastBlockStepedOn && block.location.equals(LastBlockStepedOn.location)) return;
-							eventBuilder.getEvent('stepOnBlock').iterate({ block, player });
-						} catch (error) {
-							console.warn(error, error.stack);
-						}
-					});
-				}
-			}
-		}
-	},
 	playerLeft: {
 		subscription: {
 			playerLeave: {
@@ -68,126 +42,16 @@ eventBuilder.register({
 	},
 	playerDeath: {
 		subscription: {
-			entityDie: {
-				function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: player }) => {
-					if (!(player instanceof Player)) return;
-					eventBuilder.getEvent('playerDeath').iterate({ damageSource: { killer: setProptotype(damagingEntity), projectile: damagingProjectile, cause }, player });
-				}
-			}
-		}
-	},
-	entityDeath: {
-		subscription: {
-			entityDie: {
-				function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: entity }) => {
-					eventBuilder.getEvent('entityDeath').iterate({ damageSource: { killer: setProptotype(damagingEntity), projectile: damagingProjectile, cause }, entity });
-				}
-			}
-		}
-	},
-	playerJoinAwaitMove: {
-		subscription: {
-			playerSpawn: {
-				function: ({ player, initialSpawn }) => {
-					if (!initialSpawn) return;
-					content.warn({ playerJoinAwaitMove: player.name });
-					const systemRunId = system.runSchedule(() => {
-						const { rotation, memory } = player;
-						const { lastRotation = rotation } = memory;
-						const { x: rx, y: ry } = rotation;
-						const { x: lrx, y: lry } = lastRotation;
-						memory.lastRotation = rotation;
-						content.warn({ rx, ry, lrx, lry });
-						if (rx === lrx && ry === lry) return;
-						eventBuilder.getEvent('playerJoinAwaitMove').iterate({ player });
-						system.clearRunSchedule(systemRunId);
-					}, 0);
-				}
-			}
-		}
-	},
-	itemPickup: {
-		subscription: {
 			tickAfterLoad: {
 				function: () => {
-
-					const dne = Object.assign({}, items);
-					[...overworld.getEntities({ type: 'minecraft:item' })].forEach(entity => {
-						const { id, location } = entity;
-						/**
-						 * @type {EntityItemComponent}
-						 */
-						const { itemStack } = entity.getComponent('minecraft:item');
-
-						if (!items.hasOwnProperty(id)) items[id] = { location, itemStack };
-						delete dne[id];
-					});
-					Object.entries(dne).forEach(([id, { location, itemStack }]) => {
-						content.warn({ location });
-						const player = setProptotype([...overworld.getPlayers({ location, closest: 1 })][0]);
-						eventBuilder.getEvent('itemPickup').iterate({ player, item: itemStack });
-						delete items[id];
+					players.get().iterate(player => {
+						if (player.getComponent('health').currentValue > 0) return;
+						eventBuilder.getEvent('playerDeath').iterate({ player });
 					});
 				}
 			}
 		}
-	},
-	beforePlayerScaffoldPlace: {
-		subscription: {
-			beforeItemUseOn: {
-				function: (event) => {
-					const { source, block: { location: eventBlockLocation } } = event;
-
-					const player = setProptotype(source);
-					if (!(player instanceof Player)) return;
-					if (eventBlockLocation) return;
-					const blockLocation = player.getBlockFromViewDirection();
-					if (blockLocation) return;
-					const { rotation } = player;
-					const direction = yawToCardnalDirectionVector(rotation.y);
-					const { block: blockGround } = player.dimension.getBlockFromRay(player.location, { x: 0, y: -1, z: 0 }) ?? {};
-					if (!blockGround) return;
-					const newLocation = vectorToVector3(Vector.add(blockGround.location, direction));
-					eventBuilder.getEvent('beforePlayerScaffoldPlace').iterate({ player, blockLocation: newLocation, cancel: false }, (key, eventResponse, callbackForKey) => {
-						callbackForKey(eventResponse);
-						content.warn({ key, eventResponse, callbackForKey });
-						if (eventResponse.cancel) event.cancel = true;
-
-					});
-				}
-			}
-		}
-	},
-	beforeItemUseOnStart: {
-		subscription: {
-			beforeItemUseOn: {
-				function: (event) => {
-					const { source } = event;
-					if (!(source instanceof Player)) return;
-					const { memory } = source;
-					const { usedOn } = memory;
-					if (!usedOn) {
-						eventBuilder.getEvent('beforeItemUseOnStart').iterate(event);
-						memory.usedOn = true;
-					}
-					memory.usingOn = true;
-
-				}
-			},
-			tickAfterLoad: {
-				function: () => {
-					players.get().iterate((player) => {
-						const { memory } = player;
-						const { usingOn } = memory;
-						if (!usingOn) {
-							memory.usedOn = false;
-						}
-						memory.usingOn = false;
-					});
-				}
-			}
-		}
-	},
+	}
 });
 function vectorToVector3(vector) {
 	const { x, y, z } = vector;
