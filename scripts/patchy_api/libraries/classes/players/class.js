@@ -2,7 +2,6 @@ import { DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, Co
 import { content, native } from "../../utilities.js";
 import global from "../global.js";
 import loads from "../load.js";
-import propertyBuilder from "../property/export_instance.js";
 import { Player } from "../player/class.js";
 function isDefined(input) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
@@ -191,23 +190,5 @@ export class Players {
 		const id = ids[Math.floor(Math.random() * ids.length)];
 		return ({ id: foundPlayers[id] });
 	}
-	getProperty(player, identifier, forceDisk = false) {
-		return propertyBuilder.get(player)[identifier];
-	};
-	setProperty(player, identifier, value) {
-		const properties = propertyBuilder.get(player);
-		properties[identifier] = value;
-	};
-	resetProperty(player, identifier) {
-		const properties = propertyBuilder.get(player);
-		properties[identifier] = undefined;
-	}
-	registerProperty(identifier, options) {
-		propertyBuilder.register({
-			player: {
-				[identifier]: options
-			}
-		});
-	};
 }
 

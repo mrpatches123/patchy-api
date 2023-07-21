@@ -1,4 +1,4 @@
-import { Container, ItemTypes } from '@minecraft/server';
+import { Container } from '@minecraft/server';
 const inventoryContainerFunctions = {
 	removeItem(ItemStack) {
 		for (let i = this.size - 1; i >= 0; i--) {
@@ -18,7 +18,7 @@ const inventoryContainerFunctions = {
 			const item = this.getItem(i);
 			if (ignoreEmpty && !item) { continue; }
 			if (callback(item, i, this, container)) {
-				this.setItem(i, new ItemStack(ItemTypes.get('minecraft:air'), 0, 0));
+				this.setItem(i);
 				container.addItem(item);
 			}
 		}

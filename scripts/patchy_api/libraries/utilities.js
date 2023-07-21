@@ -1,4 +1,4 @@
-import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction } from '@minecraft/server';
+import { world, Player, Entity, BlockPermutation, Direction } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function getXZVectorRY(ry) {
     const rads = (ry + 180) * Math.PI / 180;
@@ -568,137 +568,13 @@ try {
 
 }
 export const server = {
-    /**
-     * 
-     * @param {String} objective 
-     * @param {Player} player 
-     * @param {value} value 
-     * @param {'list' | 'sidebar' | 'belowName' } updateId 
-     */
-    async setPlayerScoreboard(objective, player, value, updateId) {
-        try {
-            await player.runCommandAsync('scoreboard players set @s scoreIdentityInit 0');
-            world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboardIdentity, value);
-            if (!updateId) return;
-            const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
-            if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return;
-            world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
-            world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
-        } catch (error) {
-            console.warn('server.setPlayerScoreboard()', error, error.stack);
-        }
-    },
     tellraw(message) {
         try {
             world.sendMessage(message);
         } catch (error) {
             console.warn('server.tellraw', error);
         }
-    },
-    /**
-     * @method scoreTest
-     * @param {String} objective 
-     * @param {Player} target Also be Entity or String
-     * @param {Player} findParticipant 
-     * @returns 
-     */
-    scoreTest(objective, target, findParticipant = false) {
-        if (findParticipant && (target instanceof Player || target instanceof Entity)) target = target?.name;
-        if (!target) throw new Error('target must be defined');
-        let scoreboardObjective;
-        let score;
-        let scoreboardIdentity;
-        try { scoreboardObjective = world.scoreboard.getObjective(objective); } catch (error) { /*console.warn(error, error.stack);*/ }
-        if (((target?.player ?? target) instanceof Player || target instanceof Entity) && !findParticipant) {
-
-            scoreboardIdentity = target.scoreboardIdentity;
-            if (!target['scoreboard']) return;
-            // content.warn({ score });
-        } else {
-
-            try { scoreboardIdentity = scoreboardObjective.getParticipants().find((({ displayName }) => displayName === target)); } catch (error) { /*console.warn(error, error.stack);*/ }
-        }
-        if (!scoreboardIdentity) return;
-        if (scoreboardObjective) {
-            try {
-                score = scoreboardObjective.getScore(scoreboardIdentity);
-            } catch (error) {
-                /*console.warn(error, error.stack);*/
-            }
-        }
-        return score;
-    },
-    objectiveAdd(objective, displayName = objective) {
-        try {
-            world.scoreboard.addObjective(objective, displayName);
-            return true;
-        } catch (error) {
-            // console.warn(error, error.stack);
-            return;
-        }
-    },
-    objectiveRemove(objective) {
-        try {
-            world.scoreboard.removeObjective(objective);
-            return true;
-        } catch (error) {
-            console.warn(error, error.stack);
-            return;
-        }
-    },
-    scoreAdd(objective, name, amount = 0) {
-        try {
-            overworld.runCommandAsync(`scoreboard players add ${name} ${objective} ${amount}`);
-        } catch (error) {
-            // console.warn(error, error.stack);
-            return;
-        }
-    },
-    /**
-     * @param {String} objective 
-     * @param {import('@minecraft/server').Player} player 
-     * @param {Number} value
-     * @param {'list' | 'sidebar' | 'belowName' } updateId 
-     */
-    scoreResetPlayer(objective, player, updateId) {
-        try {
-            if (!player?.scoreboardIdentity) return false;
-            world.scoreboard.getObjective(objective)
-                .removeParticipant(player.scoreboardIdentity);
-            return true;
-        } catch (error) {
-            console.warn(error, error.stack);
-            return false;
-        }
-    },
-    /**
-     * @param {String} objective 
-     * @param {import('@minecraft/server').Player} player 
-     * @param {Number} value
-     * @param {'list' | 'sidebar' | 'belowName' } updateId 
-     * @returns {number}
-     */
-    scoreSetPlayer(objective, player, value = 0, updateId) {
-        // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
-        if (!player.scoreboardIdentity) { this.setPlayerScoreboard(objective, player, value = 0, updateId); return value; }
-        const scoreboardObjective = world.scoreboard.getObjective(objective);
-        if (!(scoreboardObjective instanceof ScoreboardObjective)) throw new Error(`objective: ${objective}, at params[0] does not exist!`);
-        scoreboardObjective.setScore(player.scoreboardIdentity, value);
-        if (!updateId) return value;
-        const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
-        if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return value;
-        world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
-        world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
-        return value;
-    },
-    scoreSet(objective, name, amount = 0) {
-        try {
-            overworld.runCommandAsync(`scoreboard players set ${name} ${objective} ${amount}`);
-        } catch (error) {
-            console.warn(error, error.stack);
-            return;
-        }
-    },
+    }
 };
 
 /**
@@ -765,23 +641,7 @@ export function combine(target, source) {
 }
 
 
-export function ItemsGet(id, log = false) {
-    const item = ItemTypes.get(id);
-    if (!item) {
-        let stack;
-        try {
-            help;
-        } catch (error) {
-            stack = error.stack;
-        }
-        if (log) {
-            errorLogger.log({ message: `Item: ${id}, does not exist!` }, stack, { key: 'chests', event: 'tick' });
-        }
-        return ItemTypes.get('air');
-    } else {
-        return item;
-    }
-}
+
 
 export const colors = ['4', 'c', '6', 'g', 'e', 'a', '2', '3', '9', '1', 'd', '5'];
 /**
