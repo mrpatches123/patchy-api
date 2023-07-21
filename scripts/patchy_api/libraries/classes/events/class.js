@@ -256,12 +256,12 @@ export class EventBuilder {
 		this.subscriptions[entityOptionsKey ?? oldEventKey].subscriptions++;
 		let subscribedEventFunction;
 
-
+		// content.warn({ oldEventKey });
 		if (eventTypeProperties[oldEventKey]?.modifiables?.length) {
 			subscribedEventFunction = (event) => {
 				time.start(`Events*API*${entityOptionsKey ?? oldEventKey}`);
 				const { playerKey, playerOnly, modifiables = [] } = eventTypeProperties[oldEventKey] ?? {};
-				// if (!oldEventKey.includes('tick')) content.warn({ oldEventKey, playerKey, modifiables });
+				// if (!oldEventKey.includes('start')) content.warn({ oldEventKey, playerKey, modifiables });
 				let eventClone = (playerKey) ? {} : event;
 				if (playerKey) {
 					const player = event[playerKey];
@@ -305,7 +305,7 @@ export class EventBuilder {
 						try {
 							time.start(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
 							callback(eventClone);
-							// content.warn({ cancel: eventClone.cancel, oldEventKey, key });
+							if (eventClone.cancel) content.warn({ cancel: eventClone.cancel, oldEventKey, key });
 							this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
 						} catch (error) {
 							errorLogger.log(error, error.stack, { key: key, event: oldEventKey });

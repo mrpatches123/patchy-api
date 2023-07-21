@@ -30,7 +30,7 @@ commandBuilder.register('text', {
 		if (!y) return sender.sendMessage(`text: ${y}, at args[2] is not defined `);
 		if (!z) return sender.sendMessage(`text: ${z}, at args[3] is not defined `);
 		if (!text) return sender.sendMessage(`text: ${text}, at args[4...] is not defined `);
-		text = text.join('').replaceAll('\\n', '\n');
+		text = text.join(' ').replaceAll('\\n', '\n');
 		const location = {
 			x: relativeParse(sender, x, 'x'),
 			y: relativeParse(sender, y, 'y'),
@@ -41,7 +41,9 @@ commandBuilder.register('text', {
 			case 'c':
 			case 'create': {
 				const entity = dimension.spawnEntity('patches:floating_text', location);
+				content.warn({ text });
 				entity.nameTag = text;
+				content.warn({ text, nameTag: entity.nameTag });
 				break;
 			}
 			case 'd':

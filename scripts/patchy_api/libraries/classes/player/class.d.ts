@@ -485,6 +485,15 @@ export declare class Player extends Entity {
 	getDynamicProperty(identifier: string): boolean | number | string;
 	/**
 	 * @remarks
+	 * Returns a set of effects applied to this entity.
+	 *
+	 * @returns
+	 * List of effects.
+	 * @throws This function can throw errors.
+	 */
+	getEffects(): Effect[];
+	/**
+	 * @remarks
 	 * Returns the effect for the specified EffectType on the
 	 * entity, or undefined if the effect is not present.
 	 * @param effectType

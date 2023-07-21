@@ -212,10 +212,29 @@ export class ItemStartChargeEvent {
 	readonly useDuration: number;
 }
 export class ItemStartUseOnEvent {
+	/**
+	 * @remarks
+	 * The block that the item is used on.
+	 *
+	 */
+	readonly block: Block;
+	/**
+	 * @remarks
+	 * The face of the block that an item is being used on.
+	 *
+	 */
 	readonly blockFace: Direction;
-	getBlockLocation(): Vector3;
-	getBuildBlockLocation(): Vector3;
-	item: ItemStack;
+	/**
+	 * @remarks
+	 * The impacted item stack that is starting to be used.
+	 *
+	 */
+	readonly itemStack: ItemStack;
+	/**
+	 * @remarks
+	 * Returns the source entity that triggered this item event.
+	 *
+	 */
 	readonly source: Entity;
 }
 export class ItemStopChargeEvent {

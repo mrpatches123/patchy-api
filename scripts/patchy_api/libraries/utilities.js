@@ -30,27 +30,27 @@ export function rotationToDirection(rotation) {
 
     x = (x / 45 + 2) | 0;
     y = ((y + 45) / 90 + 2) | 0;
-    if (x < 1) return 'up';
-    else if ((x > 2)) return 'down';
+    if (x < 1) return 'Up';
+    else if ((x > 2)) return 'Down';
     switch (y) {
         case 2:
-            return 'south';
+            return 'South';
         case 4:
         case 0:
-            return 'north';
+            return 'North';
         case 1:
-            return 'east';
+            return 'East';
         case 3:
-            return 'west';
+            return 'West';
     }
 };
 export const reverseDirection = {
-    "down": "up",
-    "east": "west",
-    "north": "south",
-    "south": "north",
-    "up": "down",
-    "west": "east"
+    "Down": "Up",
+    "East": "West",
+    "North": "South",
+    "South": "North",
+    "Up": "Down",
+    "West": "East"
 };
 /**
  * 
@@ -62,27 +62,27 @@ export function rotationToHorizontalDirection(rotation) {
     y = ((y + 45) / 90 + 2) | 0;
     switch (y) {
         case 2:
-            return 'south';
+            return 'South';
         case 4:
         case 0:
-            return 'north';
+            return 'North';
         case 1:
-            return 'east';
+            return 'East';
         case 3:
-            return 'west';
+            return 'West';
     }
 };
 export function isDefined(input) {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }
 export function permutationClone(permutation) {
-    const permutationProperties = [];
+    const permutationProperties = {};
     /**
      * @type {BlockPermutation}
      */
     const blockPermutation = permutation;
-    blockPermutation.getAllProperties().forEach(({ name, validValues, value }) => {
-        permutationProperties.push({ name, validValues, value });
+    blockPermutation.getAllStates().forEach((value) => {
+        permutationProperties[value] = blockPermutation.getState(value);
     });
     return permutationProperties;
 }
@@ -405,7 +405,7 @@ export function relativeParse(player, input, direction) {
 export function blockFaceToCoords(blockFace, { x, y, z }) {
     if (!isDefined(blockFace)) throw new Error('blockFace at params[0] is not defined');
     blockFace = blockFaceToNumber[blockFace];
-    content.warn({ blockFace });
+    // content.warn({ blockFace });
 
     let location = [x, y, z];
     [

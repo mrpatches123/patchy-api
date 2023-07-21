@@ -339,6 +339,9 @@ export class Player {
 	getEffect(...args) {
 		return this.player.getEffect(...args);
 	}
+	getEffects(...args) {
+		return this.player.getEffects(...args);
+	}
 	getEntitiesFromViewVector(...args) {
 		return this.player.getBlockFromViewDirection(...args);
 	}

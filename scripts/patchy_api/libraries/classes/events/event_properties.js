@@ -119,7 +119,7 @@ const eventTypeProperties = {
 	},
 	entityDie: {
 		entityEvent: true,
-		playerKey: 'deadEntity',
+		playerKey: ['deadEntity', { damageSource: ['damagingEntity'] }],
 		playerOnly: false
 	},
 	entityDeath: {
@@ -175,7 +175,6 @@ const eventTypeProperties = {
 	itemStartUseOn: {
 		playerKey: 'source',
 		playerOnly: false,
-
 	},
 	itemStopCharge: {
 		playerKey: 'source',

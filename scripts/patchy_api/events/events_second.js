@@ -21,6 +21,8 @@ eventBuilder.register({
 
 							const { block } = rayCastHit ?? {};
 							if (!block) return;
+							if (!player.isOnGround) return;
+							if (!player.isInWater && player.isFalling) return;
 							const { LastBlockStepedOn } = memory;
 							memory.LastBlockStepedOn = block;
 							// content.warn({ LastBlockStepedOn: LastBlockStepedOn?.typeId ?? 'null', currentId: block?.typeId ?? 'null' });
@@ -71,16 +73,7 @@ eventBuilder.register({
 			entityDie: {
 				function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: player }) => {
 					if (!(player instanceof Player)) return;
-					eventBuilder.getEvent('playerDeath').iterate({ damageSource: { killer: setProptotype(damagingEntity), projectile: damagingProjectile, cause }, player });
-				}
-			}
-		}
-	},
-	entityDeath: {
-		subscription: {
-			entityDie: {
-				function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: entity }) => {
-					eventBuilder.getEvent('entityDeath').iterate({ damageSource: { killer: setProptotype(damagingEntity), projectile: damagingProjectile, cause }, entity });
+					eventBuilder.getEvent('playerDeath').iterate({ damageSource: { killer: damagingEntity, projectile: damagingProjectile, cause }, player });
 				}
 			}
 		}
@@ -137,9 +130,7 @@ eventBuilder.register({
 			beforeItemUseOn: {
 				function: (event) => {
 					const { source, block: { location: eventBlockLocation } } = event;
-
-					const player = setProptotype(source);
-					if (!(player instanceof Player)) return;
+					if (!(source instanceof Player)) return;
 					if (eventBlockLocation) return;
 					const blockLocation = player.getBlockFromViewDirection();
 					if (blockLocation) return;
