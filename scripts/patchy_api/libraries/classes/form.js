@@ -1,4 +1,3 @@
-import { world, Vector } from '@minecraft/server';
 import { Player } from './player/class.js';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message } from '@minecraft/server-ui';
 import { content, isDefined, native, RemovableTree, server, typeOf } from '../utilities.js';

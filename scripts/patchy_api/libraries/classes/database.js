@@ -1,4 +1,4 @@
-import { BlockAreaSize, world, Entity } from "@minecraft/server";
+import { world, Entity } from "@minecraft/server";
 import { overworld, nether, end, content, native } from '../utilities.js';
 import time from "./time.js";
 // const overworld = world.getDimension('overworld');
@@ -101,7 +101,7 @@ Array.prototype.random = function () {
 //
 const coords256 = Array.from(Array(256), (item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 }));
 
-const databasesArea = new BlockAreaSize(16, 1, 16);
+
 export class Databases {
     constructor() {
         this.__queuedSaves = [];

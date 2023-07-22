@@ -1,18 +1,16 @@
-import { BlockType, BlockPermutation, system, BlockAreaSize, Vector } from "@minecraft/server";
+import { BlockPermutation, system } from "@minecraft/server";
 import { content, isDefined, overworld, sort3DRange, sort3DVectors } from "../utilities.js";
 /**
  * @typedef {Object} BlockOptions
- * @property {BlockType} type
- * @property {BlockPermutation} permutation
  */
 /**
  * @typedef {Object} FillOptions
  * @property {{x: number, y: number, z: number}} location1
  * @property {{x: number, y: number, z: number}} location2
- * @property {BlockType | BlockOptions | (BlockType | BlockOptions)[]} blocks
+ * @property {BlockPermutation | (BlockPermutation)[]} blocks
  * @property {Number} hollow default?=0 which is solid and the number = thickness 
  * @property {Number} maxPlacementsPerTick default?=8192 and 0 is infinity
- * @property {BlockType} replace 
+ * @property {BlockPermutation} replace 
  */
 function isVector3(target) {
 	// content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
@@ -65,14 +63,9 @@ class Fill {
 						} else {
 							if (fillThis.queue[0]) fillThis.queue[0].lastValueIfNullBlock = false;
 						}
-
-						const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions.type;
 						// content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
 						if (replace && block.typeId !== replace.id) continue;
-						block.setType(blockType);
-						if (blockOptions instanceof BlockType) continue;
-						if (!(blockOptions?.permutation instanceof BlockPermutation)) continue;
-						block.setPermutation(blockOptions.permutation);
+						block.setPermutation(blockOptions);
 						if (isFirstBlockOfChunk) break;
 					}
 				} catch (error) {
@@ -105,16 +98,12 @@ class Fill {
 		const { y: y2 } = location2;
 		if (y1 > 319 || y1 < -64) throw new Error(`y, ${y1} in location1 in fillOptions at params[0] is less than -64 or greater than 319 which cannot be filled!`);
 		if (y2 > 319 || y2 < -64) throw new Error(`y, ${y2} in location2 in fillOptions at params[0] is less than -64 or greater than 319 which cannot be filled!`);
-		if (!(blocks instanceof BlockType) && !(blocks instanceof Array) && !(blocks instanceof Object)) throw new Error('blocks at params[0] is not of type: Object, Array, or BlockType!');
 
 		if (blocks instanceof Array) blocks.forEach((block, i) => {
-			if (!(block instanceof BlockType) && !(block instanceof Object)) throw new Error(`blocks[${i}] in params[0] is not of type: Object or BlockType!`);
-
-			if (block instanceof BlockType) return;
-			const { type, permutation } = block;
-			if (!(type instanceof BlockType)) throw new Error(`type in blocks[${i}] in fillOptions at params[0] is not of type: Object or BlockType!`);
-			if (!(permutation instanceof BlockPermutation)) throw new Error(`permutation in blocks[${i}] in fillOptions at params[0] is not of type: Object or BlockType!`);
+			if (!(block instanceof BlockPermutation)) throw new Error(`blocks[${i}] in params[0] is not of type: BlockPermutation!`);
 		});
+		else if (!(blocks instanceof BlockPermutation)) throw new Error('blocks at params[0] is not of type: BlockPermutation!');
+
 
 		if (typeof hollow !== 'number') throw new Error('hollow in fillOptions at params[0] is not of type: Number!');
 		if (typeof maxPlacementsPerTick !== 'number') throw new Error('maxPlacementsPerTick in fillOptions at params[0] is not of type: Number!');

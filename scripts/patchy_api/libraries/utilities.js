@@ -1,4 +1,4 @@
-import { world, Player, Entity, BlockPermutation, Direction } from '@minecraft/server';
+import { world, Player, Entity, BlockPermutation } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function getXZVectorRY(ry) {
     const rads = (ry + 180) * Math.PI / 180;
@@ -20,58 +20,7 @@ export function isVector2(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
-/**
- * 
- * @param {{x: number, y: number}} rotation 
- * @returns {Direction}
- */
-export function rotationToDirection(rotation) {
-    let { x, y } = rotation;
 
-    x = (x / 45 + 2) | 0;
-    y = ((y + 45) / 90 + 2) | 0;
-    if (x < 1) return 'up';
-    else if ((x > 2)) return 'down';
-    switch (y) {
-        case 2:
-            return 'south';
-        case 4:
-        case 0:
-            return 'north';
-        case 1:
-            return 'east';
-        case 3:
-            return 'west';
-    }
-};
-export const reverseDirection = {
-    "down": "up",
-    "east": "west",
-    "north": "south",
-    "south": "north",
-    "up": "down",
-    "west": "east"
-};
-/**
- * 
- * @param {{x: number, y: number}} rotation 
- * @returns {Direction}
- */
-export function rotationToHorizontalDirection(rotation) {
-    let { x, y } = rotation;
-    y = ((y + 45) / 90 + 2) | 0;
-    switch (y) {
-        case 2:
-            return 'south';
-        case 4:
-        case 0:
-            return 'north';
-        case 1:
-            return 'east';
-        case 3:
-            return 'west';
-    }
-};
 export function isDefined(input) {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }
@@ -379,46 +328,14 @@ export const clickableBlocks = [
 export function randomIntegerBetween(min, max) {
     return Math.floor(min + Math.random() * (max - min));
 };
-export function relativeParse(player, input, direction) {
-    if (input.includes('~')) {
-        if (input.endsWith('*')) {
-            return Math.floor((player.location[direction] + Number(input.replace(/[*~]/g, ''))) | 0) + 0.5;
-        } else {
-            return player.location[direction] + Number(input.replace('~', ''));
-        }
-    } else {
-        return Number(input);
-    }
-}
+
 /**
  * @typedef {Object} Vector3
  * @property {number} x
  * @property {number} y
  * @property {number} z
  */
-/**
- * 
- * @param {Direction} blockFace 
- * @param {Vector3} blockLocation 
- * @returns {Vector3}
- */
-export function blockFaceToCoords(blockFace, { x, y, z }) {
-    if (!isDefined(blockFace)) throw new Error('blockFace at params[0] is not defined');
-    blockFace = blockFaceToNumber[blockFace];
-    content.warn({ blockFace });
 
-    let location = [x, y, z];
-    [
-        [0, -1, 0],
-        [0, 1, 0],
-        [0, 0, -1],
-        [0, 0, 1],
-        [-1, 0, 0],
-        [1, 0, 0]
-    ][blockFace].forEach((coord, i) => location[i] += coord);
-    [x, y, z] = location;
-    return { x, y, z };
-}
 Math.randomBetween = function (n1, n2) {
     return n1 + Math.random() * Math.abs(n2 - n1);
 };

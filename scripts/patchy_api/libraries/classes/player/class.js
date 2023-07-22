@@ -1,5 +1,5 @@
 import loads from "../load.js";
-import { Player as PlayerType, Container, system, Vector, world } from "@minecraft/server";
+import { Player as PlayerType, system, world } from "@minecraft/server";
 import players from "../players/export_instance.js";
 import errorLogger from "../error.js";
 import { content, native } from "../../utilities.js";

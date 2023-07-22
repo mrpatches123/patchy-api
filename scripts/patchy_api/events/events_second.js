@@ -1,11 +1,12 @@
 import eventBuilder from '../libraries/classes/events/export_instance.js';
-import { EntityItemComponent, Vector, world } from '@minecraft/server';
+import { world, ItemStack } from '@minecraft/server';
 import players from '../libraries/classes/players/export_instance.js';
 import time from '../libraries/classes/time.js';
 import global from '../libraries/classes/global.js';
 import errorLogger from '../libraries/classes/error.js';
 import { content, hypot2, overworld, getXZVectorRY } from '../modules.js';
 import { Player, setProptotype } from '../libraries/classes/player/class.js';
+
 global.requestAddEvent = [];
 const items = {};
 eventBuilder.register({

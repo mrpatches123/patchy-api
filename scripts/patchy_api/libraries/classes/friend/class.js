@@ -6,7 +6,6 @@ import { Player } from '../player/class.js';
 import eventBuilder from '../events/export_instance.js';
 import time from '../time.js';
 import players from '../players/export_instance.js';
-import { Scoreboard, world } from '@minecraft/server';
 import errorLogger from '../error.js';
 const types = ['central', 'remote'];
 const maxTime = 1.728e8;

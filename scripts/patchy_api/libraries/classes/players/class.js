@@ -1,4 +1,4 @@
-import { DynamicPropertiesDefinition, world, MinecraftEntityTypes, ItemStack, Container, system } from "@minecraft/server";
+import { world, ItemStack, Container, system } from "@minecraft/server";
 import { content, native } from "../../utilities.js";
 import global from "../global.js";
 import loads from "../load.js";

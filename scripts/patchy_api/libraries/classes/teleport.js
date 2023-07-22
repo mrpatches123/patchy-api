@@ -1,5 +1,5 @@
-import { Block, Dimension, Vector } from '@minecraft/server';
-import { content, isVector2, isVector3, native, offsetVector3, randomCoordsOutsideCircle } from '../utilities.js';
+import { Block, Dimension } from '@minecraft/server';
+import { content, isVector2, isVector3 } from '../utilities.js';
 import { Player } from './player/class.js';
 import time from './time.js';
 
