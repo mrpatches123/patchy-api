@@ -1,5 +1,6 @@
 import * as Server from '@minecraft/server';
 import * as ServerUI from '@minecraft/server-ui';
+//remember m9 helped make this
 export const content = {
 	warn(...messages) {
 		console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
