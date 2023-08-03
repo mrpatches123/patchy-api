@@ -149,7 +149,7 @@ export interface EventKeyTypes {
 export type ReplaceTypes<T> = T extends EntityType ? Entity | Player : T extends PlayerType ? Player : T extends EntityDamageSourceType ? EntityDamageSource : T;
 
 export type EventObject = { [key in keyof EventKeyTypes]: (arg: ReplaceTypes<EventKeyTypes[key]>) => void };
-export type EventRegisterObject = { [key: string]: { subscription: { [key in keyof EventKeyTypes]: { function: (arg: ReplaceTypes<EventKeyTypes[key]>) => void; options?: EntityEventOptions; forceNative?: boolean; } }; }; };
+export type EventRegisterObject = { [key: string]: { subscription: { [key in keyof EventKeyTypes | string]: { function: (arg: ReplaceTypes<EventKeyTypes[key]>) => void; options?: EntityEventOptions; forceNative?: boolean; } }; }; };
 
 // export class EventBuilder {
 
