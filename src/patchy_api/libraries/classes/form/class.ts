@@ -1,7 +1,6 @@
 import { world, Player } from '@minecraft/server';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message, FormResponse, FormCancelationReason } from '@minecraft/server-ui';
 import schema, { ArrayType } from './schema.js';
-import errorLogger from '../error.js';
 /**
  * @type {{[typeKey: String]: {[elementKey: String]: Boolean}}}
  */
@@ -284,80 +283,75 @@ export class FormBuilder {
 			}
 			if (!objectClone) { continue; }
 			Object.entries(objectClone).forEach(([elementKey, value]) => {
-				try {
-					let global = false;
-					if (formSchema.global.hasOwnProperty(elementKey)) global = true;
-					let elementSchemaObject = formSchema?.[elementKey] ?? formSchema?.global?.[elementKey];
-					let { schema: elementSchema, setupFunction, custom, hasCallback, root, formMethod, customProperties = [] } = elementSchemaObject ?? {};
-					if (!elementSchema && root) {
-						elementSchema = formSchema?.[root]?.schema ?? formSchema?.global?.[root]?.schema;
-						if (!elementSchema) throw new Error(`root: ${root}, at index: ${i}, in ${type} in formData for ${key} does not exist per schema!`);
-					}
-					if (!elementSchema) throw new Error(`elementKey: ${elementKey}, at index: ${i}, in ${type} in formData for ${key} does not exist per schema!`);
-					if (global) {
+				let global = false;
+				if (formSchema.global.hasOwnProperty(elementKey)) global = true;
+				let elementSchemaObject = formSchema?.[elementKey] ?? formSchema?.global?.[elementKey];
+				let { schema: elementSchema, setupFunction, custom, hasCallback, root, formMethod, customProperties = [] } = elementSchemaObject ?? {};
+				if (!elementSchema && root) {
+					elementSchema = formSchema?.[root]?.schema ?? formSchema?.global?.[root]?.schema;
+					if (!elementSchema) throw new Error(`root: ${root}, at index: ${i}, in ${type} in formData for ${key} does not exist per schema!`);
+				}
+				if (!elementSchema) throw new Error(`elementKey: ${elementKey}, at index: ${i}, in ${type} in formData for ${key} does not exist per schema!`);
+				if (global) {
 
-						custom = (formMethod) ? false : true;
-						globalSettings[elementKey] = value;
-						// content.warn({ globalSettings });
-					}
-					if (setupFunction && !(setupFunction instanceof Function)) throw new Error(`setupFunction in ${elementKey}, in ${type} schema in ${type} in schema in schema.js is not of type: Function!`);
-					if (hasCallback && typeof hasCallback !== 'boolean') throw new Error(`hasCallback in ${elementKey}, in ${type} schema in ${type} in schema in schema.js is not of type: Function!`);
-					if (value instanceof Function && !((typeOf(elementSchema) === 'Function') || (typeOf(elementSchema) === 'Array' && elementSchema.some(innerSchema => typeOf(innerSchema) === 'Function')))) {
-						value = value(receiver, i, ...extraArguments);
-					}
-					if (setupFunction instanceof Function) {
-						const extraElementFunction = setupFunction(receiver, this, form, key, value, i, callbackArray, objectClone, ...extraArguments);
-						if (extraElementFunction instanceof Function || (extraElementFunction instanceof Array && extraElementFunction.every(func => func && func instanceof Function))) objectClone.extraElementFunction = extraElementFunction;
-					}
-					function setup(type) {
-						if (typeOf(type) === 'Object') {
-							Object.entries(type).forEach(([typeKey, typeValue]) => {
-								let innerValue = value?.[typeKey];
-								// content.warnType({ typeKey, typeValue });
-								if (innerValue instanceof Function && !((typeOf(typeValue) === 'Function') || (typeOf(typeValue) === 'Array' && typeValue.some(innerSchema => typeOf(innerSchema) === 'Function')))) {
-									innerValue = value(receiver, i, ...extraArguments);
-								}
-								if (typeValue instanceof Array) {
-									// content.warnType({ type, typeValue, innerValue });
-									if (!typeValue.some(innerType => {
-										if (typeEquals(innerType, innerValue)) return true;
-									})) throw new Error(`key: ${typeKey}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${orArray(typeValue.map(innerType => typeOf(innerType)))}!`);
+					custom = (formMethod) ? false : true;
+					globalSettings[elementKey] = value;
+					// content.warn({ globalSettings });
+				}
+				if (setupFunction && !(setupFunction instanceof Function)) throw new Error(`setupFunction in ${elementKey}, in ${type} schema in ${type} in schema in schema.js is not of type: Function!`);
+				if (hasCallback && typeof hasCallback !== 'boolean') throw new Error(`hasCallback in ${elementKey}, in ${type} schema in ${type} in schema in schema.js is not of type: Function!`);
+				if (value instanceof Function && !((typeOf(elementSchema) === 'Function') || (typeOf(elementSchema) === 'Array' && elementSchema.some(innerSchema => typeOf(innerSchema) === 'Function')))) {
+					value = value(receiver, i, ...extraArguments);
+				}
+				if (setupFunction instanceof Function) {
+					const extraElementFunction = setupFunction(receiver, this, form, key, value, i, callbackArray, objectClone, ...extraArguments);
+					if (extraElementFunction instanceof Function || (extraElementFunction instanceof Array && extraElementFunction.every(func => func && func instanceof Function))) objectClone.extraElementFunction = extraElementFunction;
+				}
+				function setup(type) {
+					if (typeOf(type) === 'Object') {
+						Object.entries(type).forEach(([typeKey, typeValue]) => {
+							let innerValue = value?.[typeKey];
+							// content.warnType({ typeKey, typeValue });
+							if (innerValue instanceof Function && !((typeOf(typeValue) === 'Function') || (typeOf(typeValue) === 'Array' && typeValue.some(innerSchema => typeOf(innerSchema) === 'Function')))) {
+								innerValue = value(receiver, i, ...extraArguments);
+							}
+							if (typeValue instanceof Array) {
+								// content.warnType({ type, typeValue, innerValue });
+								if (!typeValue.some(innerType => {
+									if (typeEquals(innerType, innerValue)) return true;
+								})) throw new Error(`key: ${typeKey}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${orArray(typeValue.map(innerType => typeOf(innerType)))}!`);
 
-								} else if (typeValue instanceof ArrayType) {
-									if (!(innerValue instanceof Array)) throw new Error(`key: ${key}, in elementKey, at index: ${i}, in ${type} in formData for ${key} per schema is not of type: Array!`);
-									innerValue.forEach((bottemValue, a) => {
-										if (Object.entries(typeValue.type).some(([innerKey, bottomType]) => {
-											if (typeEquals(bottomType, bottemValue)) return true;
-										})) throw new Error(`innerKey: ${innerKey}, index: ${a}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(bottomType)}!`);
-									});
-								} else {
-									if (!typeEquals(typeValue, innerValue)) throw new Error(`key: ${typeKey}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(innerType)}!`);
-								}
-								delete objectClone[elementKey][typeKey];
-								if (isDefined(innerValue)) objectClone[elementKey][typeKey] = innerValue;
-								if (typeKey === 'reopen' && isDefined(innerValue)) content.warn({ reopenTest: objectClone[elementKey] });
-							});
-							// content.warn({ elementKey, custom, global, formMethod, root, args: Object.values(objectClone[elementKey]), bool: custom || (global && !formMethod) });
-							if (custom || (global && !formMethod)) return;
-							const args = Object.entries(objectClone[elementKey]).filter(([propertyKey]) => !customProperties.includes(propertyKey)).map(([propertyKey, value]) => value);
-							form[root ?? elementKey](...args);
-						} else {
-							// content.warnType({ type, value });
-							if (!typeEquals(type, value)) return true;
-							if (custom || (global && !formMethod)) return;
-							if (!isDefined(value)) return;
-							form[elementKey](value);
-						}
-					}
-					if (elementSchema instanceof Array) {
-						if (elementSchema.every(type => { setup(type); })) throw new Error(`elementKey: ${elementKey}, at index: ${i}, in ${type} in formData for ${key} per schema is not of type: ${orArray(elementSchema.map(value => typeOf(value) ?? 'undefined'))}!`);;
+							} else if (typeValue instanceof ArrayType) {
+								if (!(innerValue instanceof Array)) throw new Error(`key: ${key}, in elementKey, at index: ${i}, in ${type} in formData for ${key} per schema is not of type: Array!`);
+								innerValue.forEach((bottemValue, a) => {
+									if (Object.entries(typeValue.type).some(([innerKey, bottomType]) => {
+										if (typeEquals(bottomType, bottemValue)) return true;
+									})) throw new Error(`innerKey: ${innerKey}, index: ${a}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(bottomType)}!`);
+								});
+							} else {
+								if (!typeEquals(typeValue, innerValue)) throw new Error(`key: ${typeKey}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(innerType)}!`);
+							}
+							delete objectClone[elementKey][typeKey];
+							if (isDefined(innerValue)) objectClone[elementKey][typeKey] = innerValue;
+							if (typeKey === 'reopen' && isDefined(innerValue)) content.warn({ reopenTest: objectClone[elementKey] });
+						});
+						// content.warn({ elementKey, custom, global, formMethod, root, args: Object.values(objectClone[elementKey]), bool: custom || (global && !formMethod) });
+						if (custom || (global && !formMethod)) return;
+						const args = Object.entries(objectClone[elementKey]).filter(([propertyKey]) => !customProperties.includes(propertyKey)).map(([propertyKey, value]) => value);
+						form[root ?? elementKey](...args);
 					} else {
-						const shouldErrorFromShallowType = setup(elementSchema);
-						if (shouldErrorFromShallowType) throw new Error(`elementKey: ${elementKey}, at index: ${i}in formData for ${key} per schema is not of type: ${typeOf(elementSchema)}!`);
+						// content.warnType({ type, value });
+						if (!typeEquals(type, value)) return true;
+						if (custom || (global && !formMethod)) return;
+						if (!isDefined(value)) return;
+						form[elementKey](value);
 					}
-				} catch (error) {
-					content.warn({ elementKey, value });
-					errorLogger.log(error, error.stack, { key: elementKey, eventKey: key });
+				}
+				if (elementSchema instanceof Array) {
+					if (elementSchema.every(type => { setup(type); })) throw new Error(`elementKey: ${elementKey}, at index: ${i}, in ${type} in formData for ${key} per schema is not of type: ${orArray(elementSchema.map(value => typeOf(value) ?? 'undefined'))}!`);;
+				} else {
+					const shouldErrorFromShallowType = setup(elementSchema);
+					if (shouldErrorFromShallowType) throw new Error(`elementKey: ${elementKey}, at index: ${i}in formData for ${key} per schema is not of type: ${typeOf(elementSchema)}!`);
 				}
 			});
 			formArray[i] = objectClone;

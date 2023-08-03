@@ -64,7 +64,6 @@ export class PlotBuilder {
 		this.creates = {};
 		this.subscribedQueue = false;
 		this.registeredProperties = false;
-		this.runCreateQueue();
 	}
 	runCreateQueue() {
 		const plotThis = this;

@@ -284,7 +284,6 @@ export function betweenBlockVector3(target, vector1, vector2) {
     const ox2 = Math.floor((x1 < x2) ? x2 : x1);
     const oy2 = Math.floor((y1 < y2) ? y2 : y1);
     const oz2 = Math.floor((z1 < z2) ? z2 : z1);
-    // content.warn({ ox1, oy1, oz1, ox2, oy2, oz2 });
     let { x, y, z } = target;
     x = Math.floor(x) + 0.5;
     y = Math.floor(y) + 0.5;
