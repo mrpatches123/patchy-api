@@ -1,5 +1,5 @@
 import { Player } from "../player/class.js";
-import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, Vector, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation, Vector3, Vector2, ScriptEventSource, BlockBreakAfterEvent, BlockPlaceAfterEvent, ButtonPushAfterEvent, ChatSendAfterEvent, BlockExplodeAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, DataDrivenEntityTriggerAfterEvent, EffectAddAfterEvent, EntityDieAfterEvent, EntitySpawnAfterEvent, EntityHealthChangedAfterEvent, EntityHitBlockAfterEvent, EntityHitEntityAfterEvent, EntityHurtAfterEvent, ExplosionAfterEvent, ItemStopUseAfterEvent, ItemDefinitionTriggeredAfterEvent, ItemReleaseUseAfterEvent, ItemStartUseAfterEvent, ItemStartUseOnAfterEvent, ItemStopUseOnAfterEvent, ItemUseAfterEvent, ItemUseOnAfterEvent, LeverActionAfterEvent, PressurePlatePushAfterEvent, TargetBlockHitAfterEvent, TripWireTripAfterEvent, PlayerJoinAfterEvent, PlayerLeaveAfterEvent, ProjectileHitAfterEvent, WeatherChangeAfterEvent, WorldInitializeAfterEvent, PlayerSpawnAfterEvent, ScriptEventCommandMessageAfterEvent } from '@minecraft/server';
+import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, Vector, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation, Vector3, Vector2, ScriptEventSource, BlockBreakAfterEvent, BlockPlaceAfterEvent, ButtonPushAfterEvent, ChatSendAfterEvent, BlockExplodeAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, DataDrivenEntityTriggerAfterEvent, EffectAddAfterEvent, EntityDieAfterEvent, EntitySpawnAfterEvent, EntityHealthChangedAfterEvent, EntityHitBlockAfterEvent, EntityHitEntityAfterEvent, EntityHurtAfterEvent, ExplosionAfterEvent, ItemStopUseAfterEvent, ItemDefinitionTriggeredAfterEvent, ItemReleaseUseAfterEvent, ItemStartUseAfterEvent, ItemStartUseOnAfterEvent, ItemStopUseOnAfterEvent, ItemUseAfterEvent, ItemUseOnAfterEvent, LeverActionAfterEvent, PressurePlatePushAfterEvent, TargetBlockHitAfterEvent, TripWireTripAfterEvent, PlayerJoinAfterEvent, PlayerLeaveAfterEvent, ProjectileHitAfterEvent, WeatherChangeAfterEvent, WorldInitializeAfterEvent, PlayerSpawnAfterEvent, ScriptEventCommandMessageAfterEvent } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
 
 
@@ -143,10 +143,10 @@ export interface EventKeyTypes {
 	worldLoad: undefined;
 	scoreboardChange: ScoreboardChangeEvent;
 	beforePlayerScaffoldPlace: BeforePlayerScaffoldPlaceEvent;
-
+	custom: any;
 };
 
-type ReplaceTypes<T> = T extends EntityType ? Entity | Player : T extends PlayerType ? Player : T extends EntityDamageSourceType ? EntityDamageSource : T;
+export type ReplaceTypes<T> = T extends EntityType ? Entity | Player : T extends PlayerType ? Player : T extends EntityDamageSourceType ? EntityDamageSource : T;
 
 export type EventObject = { [key in keyof EventKeyTypes]: (arg: ReplaceTypes<EventKeyTypes[key]>) => void };
 export type EventRegisterObject = { [key: string]: { subscription: { [key in keyof EventKeyTypes]: { function: (arg: ReplaceTypes<EventKeyTypes[key]>) => void; options?: EntityEventOptions; forceNative?: boolean; } }; }; };

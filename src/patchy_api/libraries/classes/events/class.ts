@@ -1,12 +1,12 @@
 
-import { world, Entity, system, Player } from '@minecraft/server';
+import { world, Entity, system, Player, EntityEventOptions } from '@minecraft/server';
 import { content, native } from '../../utilities.js';
 import time from '../time.js';
 import { setProptotype } from '../player/class.js';
 import { CustomEvent } from '../custom_event/class.js';
 import eventTypeProperties from './event_properties.js';
 import errorLogger from '../error.js';
-import { EventObject, EventRegisterObject, EventKeyTypes } from './types.ts';
+import { EventObject, EventRegisterObject, EventKeyTypes, ReplaceTypes } from './types.ts';
 let keystest = [];
 let clearedKeyTest = false;
 
@@ -61,9 +61,6 @@ function arrayClone(array: any[]): any[] {
 	return newArray;
 }
 
-/**
- * @type {{[key: string]: {cancellable?: boolean,entityEvent?: boolean, playerKey?: 'sender' | 'source' | 'player' | 'entity', playerOnly?: boolean, custom?: boolean}}}
- */
 
 const worldSystemEvents = {
 	afterEvents: world.afterEvents,
@@ -74,8 +71,8 @@ const worldSystemEvents = {
 
 
 export class EventBuilder {
-	subscriptions: { [eventKey in keyof EventKeyTypes]: {}; } = {};
-	registry!: { [eventKey in keyof EventKeyTypes]: {}; };
+	subscriptions: { [eventKey in keyof EventKeyTypes]: {}; } | {};
+	registry: { [newEventKey: string]: { subscriptions: { [eventKey in keyof EventKeyTypes]: { entityOptionsKey: string, function: (arg: ReplaceTypes<EventKeyTypes[eventKey]>) => void; options?: EntityEventOptions; forceNative?: boolean; } }; } | {}; };
 	classId: number;
 	constructor() {
 		this.subscriptions = {};
@@ -90,6 +87,7 @@ export class EventBuilder {
 		};
 		system.run(queueCallback);
 	};
+	E;
 	register(eventAddObject: EventRegisterObject): void {
 		Object.entries(eventAddObject).forEach(([newEventKey, properties]) => {
 			if (!(properties instanceof Object)) throw new Error(`key: ${newEventKey}, does have a value with the type: Object!`);
@@ -97,19 +95,19 @@ export class EventBuilder {
 			if (!properties.hasOwnProperty('subscription')) throw new Error(`key: ${newEventKey}, does have a the key: subscription!`);
 			if (!(subscription instanceof Object)) throw new Error(`subscription in ${newEventKey} does have a value with the type: Object!`);
 			Object.entries(subscription).forEach(([eventKey, eventProperties]) => {
-				if (!this.registry.hasOwnProperty(this.registry[newEventKey])) this.registry[newEventKey] = {};
+				if (!this.registry.hasOwnProperty(newEventKey)) this.registry[newEventKey] = {};
 				if (!(eventProperties instanceof Object)) throw new Error(`key: ${eventKey}, in subscription in ${newEventKey} does have a value of type: Object!`);
 				const { function: subscriptionFunction, options: entityOptions, forceNative } = eventProperties;
 				if (!(subscriptionFunction instanceof Function)) throw new Error(`key: function, in ${eventKey} in subscription in ${newEventKey} does have a value of type: Function!`);
 				const fixedEventKey = this.removeBeforeInKey(eventKey);
 				if (eventKey !== 'custom' && forceNative !== undefined && ((eventKey.includes('before') && fixedEventKey in world.beforeEvents) || (eventKey in world.afterEvents) || (eventKey in system.afterEvents) || (eventKey in system.beforeEvents))) throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and eventkey: ${newEventKey}, is not in world.afterEvents, world.beforeEvents, system.afterEvents, or system.beforeEvents or is "custom"!`);
 				if (forceNative !== undefined && typeof forceNative !== 'boolean') throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and does have a value of type: Boolean!`);
-				if (entityOptions !== undefined && !eventTypeProperties[eventKey].entityEvent) throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} should not be defined since that event is not an entity event!`);
+				if (entityOptions !== undefined && !eventKey.includes('entity')) throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} should not be defined since that event is not an entity event!`);
 				if (entityOptions !== undefined && !(entityOptions instanceof Object)) throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} is defined and value is not of type: interface(EntityEventOptions)!`);
 				if (entityOptions) {
 					const { entityTypes = [], entities = [] } = entityOptions;
 					// content.warn({ entityTypes, entities });
-					properties.entityOptionsKey = `${eventKey}*${[
+					properties[eventKey].entityOptionsKey = `${eventKey}*${[
 						...arrayClone(entityTypes),
 						...arrayClone(entities).map(({ id }) => id)
 					].join('*')}`;
