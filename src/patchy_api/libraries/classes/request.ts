@@ -19,12 +19,6 @@ class RequestBuilder {
 		if (!this.memory[id][key][target].hasOwnProperty(type)) this.memory[id][key][target][type] = {};
 		this.memory[id][key][target][type] = value;
 	}
-	/**
-	 * 
-	 * @param {String} target 
-	 * @param {Array<String>} keys 
-	 * @param {boolean} isArray 
-	 */
 	getMemoryTarget(id: string, target: string, keys: string[], type: string, isArray = false) {
 		// content.warn({ RequestBuilder: this });
 		const returnType = (isArray) ? [] : {};
