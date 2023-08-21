@@ -8,6 +8,15 @@ import { content, hypot2, overworld, getXZVectorRY } from '../modules.js';
 import { Player, setProptotype } from '../libraries/classes/player/class.js';
 global.requestAddEvent = [];
 const items = {};
+const numberOfStepOns = 3;
+/**
+ * @param {{x: number, y: number,z: number}} vector1 
+ * @param {{x: number, y: number,z: number}} vector2 
+ * @returns {boolean}
+ */
+function vector3Equals(vector1, vector2) {
+	return vector1.x === vector2.x && vector1.y === vector2.y && vector1.z === vector2.z;
+};
 eventBuilder.register({
 	stepOnBlock: {
 		subscription: {
@@ -23,11 +32,13 @@ eventBuilder.register({
 							if (!block) return;
 							if (!player.isOnGround) return;
 							if (!player.isInWater && player.isFalling) return;
-							const { LastBlockStepedOn } = memory;
-							memory.LastBlockStepedOn = block;
+							memory.lastBlocksStepedOn ??= [];
+							const lastBlocksStepedOn = memory.lastBlocksStepedOn;
+							if (memory.lastBlocksStepedOn.length > numberOfStepOns) memory.lastBlocksStepedOn.shift();
+							memory.lastBlocksStepedOn.push(block);
 							// content.warn({ LastBlockStepedOn: LastBlockStepedOn?.typeId ?? 'null', currentId: block?.typeId ?? 'null' });
-
-							if (LastBlockStepedOn && block.location.equals(LastBlockStepedOn.location)) return;
+							const slice = lastBlocksStepedOn.slice(1);
+							if (lastBlocksStepedOn.length === numberOfStepOns && (slice.some(lastBlock => vector3Equals(lastBlocksStepedOn[0].location, lastBlock) || slice.some(block => slice.some(block1 => !vector3Equals(block1.location, block.location)))))) return;
 							eventBuilder.getEvent('stepOnBlock').iterate({ block, player });
 						} catch (error) {
 							console.warn(error, error.stack);

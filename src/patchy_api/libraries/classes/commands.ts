@@ -5,6 +5,7 @@ const { commandPrefix } = config;
 const { isArray } = Array;
 const { isInteger } = Number;
 class CommandBuilder {
+    __aliasesObject: {};
     constructor() {
         this.__aliasesObject = {};
     };

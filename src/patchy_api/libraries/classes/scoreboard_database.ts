@@ -80,7 +80,7 @@ class Databases {
     }
     /**
      * @method get
-     * @param {String}databaseName
+     * @param {string}databaseName
      */
     get(databaseName) {
         const objective = world.scoreboard.getObjective('sbDB:' + databaseName);

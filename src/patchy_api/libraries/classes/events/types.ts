@@ -143,13 +143,21 @@ export interface EventKeyTypes {
 	worldLoad: undefined;
 	scoreboardChange: ScoreboardChangeEvent;
 	beforePlayerScaffoldPlace: BeforePlayerScaffoldPlaceEvent;
-	custom: any;
+	custom: undefined;
 };
-
 export type ReplaceTypes<T> = T extends EntityType ? Entity | Player : T extends PlayerType ? Player : T extends EntityDamageSourceType ? EntityDamageSource : T;
 
-export type EventObject = { [key in keyof EventKeyTypes]: (arg: ReplaceTypes<EventKeyTypes[key]>) => void };
-export type EventRegisterObject = { [key: string]: { subscription: { [key in keyof EventKeyTypes | string]: { function: (arg: ReplaceTypes<EventKeyTypes[key]>) => void; options?: EntityEventOptions; forceNative?: boolean; } }; }; };
+export type EventObject = { [key in keyof EventKeyTypes]?: (arg: ReplaceTypes<EventKeyTypes[key]>) => void };
+/**
+ * entityOptionsKey is asigned via the class
+ */
+export type EventRegisterObject = {
+	[key: string]: {
+		subscription: { [key in keyof EventKeyTypes]?: { function: (arg: ReplaceTypes<EventKeyTypes[key]>) => void; options?: EntityEventOptions; forceNative?: boolean; entityOptionsKey?: string; } };
+		unsubscription?: Function;
+	};
+};
+export const eventKeys: (keyof EventRegisterObject)[] = ['beforeChat', 'beforeChatSend', 'beforeDataDrivenEntityTriggerEvent', 'beforeDataDrivenPlayerTriggerEvent', 'beforeExplosion', 'beforeItemDefinitionEvent', 'beforeItemUse', 'beforeItemUseOn', 'beforeItemUseOnStart', 'beforePistonActivate', 'blockBreak', 'blockExplode', 'blockPlace', 'buttonPush', 'chat', 'chatSend', 'dataDrivenEntityTriggerEvent', 'dataDrivenPlayerTriggerEvent', 'effectAdd', 'entityDie', 'entitySpawn', 'entityHealthChanged', 'entityHitBlock', 'entityHitEntity', 'entityHurt', 'explosion', 'itemStopUse', 'itemDefinitionEvent', 'itemReleaseCharge', 'itemStartCharge', 'itemStartUseOn', 'itemStopUseOn', 'itemUse', 'itemUseOn', 'itemPickup', 'leverAction', 'pistonActivate', 'pressurePlatePush', 'targetBlockHit', 'tripWireTrip', 'playerJoin', 'playerLeave', 'projectileHit', 'tick', 'weatherChange', 'worldInitialize', 'tickAfterLoad', 'playerJoined', 'playerHit', 'playerHurt', 'playerDeath', 'requestAdded', 'stepOnBlock', 'playerSpawn', 'playerSpawned', 'playerJoinAwaitMove', 'scriptEventReceive', 'worldLoad', 'scoreboardChange', 'beforePlayerScaffoldPlace', 'custom',];
 
 // export class EventBuilder {
 

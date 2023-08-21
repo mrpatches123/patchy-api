@@ -1,24 +1,28 @@
-import { MinecraftEntityTypes, EntityTypes, world, DynamicPropertiesDefinition, Entity, EntityType } from "@minecraft/server";
+import { MinecraftEntityTypes, EntityTypes, world, DynamicPropertiesDefinition, Entity, EntityType, World } from "@minecraft/server";
 import { content, isDefined } from "../../utilities.js";
+import { Player } from "../player/class.js";
 const types = ['string', 'number', 'boolean'];
 const overworld = world.getDimension('overworld');
 export class PropertyBuilder {
+	registry: Record<keyof typeof MinecraftEntityTypes | 'world', Record<string, { type?: 'string' | 'number' | 'boolean', maxLength?: number; }>>;
+	properties: Record<keyof typeof MinecraftEntityTypes | 'world', Record<string, { value?: number | string | boolean, values?: Record<string, number | string | boolean>, type?: 'string' | 'number' | 'boolean', maxLength?: number; }>>;
+	subscribedRegistration: boolean;
+	registeredProperties: boolean;
 	constructor() {
-		this.registry = {};
-		this.properties = {};
-		this.proxys = {};
+		this.registry = {} as typeof this.registry;
+		this.properties = {} as typeof this.properties;
 		this.registeredProperties = false;
 		this.subscribedRegistration = false;
 	}
 	/**
-	 * @param {{ [typeId in keyof typeof MinecraftEntityTypes | 'world']: { [property: string]: { maxLength?: number, type: 'string' | 'number' | 'boolean' } } }} data 
+	 * @param {} data 
 	 */
-	register(data) {
-		if (!(data instanceof Object)) throw new Error(`data: ${maxLength}, at params[0] is not of type: Object!`);
+	register(data: { [typeId in keyof typeof MinecraftEntityTypes | 'world']: { [property: string]: { maxLength?: number, type: 'string' | 'number' | 'boolean'; }; } }) {
+		if (!(data instanceof Object)) throw new Error(`data at params[0] is not of type: Object!`);
 		Object.entries(data).forEach(([typeId, properties]) => {
-			if (!(properties instanceof Object)) throw new Error(`properties: ${properties}, in ${identifier} at params[0] is not of type: Object!`);
-			const entityType = (MinecraftEntityTypes.hasOwnProperty(typeId)) ? MinecraftEntityTypes[typeId] : EntityTypes.get(typeId);
-			const currentTypeId = (typeId === 'world') ? 'world' : entityType?.id;
+			if (!(properties instanceof Object)) throw new Error(`properties: ${properties}, in ${typeId} at params[0] is not of type: Object!`);
+			const entityType = (MinecraftEntityTypes.hasOwnProperty(typeId)) ? MinecraftEntityTypes[typeId as keyof typeof MinecraftEntityTypes] as EntityType : EntityTypes.get(typeId);
+			const currentTypeId = (typeId === 'world') ? 'world' : entityType?.id as keyof typeof MinecraftEntityTypes;
 			if (!currentTypeId) throw new Error(`typeId: ${typeId}, in data at parms[0] is not associated with a entity, player, or is 'world'!`);
 			this.registry[currentTypeId] ??= {};
 			Object.entries(properties).forEach(([identifier, { type, maxLength }]) => {
@@ -60,13 +64,12 @@ export class PropertyBuilder {
 	/**
 	 * @param {Entity} entity 
 	 */
-	initialize(entity) {
-		const { typeId, id, name = 'null' } = entity;
-		// content.warn({ typeId, id, name });
-		Object.entries(this.properties?.[typeId] ?? {}).forEach(([identifier, { type, maxLength }]) => {
+	initialize(entity: Entity | Player) {
+		const { typeId, id } = entity;
+		Object.entries(this.properties?.[typeId as keyof typeof MinecraftEntityTypes] ?? {}).forEach(([identifier, { type, maxLength }]) => {
 			const value = entity.getDynamicProperty(identifier);
 			if (!value) return;
-			this.properties[typeId][identifier].values[id] = value;
+			(this.properties[typeId as keyof typeof MinecraftEntityTypes][identifier] as any).values[id] = value;
 		});
 
 	}
@@ -78,16 +81,16 @@ export class PropertyBuilder {
 			// content.warn({ registry: propertyThis.registry });
 			Object.entries(propertyThis.registry).forEach(([typeId, properties]) => {
 				const dynamicPropertiesDefinition = new DynamicPropertiesDefinition();
-				propertyThis.properties[typeId] ??= {};
+				propertyThis.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'] ??= {};
 				Object.entries(properties).forEach(([identifier, { type, maxLength }]) => {
 					// content.warn({ typeId, identifier, type });
-					propertyThis.properties[typeId][identifier] = {};
-					propertyThis.properties[typeId][identifier].type = type;
-					if (typeId !== 'world') propertyThis.properties[typeId][identifier].values = {};
+					propertyThis.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'][identifier] = {};
+					propertyThis.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'][identifier].type = type;
+					if (typeId !== 'world') propertyThis.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'][identifier].values = {};
 					switch (type) {
 						case 'string': {
-							dynamicPropertiesDefinition.defineString(identifier, maxLength);
-							propertyThis.properties[typeId][identifier].maxLength = maxLength;
+							dynamicPropertiesDefinition.defineString(identifier, maxLength as number);
+							propertyThis.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'][identifier].maxLength = maxLength;
 							break;
 						}
 						case 'number': {
@@ -108,34 +111,31 @@ export class PropertyBuilder {
 		});
 
 	}
-	get(entity) {
+	get(entity?: Player | Entity | World): Record<string, string | number | boolean> {
 
-		let isWorld = false;
-		if (!arguments.length) (entity = world, isWorld = true);
-		let { typeId, id } = entity;
-		if (isWorld) typeId = 'world';
+		if (entity === undefined) entity = world;
+		let { typeId, id } = (entity instanceof World) ? { typeId: 'world', id: null } : entity;
 		const thisProperty = this;
 		if (!thisProperty.properties.hasOwnProperty(typeId)) throw new Error(`${typeId.replace(/\w:/, '')} has no properties registered`);
 		return new Proxy({}, {
 			get(target, key) {
-				if (!thisProperty.properties[typeId].hasOwnProperty(key)) throw new Error(`dynamic property, ${key} does not exist on ${typeId.replace(/\w:/, '')}`);
-				return (typeId === 'world') ? thisProperty.properties?.[typeId]?.[key]?.value : thisProperty.properties?.[typeId]?.[key]?.values[id];
+				if (!thisProperty.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'].hasOwnProperty(key)) throw new Error(`dynamic property, ${key as string} does not exist on ${typeId.replace(/\w:/, '')}`);
+				return (typeId === 'world') ? thisProperty.properties?.[typeId as keyof typeof MinecraftEntityTypes | 'world']?.[key as string]?.value : (thisProperty.properties?.[typeId as keyof typeof MinecraftEntityTypes] as any)?.[key]?.values[id as string];
 			},
 			has(target, key) {
-				if (!thisProperty.properties[typeId].hasOwnProperty(key)) throw new Error(`dynamic property, ${key} does not exist on ${typeId.replace(/\w:/, '')}`);
-				return thisProperty.properties?.[typeId]?.[key]?.values.hasOwnProperty(id);
+				if (!thisProperty.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'].hasOwnProperty(key)) throw new Error(`dynamic property, ${key as string} does not exist on ${typeId.replace(/\w:/, '')}`);
+				return (thisProperty.properties?.[typeId as keyof typeof MinecraftEntityTypes | 'world'] as any)?.[key]?.values.hasOwnProperty(id);
 			},
-			set(target, key, value) {
-				if (!thisProperty.properties[typeId].hasOwnProperty(key)) throw new Error(`dynamic property, ${key} does not exist on ${typeId.replace(/\w:/, '')}`);
-				const { type } = thisProperty.properties[typeId][key];
-				if (isDefined(value) && typeof value !== type) throw new Error(`value for dynamic property: ${key} is not of type: ${type}`);
-				if (typeId === 'world') thisProperty.properties[typeId][key].value = value;
-				else thisProperty.properties[typeId][key].values[id] = value;
-				if (!isDefined(value)) { entity.removeDynamicProperty(key); return Reflect.set(...arguments); };
-				entity.setDynamicProperty(key, value);
-				return Reflect.set(...arguments);
+			set(target, key, value, reciveir) {
+				if (!thisProperty.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'].hasOwnProperty(key)) throw new Error(`dynamic property, ${key as string} does not exist on ${typeId.replace(/\w:/, '')}`);
+				const { type } = thisProperty.properties[typeId as keyof typeof MinecraftEntityTypes | 'world'][key as string];
+				if (isDefined(value) && typeof value !== type) throw new Error(`value for dynamic property: ${key as string} is not of type: ${type}`);
+				if (typeId === 'world') thisProperty.properties[typeId][key as string].value = value;
+				else (thisProperty.properties[typeId as keyof typeof MinecraftEntityTypes] as any)[key].values[id as string] = value;
+				if (!isDefined(value)) { (entity as Player | Entity | World).removeDynamicProperty(key as string); return Reflect.set(target, key, value, reciveir); };
+				(entity as Player | Entity | World).setDynamicProperty(key as string, value);
+				return Reflect.set(target, key, value, reciveir);
 			}
 		});
 	};
 }
-content;

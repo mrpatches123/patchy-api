@@ -6,20 +6,18 @@ import databases from './database.js';
 import eventBuilder from './events/export_instance.js';
 
 class RequestBuilder {
-	constructor() {
-
-	}
-	addMemory(id, key, target, type, value) {
+	memory: Record<string, Record<string, Record<string, Record<string, any>>>> = {};
+	addMemory(id: string, key: string, target: string, type: string, value: any) {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
 		if (typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
 		if (value === undefined) throw new Error(`value at params[4] is not defined`);
-		if (!this.hasOwnProperty(id)) this[id] = {};
-		if (!this[id].hasOwnProperty(key)) this[id][key] = {};
-		if (!this[id][key].hasOwnProperty(target)) this[id][key][target] = {};
-		if (!this[id][key][target].hasOwnProperty(type)) this[id][key][target][type] = {};
-		this[id][key][target][type] = value;
+		if (!this.hasOwnProperty(id)) this.memory[id] = {};
+		if (!this.memory[id].hasOwnProperty(key)) this.memory[id][key] = {};
+		if (!this.memory[id][key].hasOwnProperty(target)) this.memory[id][key][target] = {};
+		if (!this.memory[id][key][target].hasOwnProperty(type)) this.memory[id][key][target][type] = {};
+		this.memory[id][key][target][type] = value;
 	}
 	/**
 	 * 
@@ -27,7 +25,7 @@ class RequestBuilder {
 	 * @param {Array<String>} keys 
 	 * @param {boolean} isArray 
 	 */
-	getMemoryTarget(id, target, keys, type, isArray = false) {
+	getMemoryTarget(id: string, target: string, keys: string[], type: string, isArray = false) {
 		// content.warn({ RequestBuilder: this });
 		const returnType = (isArray) ? [] : {};
 
@@ -41,7 +39,7 @@ class RequestBuilder {
 			});
 		}
 		if (!keys) {
-			return this[id].forEach((key, targets) => {
+			return this.memory[id].forEach((key, targets) => {
 
 				const target = targets[targets];
 				if (!target) return;
@@ -53,8 +51,8 @@ class RequestBuilder {
 			return keys.accumulate(key => {
 				if (!this?.[id]?.[key]?.[target]) return;
 
-				if (type && this[id][key][target].hasOwnProperty(type)) return { [key]: this[id][key][target] };
-				else return { [key]: this[id][key][target] };
+				if (type && this.memory[id][key][target].hasOwnProperty(type)) return { [key]: this.memory[id][key][target] };
+				else return { [key]: this.memory[id][key][target] };
 			}, returnType);
 		}
 	}
@@ -65,22 +63,22 @@ class RequestBuilder {
 		if (type && typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
 		if (target) {
 			if (type) {
-				delete this[id][key][target][type];
-				const targetLength = this[id][key][target].length();
+				delete this.memory[id][key][target][type];
+				const targetLength = this.memory[id][key][target].length();
 				if (!targetLength) {
-					delete this[id][key][target];
+					delete this.memory[id][key][target];
 				}
 			}
-			const keyLength = this[id][key].length();
+			const keyLength = this.memory[id][key].length();
 			if (!keyLength) {
-				delete this[id][key];
+				delete this.memory[id][key];
 			}
 		} else {
-			delete this[id][key];
+			delete this.memory[id][key];
 		}
-		const requestsLength = this[id].length();
+		const requestsLength = this.memory[id].length();
 		if (!requestsLength) {
-			delete this[id];
+			delete this.memory[id];
 		}
 	}
 	/**
@@ -123,8 +121,6 @@ class RequestBuilder {
 	 * @param {watchOptions} options 
 	 */
 	watch(id, testCallback, findCallback = null, options = {}) {
-
-
 
 		content.warn({ t: 'RequestBuilderwatch', id });
 		if (id instanceof String) throw new Error(`findCallback for id: ${id}, is not a String`);

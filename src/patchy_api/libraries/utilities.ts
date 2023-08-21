@@ -1,31 +1,26 @@
-import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction } from '@minecraft/server';
+import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction, Vector2, Vector3, DisplaySlotId } from '@minecraft/server';
 import errorLogger from './classes/error.js';
-export function getXZVectorRY(ry) {
+export function getXZVectorRY(ry: number) {
     const rads = (ry + 180) * Math.PI / 180;
     return { x: Math.sin(rads), y: 0, z: Math.cos(rads) };
 }
 export const content = {
-    warn(...messages) {
+    warn(...messages: any[]) {
         console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
     },
-    chatFormat(...messages) {
+    chatFormat(...messages: any[]) {
         chunkString(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value, 4)).join(' '), 500).forEach(message => world.sendMessage(message));
     }
 };
-export function isVector3(target) {
+export function isVector3(target: any) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
 }
-export function isVector2(target) {
+export function isVector2(target: any) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
-/**
- * 
- * @param {{x: number, y: number}} rotation 
- * @returns {Direction}
- */
-export function rotationToDirection(rotation) {
+export function rotationToDirection(rotation: Vector2) {
     let { x, y } = rotation;
 
     x = (x / 45 + 2) | 0;
@@ -52,12 +47,7 @@ export const reverseDirection = {
     "Up": "Down",
     "West": "East"
 };
-/**
- * 
- * @param {{x: number, y: number}} rotation 
- * @returns {Direction}
- */
-export function rotationToHorizontalDirection(rotation) {
+export function rotationToHorizontalDirection(rotation: Vector2) {
     let { x, y } = rotation;
     y = ((y + 45) / 90 + 2) | 0;
     switch (y) {
@@ -72,27 +62,21 @@ export function rotationToHorizontalDirection(rotation) {
             return 'West';
     }
 };
-export function isDefined(input) {
+export function isDefined(input: any) {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }
-export function permutationClone(permutation) {
-    const permutationProperties = {};
+export function permutationClone(permutation: BlockPermutation) {
+    const permutationProperties: any = {};
     /**
      * @type {BlockPermutation}
      */
     const blockPermutation = permutation;
-    blockPermutation.getAllStates().forEach((value) => {
+    Object.keys(blockPermutation.getAllStates()).forEach((value) => {
         permutationProperties[value] = blockPermutation.getState(value);
     });
     return permutationProperties;
 }
-/**
- * @function weightsRandom returns the index of the weight that was selected
- * @param  {...Number} weights 
- * @returns {number}
- * @example weightsRandom(1,4,5,7) //returns 0, 1, 2, or 3
- */
-export function weightsRandom(...weights) {
+export function weightsRandom(...weights: number[]) {
     const sum = weights.reduce((s, c) => s + c);
     let valueSUm = 0;
     const sortedWeights = [...weights].sort((a, b) => b - a);
@@ -102,10 +86,11 @@ export function weightsRandom(...weights) {
     return weights.indexOf(sortedWeights[test.indexOf(random)]);
 }
 export class RemovableTree {
+    array: string[];
     constructor(array = []) {
         this.array = array;
     }
-    next(key) {
+    next(key: string) {
         const index = this.array.indexOf(key);
         if (index === -1) {
             this.array.push(key);
@@ -127,7 +112,7 @@ export class RemovableTree {
 
     }
 }
-export function typeOf(value) {
+export function typeOf(value: any) {
     if (typeof value === 'function') {
         try {
             return (new value()).constructor?.name;
@@ -138,42 +123,42 @@ export function typeOf(value) {
     return value?.constructor?.name;
 }
 
-export function hypot3(n1, n2, n3) {
+export function hypot3(n1: number, n2: number, n3: number) {
     return Math.sqrt(n1 ** 2 + n2 ** 2 + n3 ** 2);
 }
-export function hypot2(n1, n2) {
+export function hypot2(n1: number, n2: number) {
     return Math.sqrt(n1 ** 2 + n2 ** 2);
 }
 
-export function guessTheNumber(condition, maxAmount) {
-    const dividend = maxAmount / 2;
-    let currentNumber = dividend;
-    let lastCondition;
-    let iterations = Math.ceil(Math.log2(maxAmount) + maxAmount / 22000);
-    for (let i = 0; i < iterations; i++) {
-        const divsor = 2 ** i;
-        const guess = (lastCondition === undefined) ? currentNumber : (lastCondition) ? currentNumber - dividend / divsor : currentNumber + dividend / divsor;
-        lastCondition = Boolean(condition(guess));
-        // console.log(i, guess, lastCondition);
-        currentNumber = guess;
-    }
-    return currentNumber;
-}
-export async function testXpLevel(player, testLevel) {
-    const bool = false;
-    try { await player.runCommandAsync(`tesfor @s[lm=${testLevel}]`); bool = true; } catch { }
-    return bool;
-}
+// export function guessTheNumber(condition: (number: number) => boolean, maxAmount: number) {
+//     const dividend = maxAmount / 2;
+//     let currentNumber = dividend;
+//     let lastCondition;
+//     let iterations = Math.ceil(Math.log2(maxAmount) + maxAmount / 22000);
+//     for (let i = 0; i < iterations; i++) {
+//         const divsor = 2 ** i;
+//         const guess: number = (lastCondition === undefined) ? currentNumber : (lastCondition) ? currentNumber - dividend / divsor : currentNumber + dividend / divsor;
+//         lastCondition = Boolean(condition(guess));
+//         // console.log(i, guess, lastCondition);
+//         currentNumber = guess;
+//     }
+//     return currentNumber;
+// }
+// export async function testXpLevel(player: Player, testLevel: number) {
+//     const bool = false;
+//     try { await player.runCommandAsync(`tesfor @s[lm=${testLevel}]`); bool = true; } catch { }
+//     return bool;
+// }
 
-export const xp = guessTheNumber(async (guess) => {
-    return await testXpLevel(player, Math.round(guess));
-}, 24000);
+// export const xp = guessTheNumber(async (guess) => {
+//     return await testXpLevel(player, Math.round(guess));
+// }, 24000);
 /**
  * @function parseList spreads all arrays in an array into one single array
  * @param {Array} list 
  * @returns Array
  */
-export function parseList(list) {
+export function parseList(list: any[]) {
     if (!Array.isArray(list)) { return; }
     for (let i = 0; i < list.length; i++) {
         const item = list[i];
@@ -193,7 +178,7 @@ const { isInteger } = Number;
 const { isArray } = Array;
 const { log10, random, hypot, sqrt, PI } = Math;
 const { entries, keys, values, assign } = Object;
-export function randomCoordsOutsideCircle(minRadius, maxRadius) {
+export function randomCoordsOutsideCircle(minRadius: number, maxRadius: number) {
     const angle = random() * PI * 2;
     const randR = () => minRadius + (maxRadius - minRadius) * sqrt(random());
     const x = Math.cos(angle) * randR();
@@ -206,7 +191,7 @@ export function randomCoordsOutsideCircle(minRadius, maxRadius) {
  * @param {[{x: number, y: number,z: number},{x: number, y: number,z: number}]} bounds 
  * @returns {{x: number, y: number,z: number}}
  */
-export function randomCoordsInsideRectangle(bounds) {
+export function randomCoordsInsideRectangle(bounds: [Vector3, Vector3]): Vector3 {
     const [{ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }] = sort3DVectors(...bounds);
     const xSize = x2 - x1 + 1;
     const zSize = z2 - z1 + 1;
@@ -221,14 +206,14 @@ export function randomCoordsInsideRectangle(bounds) {
 //     const r = hypot(x, z);
 //     return { x, z, r, edge: { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius } };
 // }
-export function sortRange(array) {
+export function sortRange(array: [[number, number], [number, number]]) {
     const x1 = (array[0][0] < array[1][0]) ? array[0][0] : array[1][0];
     const z1 = (array[0][1] < array[1][1]) ? array[0][1] : array[1][1];
     const x2 = (array[0][0] < array[1][0]) ? array[1][0] : array[0][0];
     const z2 = (array[0][1] < array[1][1]) ? array[1][1] : array[0][1];
     return [[x1, z1], [x2, z2]];
 }
-export function sort3DRange(array) {
+export function sort3DRange(array: [[number, number, number], [number, number, number]]) {
     const x1 = (array[0][0] < array[1][0]) ? array[0][0] : array[1][0];
     const y1 = (array[0][1] < array[1][1]) ? array[0][1] : array[1][1];
     const z1 = (array[0][2] < array[1][2]) ? array[0][2] : array[1][2];
@@ -244,7 +229,7 @@ const { floor } = Math;
  * @param {{x: number, y: number, z: number}} vector2 
  * @returns {[{x: number, y: number, z: number}, {x: number, y: number, z: number}]}
  */
-export function sort3DVectors(vector1, vector2) {
+export function sort3DVectors(vector1: Vector3, vector2: Vector3) {
     const { x: x1, y: y1, z: z1 } = vector1;
     const { x: x2, y: y2, z: z2 } = vector2;
     const ox1 = (x1 < x2) ? x1 : x2;
@@ -263,7 +248,7 @@ export function sort3DVectors(vector1, vector2) {
  * @param {{x: number, y: number, z: number}} vector2 
  * @returns 
  */
-export function betweenVector3(target, vector1, vector2) {
+export function betweenVector3(target: Vector3, vector1: Vector3, vector2: Vector3) {
     const { x: x1, y: y1, z: z1 } = vector1;
     const { x: x2, y: y2, z: z2 } = vector2;
     const ox1 = (x1 < x2) ? x1 : x2;
@@ -275,7 +260,7 @@ export function betweenVector3(target, vector1, vector2) {
     let { x, y, z } = target;
     return x >= ox1 && x <= ox2 && y >= oy1 && y <= oy2 && z >= oz1 && z <= oz2;
 }
-export function betweenBlockVector3(target, vector1, vector2) {
+export function betweenBlockVector3(target: Vector3, vector1: Vector3, vector2: Vector3) {
     const { x: x1, y: y1, z: z1 } = vector1;
     const { x: x2, y: y2, z: z2 } = vector2;
     const ox1 = Math.floor((x1 < x2) ? x1 : x2);
@@ -290,7 +275,7 @@ export function betweenBlockVector3(target, vector1, vector2) {
     z = Math.floor(z) + 0.5;
     return x >= ox1 && x <= ox2 && y >= oy1 && y <= oy2 && z >= oz1 && z <= oz2;
 }
-export function andArray(array = []) {
+export function andArray(array: any[] = []) {
     const copy = [...array];
     switch (array.length) {
         case 0:
@@ -298,14 +283,14 @@ export function andArray(array = []) {
         case 1:
             return array[0].toString();
         case 2:
-            copy.splice(array.length - 1, null, 'and');
+            copy.splice(array.length - 1, 0, 'and');
             return copy.join(' ');
         default:
             copy.splice(array.length - 1, 1, 'and');
             return `${copy.join(', ')} ${array[array.length - 1]}`;
     }
 }
-export function orArray(array = []) {
+export function orArray(array: any[] = []) {
     const copy = [...array];
     switch (array.length) {
         case 0:
@@ -313,7 +298,7 @@ export function orArray(array = []) {
         case 1:
             return array[0].toString();
         case 2:
-            copy.splice(array.length - 1, null, 'or');
+            copy.splice(array.length - 1, 0, 'or');
             return copy.join(' ');
         default:
             copy.splice(array.length - 1, 1, 'or');
@@ -376,10 +361,10 @@ export const clickableBlocks = [
     "minecraft:lit_smoker",
     "minecraft:smoker"
 ];
-export function randomIntegerBetween(min, max) {
+export function randomIntegerBetween(min: number, max: number) {
     return Math.floor(min + Math.random() * (max - min));
 };
-export function relativeParse(player, input, direction) {
+export function relativeParse(player: Player, input: string, direction: keyof Vector3) {
     if (input.includes('~')) {
         if (input.endsWith('*')) {
             return Math.floor((player.location[direction] + Number(input.replace(/[*~]/g, ''))) | 0) + 0.5;
@@ -390,21 +375,9 @@ export function relativeParse(player, input, direction) {
         return Number(input);
     }
 }
-/**
- * @typedef {Object} Vector3
- * @property {number} x
- * @property {number} y
- * @property {number} z
- */
-/**
- * 
- * @param {Direction} blockFace 
- * @param {Vector3} blockLocation 
- * @returns {Vector3}
- */
-export function blockFaceToCoords(blockFace, { x, y, z }) {
-    if (!isDefined(blockFace)) throw new Error('blockFace at params[0] is not defined');
-    blockFace = blockFaceToNumber[blockFace];
+export function blockFaceToCoords(blockFaceDir: Direction, { x, y, z }: Vector3) {
+    if (!isDefined(blockFaceDir)) throw new Error('blockFaceDir at params[0] is not defined');
+    const blockFace = blockFaceToNumber[blockFaceDir];
     // content.warn({ blockFace });
 
     let location = [x, y, z];
@@ -419,16 +392,7 @@ export function blockFaceToCoords(blockFace, { x, y, z }) {
     [x, y, z] = location;
     return { x, y, z };
 }
-Math.randomBetween = function (n1, n2) {
-    return n1 + Math.random() * Math.abs(n2 - n1);
-};
-/**
- * 
- * @param {import('@minecraft/server').Vector3} Vector3 
- * @param {import('@minecraft/server').Vector3} offsetVector3 
- * @returns {import('@minecraft/server').Vector3}
- */
-export function offsetVector3(Vector3, offsetVector3) {
+export function offsetVector3(Vector3: Vector3, offsetVector3: Vector3): Vector3 {
     return { x: Vector3.x + offsetVector3.x, y: Vector3.y + offsetVector3.y, z: Vector3.z + offsetVector3.z };
 };
 
@@ -441,7 +405,7 @@ export function offsetVector3(Vector3, offsetVector3) {
 
 
 
-export function pathIsObject(pathArray, object, allowArrays) {
+export function pathIsObject(pathArray: string[], object: any, allowArrays?: boolean) {
     if (!allowArrays) {
         // console.log(`return typeof object?.${pathArray.join('?.')} === 'object' && !Array.isArray(object?.${pathArray.join('?.')})`);
         return new Function('object', `return typeof object?.${pathArray.join('?.')} === 'object' && !Array.isArray(object?.${pathArray.join('?.')})`)(object);
@@ -449,7 +413,7 @@ export function pathIsObject(pathArray, object, allowArrays) {
         return new Function('object', `return typeof object?.${pathArray.join('?.')} === 'object'`)(object);
     }
 }
-export function pathIsSettable(pathArray, object, allowArrays) {
+export function pathIsSettable(pathArray: string[], object: any, allowArrays?: boolean) {
     const call = pathArray.slice(0, -1).every((key, i) => pathIsObject(pathArray.slice(0, -(i + 1)), object, allowArrays));
     if (pathArray.slice(0, -1).length) {
         return call;
@@ -457,7 +421,7 @@ export function pathIsSettable(pathArray, object, allowArrays) {
         return true;
     }
 }
-export function assignToPath(pathArray, object, value, allowArrays = false) {
+export function assignToPath(pathArray: string[], object: any, value: any, allowArrays?: boolean) {
     const mappedPathArray = pathArray.map(value => `[${(typeof value === 'number') ? value : `'${value}'`}]`);
     //   	// console.log(mappedPathArray)
     //   // console.log(pathIsSettable(mappedPathArray, object))
@@ -486,7 +450,7 @@ export function assignToPath(pathArray, object, value, allowArrays = false) {
     }
 }
 const native = {
-    typeOf(input) {
+    typeOf(input: any) {
         switch (typeof input) {
             case 'object': {
                 return (Array.isArray(input)) ? 'array' : 'object';
@@ -496,7 +460,7 @@ const native = {
             }
         }
     },
-    toConstructed(type) {
+    toConstructed(type: any): {} | [] | false {
         switch (type) {
             case "object": {
                 return {};
@@ -508,11 +472,11 @@ const native = {
 
         }
     },
-    toObject(input) {
-        let output = this.toConstructed(this.typeOf(input));
+    toObject<t>(input: t): t {
+        let output = this.toConstructed(this.typeOf(input)) as t;
         if (!output) { return input; }
-        call(input, []);
-        function call(input1, path) {
+        call(input, [] as t);
+        function call(input1: any, path: any) {
             // console.log(path);
             switch (native.typeOf(input1)) {
                 case "object": {
@@ -524,7 +488,7 @@ const native = {
                     break;
                 } case "array": {
                     output = assignToPath(path, output, [], true);
-                    input1.forEach((item, i) => {
+                    (input1 as any[]).forEach((item, i) => {
                         call(item, [...path, i]);
                     });
                     break;
@@ -541,20 +505,20 @@ const native = {
 
         return output;
     },
-    stringify(input, replacer, spacing) {
+    stringify(...[input, replacer, spacing]: Parameters<JSON['stringify']>) {
         return JSON.stringify(this.toObject(input), replacer, spacing);
     }
 };
 export { native };
 
-export function toProperCase(string) {
+export function toProperCase(string: string) {
     return string.replace(/_/g, ' ').replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 }
-export function toCamelCase(str) {
+export function toCamelCase(str: string) {
     return str.replace(/(?:^\w|[A-Z]|(\b|_)\w)/g, (word, index) => word.toUpperCase()).replace(/[\s_]+/g, '').replace(/\w/, (world) => world.toLowerCase());
 }
 export const staff = {
-    sendMessage(message, exludePlayer) {
+    sendMessage(message: any, exludePlayer: string) {
         [...world.getPlayers({ scoreOptions: [{ exclude: true, maxScore: 1, minScore: 1, objective: 'staff' }] })]
             .filter(player => player.id !== exludePlayer)
             .forEach(player => {
@@ -573,24 +537,24 @@ export const server = {
      * @param {String} objective 
      * @param {Player} player 
      * @param {value} value 
-     * @param {'list' | 'sidebar' | 'belowName' } updateId 
+     * @param {'List' | 'Sidebar' | 'BelowName' } updateId 
      */
-    async setPlayerScoreboard(objective, player, value, updateId) {
+    async setPlayerScoreboard(objective: string, player: Player, value: number, updateId?: DisplaySlotId) {
         try {
             await player.runCommandAsync('scoreboard players set @s scoreIdentityInit 0');
-            world.scoreboard.setScore(world.scoreboard.getObjective(objective), player.scoreboardIdentity, value);
+            world.scoreboard.getObjective(objective).setScore(player, value);
             if (!updateId) return;
             const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
             if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return;
             world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
             world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
-        } catch (error) {
+        } catch (error: any) {
             console.warn('server.setPlayerScoreboard()', error, error.stack);
         }
     },
-    tellraw(message) {
+    tellraw(message: any) {
         try {
-            world.sendMessage(message);
+            world.sendMessage(message.toString());
         } catch (error) {
             console.warn('server.tellraw', error);
         }
@@ -602,33 +566,15 @@ export const server = {
      * @param {Player} findParticipant 
      * @returns 
      */
-    scoreTest(objective, target, findParticipant = false) {
-        if (findParticipant && (target instanceof Player || target instanceof Entity)) target = target?.name;
+    scoreTest(objective: string, target: Player | Entity | string) {
+        if (!objective) throw new Error('objective must be defined');
         if (!target) throw new Error('target must be defined');
-        let scoreboardObjective;
-        let score;
-        let scoreboardIdentity;
-        try { scoreboardObjective = world.scoreboard.getObjective(objective); } catch (error) { /*console.warn(error, error.stack);*/ }
-        if (((target?.player ?? target) instanceof Player || target instanceof Entity) && !findParticipant) {
+        const scoreboardObjective = world.scoreboard.getObjective(objective);
+        if (!scoreboardObjective) throw new Error(`scoreboardObjective: ${objective} must exist`);
 
-            scoreboardIdentity = target.scoreboardIdentity;
-            if (!target['scoreboard']) return;
-            // content.warn({ score });
-        } else {
-
-            try { scoreboardIdentity = scoreboardObjective.getParticipants().find((({ displayName }) => displayName === target)); } catch (error) { /*console.warn(error, error.stack);*/ }
-        }
-        if (!scoreboardIdentity) return;
-        if (scoreboardObjective) {
-            try {
-                score = scoreboardObjective.getScore(scoreboardIdentity);
-            } catch (error) {
-                /*console.warn(error, error.stack);*/
-            }
-        }
-        return score;
+        return scoreboardObjective.getScore(target);
     },
-    objectiveAdd(objective, displayName = objective) {
+    objectiveAdd(objective: string, displayName = objective) {
         try {
             world.scoreboard.addObjective(objective, displayName);
             return true;
@@ -637,20 +583,12 @@ export const server = {
             return;
         }
     },
-    objectiveRemove(objective) {
+    objectiveRemove(objective: string) {
         try {
             world.scoreboard.removeObjective(objective);
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.warn(error, error.stack);
-            return;
-        }
-    },
-    scoreAdd(objective, name, amount = 0) {
-        try {
-            overworld.runCommandAsync(`scoreboard players add ${name} ${objective} ${amount}`);
-        } catch (error) {
-            // console.warn(error, error.stack);
             return;
         }
     },
@@ -660,52 +598,33 @@ export const server = {
      * @param {Number} value
      * @param {'list' | 'sidebar' | 'belowName' } updateId 
      */
-    scoreResetPlayer(objective, player, updateId) {
+    scoreResetPlayer(objective: string, target: Player | Entity | string) {
         try {
-            if (!player?.scoreboardIdentity) return false;
             world.scoreboard.getObjective(objective)
-                .removeParticipant(player.scoreboardIdentity);
+                .removeParticipant(target);
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.warn(error, error.stack);
             return false;
         }
     },
-    /**
-     * @param {String} objective 
-     * @param {import('@minecraft/server').Player} player 
-     * @param {Number} value
-     * @param {'list' | 'sidebar' | 'belowName' } updateId 
-     * @returns {number}
-     */
-    scoreSetPlayer(objective, player, value = 0, updateId) {
+    scoreSetPlayer(objective: string, target: Player | Entity | string, value = 0, updateId?: DisplaySlotId) {
         // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
-        if (!player.scoreboardIdentity) { this.setPlayerScoreboard(objective, player, value = 0, updateId); return value; }
-        const scoreboardObjective = world.scoreboard.getObjective(objective);
-        if (!(scoreboardObjective instanceof ScoreboardObjective)) throw new Error(`objective: ${objective}, at params[0] does not exist!`);
-        scoreboardObjective.setScore(player.scoreboardIdentity, value);
+        world.scoreboard.getObjective(objective).setScore(target, value);
         if (!updateId) return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
-        if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return value;
+        if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return;
         world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
         world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
         return value;
-    },
-    scoreSet(objective, name, amount = 0) {
-        try {
-            overworld.runCommandAsync(`scoreboard players set ${name} ${objective} ${amount}`);
-        } catch (error) {
-            console.warn(error, error.stack);
-            return;
-        }
-    },
+    }
 };
 
 /**
  * @param {number} seconds 
  * @returns {string}
  */
-export function formatSeconds(seconds) {
+export function formatSeconds(seconds: number) {
     const minutes = Math.floor((seconds % 3600) / 60);
     const hours = Math.floor(seconds / 3600);
     return `${(hours) ? `${hours}:` : ''}${(minutes) ? `${minutes}:` : ''}${(seconds % 60).toString().padStart(2, '0')}`;
@@ -714,7 +633,7 @@ export function formatSeconds(seconds) {
  * @param {{x: number, y: number, z: number}} vector 
  * @returns {{x: number, y: number}}
  */
-export function vector3ToRotation(vector) {
+export function vector3ToRotation(vector: Vector3) {
     return { x: Math.asin(-vector.y) * 180 / Math.PI, y: -Math.atan2(vector.x, vector.z) * 180 / Math.PI };
 }
 /**
@@ -755,8 +674,8 @@ export function vector3ToRotation(vector) {
  * @returns {Array<String>} Returns the following array for each object in the array.
  */
 
-export function combine(target, source) {
-    target.forEach((key, value) => {
+export function combine(target: any, source: any) {
+    Object.entries(target).forEach(([key, value]) => {
         if (source[key] && typeof target[key] === 'object' && typeof source[key] === 'object') {
             source[key] = { ...target[key], ...source[key] };
         }
@@ -765,13 +684,13 @@ export function combine(target, source) {
 }
 
 
-export function ItemsGet(id, log = false) {
+export function ItemsGet(id: string, log = false) {
     const item = ItemTypes.get(id);
     if (!item) {
         let stack;
         try {
-            help;
-        } catch (error) {
+            throw new Error('');
+        } catch (error: any) {
             stack = error.stack;
         }
         if (log) {
@@ -784,19 +703,22 @@ export function ItemsGet(id, log = false) {
 }
 
 export const colors = ['4', 'c', '6', 'g', 'e', 'a', '2', '3', '9', '1', 'd', '5'];
+const reverseCopy = (array: any[]) => {
+    return [...array].reverse();
+};
 /**
  * 
  * @param {Number} value 0-1
  * @param {Bool} reversed 
  * @returns {String}
  */
-export function rainbowWeight(value, reversed = false) {
-    const colorsA = (reversed) ? colors.reverseCopy() : colors;
+export function rainbowWeight(value: number, reversed = false) {
+    const colorsA = (reversed) ? reverseCopy(colors) : colors;
     // content.warn({color: ~~(((value > 1) ? 1 : value) * (colors2.length - 1)), colors})
     return colorsA[~~(((value > 1) ? 1 : value) * (colorsA.length - 1))];
 }
 export function rainbow() {
-    return colors.random();
+    return colors[Math.floor(Math.random() * colors.length)];
 }
 export function getNames() {
     const names = [...world.getPlayers()].forEach(name => {
@@ -805,7 +727,7 @@ export function getNames() {
     return names;
 }
 
-export function createArrayBetween(min, max) {
+export function createArrayBetween(min: number, max: number) {
     const array = new Array(max - min + 1);
     for (let i = 0; min <= max; i++) {
         array[i] = min++;
@@ -814,7 +736,7 @@ export function createArrayBetween(min, max) {
 }
 const numberCharCodes = [...createArrayBetween(33, 126), ...createArrayBetween(161, 321)];//createArrayBetween(33, 321);
 const charArray = numberCharCodes.map(value => String.fromCharCode(value));
-const charObject = {};
+const charObject = {} as Record<string, number>;
 charArray.forEach((char, i) => charObject[char] = i);
 const valueUndefined = charArray[0];
 // const errors = [];
@@ -829,21 +751,21 @@ const valueUndefined = charArray[0];
 //     });
 //     content.warn({ errors });
 // });
-export function obfuscate255(string) {
-    return [...string].map(value => charArray[value.charCodeAt()] ?? valueUndefined).join('');
+export function obfuscate255(string: string) {
+    return [...string].map(value => charArray[value.charCodeAt(0)] ?? valueUndefined).join('');
 }
 
-export function deobfuscate255(string) {
+export function deobfuscate255(string: string) {
     return [...string].map(value => String.fromCharCode(charObject[value])).join('');
 }
 
 
 export const overworld = world.getDimension('overworld'), nether = world.getDimension('nether'), end = world.getDimension('the end');
 
-export function chunkStringRegex(str, length) {
+export function chunkStringRegex(str: string, length: number) {
     return str.match(new RegExp(".{1," + length + "}", "g"));
 }
-export function chunkString(str, length) {
+export function chunkString(str: string, length: number) {
     let size = (str.length / length) | 0;
     const array = Array(++size);
     for (let i = 0, offset = 0; i < size; i++, offset += length) {
@@ -856,14 +778,14 @@ export function chunkString(str, length) {
  * @param {Number} length 
  * @returns {Array}
  */
-export function chunkStringBytes(str, length) {
+export function chunkStringBytes(str: string, length: number) {
     const chunks = [];
     let chunk = '';
     let byteCount = 0;
 
     for (let i = 0; i < str.length; i++) {
         const char = str[i];
-        const charCode = char.charCodeAt();
+        const charCode = char.charCodeAt(0);
 
         if (byteCount + (charCode > 127 ? 2 : 1) > length) {
             chunks.push(chunk);
@@ -887,7 +809,7 @@ export function chunkStringBytes(str, length) {
  * @param {number} length 
  * @returns 
  */
-export function chunkStringReverse(str, length) {
+export function chunkStringReverse(str: string, length: number) {
     let size = (str.length / length) | 0;
     const array = Array(++size);
     for (let i = size - 1, offset = str.length - length; i >= 0; i--, offset -= length) {
@@ -895,19 +817,16 @@ export function chunkStringReverse(str, length) {
     }
     return array;
 }
-export function generateRandomString(length) {
+export function generateRandomString(length: number) {
     return Array.from(Array(length), () => String.fromCharCode((Math.random() * 86 | 0) + 33)).join('');
 };
 /**
- * @function parseCommand
- * @param {String} message 
- * @param {String} prefix 
- * @returns {String[]}
- * @example parseCommand('!give @"bat is bob" iron_sword {"data":6, "enchantments": {"sharpness":3}}', '!'); //returns ['give','bat is bob','iron_sword','{"data":6,"enchantments":{"sharpness":3}}']
+ * do not \ on the @
+ * @example parseCommand('!give \@"bat is bob" iron_sword {"data":6, "enchantments": {"sharpness":3}}', '!'); //returns ['give','bat is bob','iron_sword','{"data":6,"enchantments":{"sharpness":3}}']
  */
-export function parseCommand(message, prefix) {
+export function parseCommand(message: string, prefix: string) {
     const messageLength = message.length;
-    let finding = false;
+    let finding: string | boolean = false;
     let braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0;
     let started = false;
     let o = 0;
@@ -1044,7 +963,7 @@ export function parseCommand(message, prefix) {
     return output;
 }
 const types = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'N', 'D'];
-export function metricNumbers(value, place = 2) {
+export function metricNumbers(value: number, place = 2) {
     const digits = ~~(log10(value) / 3);
     return (!digits) ? value : (value / 10 ** (digits * 3)).toFixed(place) + types[digits];
 }
@@ -1053,12 +972,12 @@ const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'si
 const tens = [false, false, 'twenty', 'thirty', 'fourty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
 const places = ['hundred', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion', 'Sextillion', 'Septillion', 'Octillion', 'Nonillion', 'Decillion', 'Undecillion', 'Duodecillion', 'Tredecillion', 'Quattuordecillion', 'Quindecillion', 'Sexdecillion', 'Septendecillion', 'Octodecillion', 'Novemdecillion'];
 
-export function fixSciNumberString(string) {
+export function fixSciNumberString(string: string | number) {
     if (typeof string !== 'string') string = string.toString();
-    let [number, power] = string.split('e');
-    number = number.split('.');
+    let [numberBS, powerBN] = string.split('e');
+    let number = numberBS.split('.');
     if (number.length === 1) number.push('');
-    power = Number(power);
+    let power = Number(powerBN);
     if (!power) return (number.length > 1) ? number[0] : number.join('.');
     if (power > 0) {
         number[0] += number[1].substring(0, power).padEnd(power, '0');
@@ -1070,7 +989,7 @@ export function fixSciNumberString(string) {
     return number.join('.');
 }
 
-export function formatNumber(number) {
+export function formatNumber(number: number | string) {
     if (typeof number === 'number') number = Math.floor(number).toString();
     let negitive = false;
     if (Number(number) < 0) number = number.replaceAll('-', ''), negitive = true;
@@ -1089,15 +1008,12 @@ export function formatNumber(number) {
     return ((negitive) ? 'negtive ' : '') + output;
 }
 const decimals = ['', 'an eighth', 'a quarter', 'three eighths', 'a half', 'five eighths', 'three forths', 'seven eighths'];
-export function formatDecimal(number) {
+export function formatDecimal(number: number) {
     const index = Math.floor(number % 1 * 8);
     console.log(index);
     return `${(index === decimals.length - 1) ? '' : ` and ${decimals[index]}`}`;
 }
-/**
- * @param {Array} array 
- */
-export function randomValue(array) {
+export function randomValue(array: any[]) {
     return array[Math.floor(Math.random() * array.length)];
 }
 const second = 1000;
@@ -1108,7 +1024,7 @@ const year = 31536000000;
 const decade = 315360000000;
 const century = 3153600000000;
 const millennium = 31536000000000;
-export function formatMS(ms, formal = false) {
+export function formatMS(ms: number, formal = false) {
     ms = Number(ms);
     // content.warn(ms);
     if (ms < second) return `${formatNumber(ms)} millisecond${(ms === 1) ? '' : 's'}`;
@@ -1135,7 +1051,7 @@ export function formatMS(ms, formal = false) {
     }
     if (ms < century) {
         const decades = ms / decade;
-        return `${(!formal) ? Math.floor(decades) : `${formatNumber(centuries)}${(formatDecimal(centuries))}`} decade${(Math.floor(decades) === 1) ? '' : 's'}`;
+        return `${(!formal) ? Math.floor(decades) : `${formatNumber(decades)}${(formatDecimal(decades))}`} decade${(Math.floor(decades) === 1) ? '' : 's'}`;
     }
     if (ms < millennium) {
         const centuries = ms / century;

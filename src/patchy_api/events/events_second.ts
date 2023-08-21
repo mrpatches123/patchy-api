@@ -1,5 +1,5 @@
 import eventBuilder from '../libraries/classes/events/export_instance.js';
-import { EntityItemComponent, Vector, world } from '@minecraft/server';
+import { EntityItemComponent, Vector, Vector3, world } from '@minecraft/server';
 import players from '../libraries/classes/players/export_instance.js';
 import time from '../libraries/classes/time.js';
 import global from '../libraries/classes/global.js';
@@ -7,7 +7,8 @@ import errorLogger from '../libraries/classes/error.js';
 import { content, hypot2, overworld, getXZVectorRY } from '../modules.js';
 import { Player, setProptotype } from '../libraries/classes/player/class.js';
 global.requestAddEvent = [];
-const items = {};
+const numberOfStepOns = 3;
+const items: any = {};
 eventBuilder.register({
 	stepOnBlock: {
 		subscription: {
@@ -23,13 +24,15 @@ eventBuilder.register({
 							if (!block) return;
 							if (!player.isOnGround) return;
 							if (!player.isInWater && player.isFalling) return;
-							const { LastBlockStepedOn } = memory;
-							memory.LastBlockStepedOn = block;
+							memory.lastBlocksStepedOn ??= [];
+							const lastBlocksStepedOn = memory.lastBlocksStepedOn;
+							if (memory.lastBlocksStepedOn.length > numberOfStepOns) memory.lastBlocksStepedOn.shift();
+							memory.lastBlocksStepedOn.push(block);
 							// content.warn({ LastBlockStepedOn: LastBlockStepedOn?.typeId ?? 'null', currentId: block?.typeId ?? 'null' });
-
-							if (LastBlockStepedOn && block.location.equals(LastBlockStepedOn.location)) return;
+							const slice = lastBlocksStepedOn.slice(1);
+							if (lastBlocksStepedOn.length === numberOfStepOns && (slice.some(lastBlock => vector3Equals(lastBlocksStepedOn[0].location, lastBlock) || slice.some(block => slice.some(block1 => !vector3Equals(block1.location, block.location)))))) return;
 							eventBuilder.getEvent('stepOnBlock').iterate({ block, player });
-						} catch (error) {
+						} catch (error: any) {
 							console.warn(error, error.stack);
 						}
 					});
@@ -58,9 +61,9 @@ eventBuilder.register({
 		subscription: {
 			tickAfterLoad: {
 				function: () => {
-					if (!global.requestAddEvent.length) return;
+					if (!global.requestAddEvent?.length) return;
 
-					global.requestAddEvent.forEach(event => {
+					global.requestAddEvent.forEach((event: any) => {
 						eventBuilder.getEvent('requestAdded').iterate(event);
 					});
 					global.requestAddEvent = [];
@@ -104,14 +107,11 @@ eventBuilder.register({
 			tickAfterLoad: {
 				function: () => {
 
-					const dne = Object.assign({}, items);
+					const dne: any = Object.assign({}, items);
 					[...overworld.getEntities({ type: 'minecraft:item' })].forEach(entity => {
 						const { id, location } = entity;
-						/**
-						 * @type {EntityItemComponent}
-						 */
-						const { itemStack } = entity.getComponent('minecraft:item');
 
+						const { itemStack } = entity.getComponent('minecraft:item') as EntityItemComponent;
 						if (!items.hasOwnProperty(id)) items[id] = { location, itemStack };
 						delete dne[id];
 					});
@@ -180,15 +180,15 @@ eventBuilder.register({
 		}
 	},
 });
-function vectorToVector3(vector) {
+function vectorToVector3(vector: Vector3) {
 	const { x, y, z } = vector;
 	return { x, y, z };
 }
-function getSign(number) {
+function getSign(number: number) {
 	const sign = Number(number) / Math.abs(Number(number));
 	return (!sign) ? 0 : sign;
 }
-function yawToCardnalDirectionVector(ry) {
+function yawToCardnalDirectionVector(ry: number) {
 	let { x, z } = getXZVectorRY(ry);
 	const xDist = Math.abs(x - 0);
 	const zDist = Math.abs(z - 0);

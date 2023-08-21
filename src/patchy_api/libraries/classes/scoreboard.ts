@@ -4,11 +4,13 @@ import { Player } from './player/class.js';
 import eventBuilder from "./events/export_instance.js";
 const chunk = 2147483646;
 const displaySlotIds = [DisplaySlotId.List, DisplaySlotId.Sidebar, DisplaySlotId.BelowName];
-
+const sortOrders = [ObjectiveSortOrder.Ascending, ObjectiveSortOrder.Descending];
 class ScoreboardBuilder {
+	players: Record<string, Record<string, { gotten?: boolean, value?: number; }>>;
+	objectives: Record<string, { displaySlot?: DisplaySlotId.List | DisplaySlotId.Sidebar | DisplaySlotId.BelowName; }>;
 	constructor() {
 		/**
-		 * @type {{[id: string]: {[objective: string]: {gotten: boolean, value: number}}}}
+		 * @type {}
 		 */
 		this.players = {};
 		this.objectives = {};
@@ -17,23 +19,23 @@ class ScoreboardBuilder {
 	 * @param {string} objective 
 	 * @param {'List' | 'Sidebar' | 'BelowName'} displaySlotId
 	 */
-	setObjectiveDisplaySlot(objective, displaySlotId, sortOrder = ObjectiveSortOrder.Ascending) {
+	setObjectiveDisplaySlot(objective: string, displaySlotId: DisplaySlotId, sortOrder = ObjectiveSortOrder.Ascending) {
 		if (typeof objective !== 'string') throw new Error(`objective: ${objective}, at params[0] is of type: String!`);
 		if (objective.startsWith('big_')) throw new Error(`objective: ${objective}, at params[0] starts with 'big_' so it cannot be displayed in a scoreboardDisplay!`);
 		if (!displaySlotIds.includes(displaySlotId)) throw new Error(`displaySlotId: ${displaySlotId}, at params[1] is not one of the following: ${orArray(displaySlotIds)}!`);
-		if (sortOrder && sortOrder !== ObjectiveSortOrder.Ascending && sortOrder !== ObjectiveSortOrder.Descending) throw new Error(`sortOrder: ${sortOrder}, at params[2] is not one of the following: ${orArray([ObjectiveSortOrder.Ascending, ObjectiveSortOrder.Descending])}!`);
+		if (sortOrder && !sortOrders.includes(sortOrder)) throw new Error(`sortOrder: ${sortOrder}, at params[2] is not one of the following: ${orArray([ObjectiveSortOrder.Ascending, ObjectiveSortOrder.Descending])}!`);
 		const scoreboardObjective = world.scoreboard.getObjective(objective);
 		if (!scoreboardObjective) throw new Error(`objective: ${objective}, at params[0] does not exist!`);
 		content.warn({ scoreboardObjective: scoreboardObjective.id, displaySlotId });
 		world.scoreboard.setObjectiveAtDisplaySlot(displaySlotId, { objective: scoreboardObjective });
-		if (!this.objectives.hasOwnProperty(objective)) this.objectives[objective] = {};
+		if (!this.objectives.hasOwnProperty(objective)) this.objectives[objective] = {} as typeof this.objectives[string];
 		this.objectives[objective].displaySlot = displaySlotId;
 	}
 	/**
 	 * @param {string} objective 
 	 * @returns {string}
 	 */
-	clearObjectiveFromDisplaySlot(objective) {
+	clearObjectiveFromDisplaySlot(objective: string) {
 		if (typeof objective !== 'string') throw new Error(`objective: ${objective}, at params[0] is of type: String!`);
 		if (objective.startsWith('big_')) throw new Error(`objective: ${objective}, at params[0] starts with 'big_' so it cannot be displayed in a scoreboardDisplay!`);
 		for (const displaySlotId of displaySlotIds) {
@@ -51,7 +53,7 @@ class ScoreboardBuilder {
 	 * else just stored on the objective
 	 * @param {String} objective 
 	 */
-	add(objective) {
+	add(objective: string) {
 		if (typeof objective !== 'string') throw new Error(`objective at params[0] is not of type: string`);
 		if (!objective.startsWith('big_')) return server.objectiveAdd(objective);
 		server.objectiveAdd(`${objective}*r`);
@@ -62,7 +64,7 @@ class ScoreboardBuilder {
 	 * @param {String} objective 
 	 * @param {Number} value 
 	 */
-	set(player, objective, value) {
+	set(player: Player, objective: string, value: number) {
 		if (player instanceof PlayerType) throw new Error(`Player, at params[0] is of type: PlayerType(world player)!`);
 		if (!(player instanceof Player)) throw new Error(`Player, at params[0] is not of type: Player(not world player)!`);
 		if (!world.scoreboard.getObjective(objective)) throw new Error(`objective, ${objective} at params[1] does not Exist!`);
@@ -101,7 +103,7 @@ class ScoreboardBuilder {
 	 * @param {String} objective 
 	 * @param {boolean} forceDisk?=false
 	 */
-	get(player, objective, forceDisk) {
+	get(player: Player, objective: string, forceDisk?: boolean) {
 		if (!(player instanceof Player)) throw new Error(`Player, at params[1] is not the correct type of player!`);
 		if (!world.scoreboard.getObjective(objective)) throw new Error(`objective, ${objective} at params[1] does not Exist!`);
 		const { id } = player;
@@ -111,15 +113,15 @@ class ScoreboardBuilder {
 		const { value, gotten } = this.players[id][objective];
 		if (!forceDisk && gotten) return value;
 		if (!objective.startsWith('big_')) {
-			const score = server.scoreTest(objective, player, false);
+			const score = server.scoreTest(objective, player);
 			this.players[id][objective].value = score;
 			this.players[id][objective].gotten = true;
 			return score;
 		};
-		const quotient = server.scoreTest(`${objective}*q`, player, false);
-		const remainder = server.scoreTest(`${objective}*r`, player, false);
+		const quotient = server.scoreTest(`${objective}*q`, player) ?? 0;
+		const remainder = server.scoreTest(`${objective}*r`, player) ?? 0;
 		// content.warn({ quotient, remainder });
-		const score = quotient * chunk + remainder;
+		const score = (isDefined(quotient) && isDefined(remainder)) ? quotient * chunk + remainder : undefined;
 		this.players[id][objective].value = score;
 		this.players[id][objective].gotten = true;
 		return score;

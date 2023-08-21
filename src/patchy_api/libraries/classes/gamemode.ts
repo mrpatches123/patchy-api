@@ -1,4 +1,5 @@
-import { system, world, Player } from "@minecraft/server";
+import { system, world, Player as PlayerType, GameMode } from "@minecraft/server";
+import { Player } from "./player/class";
 export const gamemodeMap = {
 	survival: 0,
 	creative: 1,
@@ -11,9 +12,11 @@ export const gamemodeIndexMap = {
 	2: 'adventure',
 	5: 'spectator'
 };
-const gamemodes = Object.keys(gamemodeMap);
+const gamemodes = Object.keys(gamemodeMap) as unknown as GameMode[];
 
 class Gamemode {
+	players: Record<string, number>;
+	refreshed: boolean;
 	constructor() {
 		this.players = {};
 		this.refreshed = false;
@@ -21,7 +24,7 @@ class Gamemode {
 	/**
 	 * @param {Player} player 
 	 */
-	get(player) {
+	get(player: PlayerType | Player) {
 		if (!this.refreshed) this.refreshAll(), this.refreshed = true;
 		const { id } = player;
 		return this.players[id];
