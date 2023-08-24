@@ -1,4 +1,4 @@
-import { BlockAreaSize, Vector, world, MinecraftBlockTypes, Dimension, system } from "@minecraft/server";
+import { BlockAreaSize, Vector, world, MinecraftBlockTypes, Dimension, system, Vector2, Vector3 } from "@minecraft/server";
 import { andArray, betweenBlockVector3, blockFaceToCoords, content, isDefined, isVector2, isVector3, native, orArray, overworld, server, sort3DVectors } from "../../utilities.js";
 import eventBuilder from "../events/export_instance.js";
 import databases from "../database.js";
@@ -30,20 +30,54 @@ const buttons = [
 	MinecraftBlockTypes.mangroveButton.id
 ];
 export class PlotsVector3 {
-	constructor(x, y, z) {
+	x: number;
+	y: number;
+	z: number;
+	constructor(x: number, y: number, z: number) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 }
 export class BlockVector3 {
-	constructor(x, y, z) {
+	x: number;
+	y: number;
+	z: number;
+	constructor(x: number, y: number, z: number) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 }
-
+interface PlotRuleSet {
+	count?: number;
+	size?: BlockAreaSize;
+	start: { x: number, y: number, z: number; } | PlotsVector3;
+	offset?: { x: number, y: number, z: number; };
+	direction: 'x' | '-x' | 'z' | '-z';
+	blockPlaceMargin: { x: number, y: number, z: number; };
+}
+interface Teleport {
+	location: Vector3;
+	face?: Vector2 | Vector3;
+	dimension: Dimension;
+}
+interface PlotRules<key extends string> {
+	size?: BlockAreaSize;
+	start: { x: number, y: number, z: number; };
+	ruleSets?: PlotRuleSet[];
+	property: boolean;
+	plotNumberIdentifier?: key;
+	defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break';
+	defaultGamemode?: 0 | 1 | 2;
+	/**
+	 * default?= false
+	 */
+	loop?: boolean;
+	loopDirection?: 'x' | '-x' | 'z' | '-z';
+	teleport?: Teleport;
+	structure?: StructureLoadOptions;
+}
 scoreboardBuilder.add('blockPlaceMarginOverideX');
 scoreboardBuilder.add('blockPlaceMarginOverideY');
 scoreboardBuilder.add('blockPlaceMarginOverideZ');
@@ -52,13 +86,16 @@ const mirrors = ['none', 'x', 'xz', 'z'];
 const animationModes = ['block_by_block', 'layer_by_layer'];
 const directions = ['x', '-x', 'z', '-z'];
 const permisions = ['read', 'write', 'break', 'place', 'open', 'open-break', 'press'];
-function objectVector3(vector3) {
+function objectVector3(vector3: Vector3) {
 	const { x, y, z } = vector3;
 	return ({ x, y, z });
 
 }
 global.finishedInitialPlotCreate;
 export class PlotBuilder {
+	subscribedQueue: boolean;
+	registeredProperties: boolean;
+	creates;
 	constructor() {
 		this.plots = {};
 		this.creates = {};
