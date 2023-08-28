@@ -9,9 +9,10 @@ const elementKeysWithCallbacksForType = {} as { [typeKey: string]: { [elementKey
 Object.entries(schema).forEach(([type, { schema }]) => {
 	elementKeysWithCallbacksForType[type] ??= {};
 	Object.entries(schema).forEach(([elementKey, { hasCallback = false }]) => {
-		elementKeysWithCallbacksForType[type][elementKey] = hasCallback;
+		elementKeysWithCallbacksForType[type]![elementKey] = hasCallback;
 	});
 });
+
 const elementKeysWithReopen = [] as string[];
 Object.entries(schema).forEach(([type, { schema }]) => {
 	elementKeysWithCallbacksForType[type] ??= {};
@@ -112,6 +113,9 @@ class RemovableTree {
 
 	}
 }
+type DeepPartial<T> = {
+	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K]
+};
 interface FormPerTypes {
 	modal: modal;
 	action: action;
@@ -127,7 +131,7 @@ interface GeneratedForm {
 }
 
 export class FormBuilder {
-	playerData: { [id: string]: { awaiting: { [key: string]: boolean; }, formTree: RemovableTree, lastFormsShown: { [formKey: string]: any[]; }; }; };
+	playerData: { [id: string]: { awaiting?: { [key: string]: boolean; }, formTree?: RemovableTree, lastFormsShown?: { [formKey: string]: any[]; }; }; };
 	forms: { [key: string]: Form; };
 	constructor() {
 		this.forms = {};
@@ -198,11 +202,11 @@ export class FormBuilder {
 	 */
 	showAwait(receiver: Player, key: string, ...extraArguments: any[]) {
 		const { id } = receiver;
-		this.playerData[id] ??= {} as typeof this.playerData[string];
-		this.playerData[id].awaiting ??= {};
-		const { awaiting } = this.playerData[id];
-		if (awaiting.hasOwnProperty(key)) return receiver.sendMessage('§cyou are already awaiting the same form!');
-		this.playerData[id].awaiting[key] = true;
+		this.playerData[id] ??= {};
+		this.playerData[id]!.awaiting ??= {};
+		const { awaiting } = this.playerData[id] ?? {};
+		if (awaiting!.hasOwnProperty(key)) return receiver.sendMessage('§cyou are already awaiting the same form!');
+		this.playerData[id]!.awaiting![key] = true;
 		receiver.sendMessage('§l§eClose chat to open the Menu!');
 		const generatedForm = this.generateForm(receiver, key, ...extraArguments);
 		this.showForm(receiver, key, generatedForm, true, ...extraArguments)
@@ -232,11 +236,11 @@ export class FormBuilder {
 		if (!(((receiver as any)?.player ?? receiver) instanceof Player)) throw new Error(`receiver at params[0] is not of type: Player!`);
 		if (typeof key !== 'string') throw new Error(`key at params[1] is not of type: String!`);
 		if (!this.forms.hasOwnProperty(key)) throw new Error(`key: ${key}, at params[1] has not been created!`);
-		const type = Object.keys(this.forms[key])[0] as keyof typeof forms;
+		const type = Object.keys(this.forms[key] ?? {})[0] as keyof typeof forms;
 		const form = new forms[type]();
 		let globalSettings = {};
 		const formSchema = schema[type].schema;
-		let formData = this.forms[key][type];
+		let formData = this.forms[key]![type];
 		let formArray: ModalData[] | ActionData[] | MessageData[];
 		if (formData instanceof Function) {
 			formArray = formData(receiver, ...(extraArguments as [1]));
@@ -358,14 +362,14 @@ export class FormBuilder {
 
 			const { id } = receiver;
 			this.playerData[id] ??= {} as typeof this.playerData[typeof id];
-			this.playerData[id].lastFormsShown ??= {};
-			this.playerData[id].formTree ??= new RemovableTree();
-			this.playerData[id].lastFormsShown[key] = extraArguments ?? [];
-			this.playerData[id].formTree.next(key);
+			this.playerData[id]!.lastFormsShown ??= {};
+			this.playerData[id]!.formTree ??= new RemovableTree();
+			this.playerData[id]!.lastFormsShown![key] = extraArguments ?? [];
+			this.playerData[id]!.formTree!.next(key);
 			let { form, formArray, type, globalSettings, callbackArray } = generatedForm;
 			const elementsWithCallbacks = elementKeysWithCallbacksForType[type];
 			content.warn({ t: '1', formArray });
-			formArray = (formArray as any[]).filter((slot) => (slot instanceof Object) ? Object.keys(slot).some(elementKey => elementsWithCallbacks[elementKey]) : false);
+			formArray = (formArray as any[]).filter((slot) => (slot instanceof Object) ? Object.keys(slot).some(elementKey => elementsWithCallbacks![elementKey]) : false);
 			// content.warn({ t: '2', formArray });
 			// const response = await form.show(receiver);
 			// const { canceled, cancelationReason } = response;
@@ -378,7 +382,7 @@ export class FormBuilder {
 				const { cancelationReason } = response;
 				// content.warn({ awaitShow, cancelationReason, key });
 				if (!awaitShow || cancelationReason !== FormCancelationReason.UserBusy) {
-					if (awaitShow && this.playerData[id]?.awaiting?.[key]) delete this.playerData[id].awaiting[key];
+					if (awaitShow && this.playerData[id]?.awaiting?.[key]) delete this.playerData[id]!.awaiting![key];
 					break;
 				};
 			}
@@ -389,8 +393,8 @@ export class FormBuilder {
 					closeCallback(receiver, response, ...extraArguments);
 				}
 				if (returnOnClose) {
-					const backKey = this.playerData[id].formTree.beforeLast();;
-					const backExtraArgs = this.playerData[id].lastFormsShown[backKey] ?? [];
+					const backKey = this.playerData[id]!.formTree!.beforeLast();;
+					const backExtraArgs = this.playerData[id]!.lastFormsShown![backKey] ?? [];
 					this.show(receiver, backKey, ...backExtraArgs);
 				}
 				return;
@@ -413,8 +417,8 @@ export class FormBuilder {
 					if (callback instanceof Function) callback(receiver, selection, ...extraArguments);
 					if (pressCallback instanceof Function) pressCallback(receiver, response, ...extraArguments);
 					if (returnOnPress) {
-						const backKey = this.playerData[id].formTree.beforeLast();;
-						const backExtraArgs = this.playerData[id].lastFormsShown[backKey] ?? [];
+						const backKey = this.playerData[id]!.formTree!.beforeLast();;
+						const backExtraArgs = this.playerData[id]!.lastFormsShown![backKey] ?? [];
 						this.show(receiver, backKey, ...backExtraArgs);
 					}
 					if (elementKeysWithReopen.some(elementKey => (element as any)?.[elementKey]?.reopen)) this.show(receiver, key, ...extraArguments);
@@ -432,8 +436,8 @@ export class FormBuilder {
 					});
 					if (submitCallback instanceof Function) submitCallback(receiver, response, ...extraArguments);
 					if (returnOnPress) {
-						const backKey = this.playerData[id].formTree.beforeLast();;
-						const backExtraArgs = this.playerData[id].lastFormsShown[backKey] ?? [];
+						const backKey = this.playerData[id]!.formTree!.beforeLast();;
+						const backExtraArgs = this.playerData[id]!.lastFormsShown![backKey] ?? [];
 						this.show(receiver, backKey, ...backExtraArgs);
 					}
 					break;
@@ -445,3 +449,4 @@ export class FormBuilder {
 		}
 	}
 }
+

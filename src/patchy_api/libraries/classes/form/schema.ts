@@ -157,9 +157,10 @@ const formSchemaObject = {
 				setupFunction: (receiver: Player, formClass: FormBuilder, form: ActionFormData, key: string, elementValue: any, elementIndex: number, callbackArray: any[], objectClone: Object, ...extraArgs: any[]) => {
 					return (() => {
 						const { id } = receiver;
+						formClass.playerData[id] ??= {};
 						const memory = formClass.playerData[id];
-						const backKey = memory.formTree.beforeLast();
-						const backExtraArgs = memory.lastFormsShown[backKey] ?? [];
+						const backKey = memory!.formTree!.beforeLast();
+						const backExtraArgs = memory!.lastFormsShown![backKey] ?? [];
 						formClass.show(receiver, backKey, ...backExtraArgs);
 					});
 				},
@@ -193,13 +194,13 @@ const formSchemaObject = {
 					const index = initialisationFunction(receiver, elementIndex, ...extraArgs);
 
 					if (!isDefined(index) || index > options.length - 1 || index < 0) throw new Error(`index: ${index ?? 'undefined'} returned from initialisationFunction is not defined, less than 0, or greater than ${options.length - 1}`);
-					const { text, iconPath } = elementValue?.options?.[index];
+					const { text = ' ', iconPath } = elementValue?.options?.[index] ?? {};
 					(iconPath) ? form.button(text, iconPath) : form.button(text);
 					return (() => {
 						const newIndex = cycleCallback(receiver, elementIndex, ...extraArgs);
 						if (!isDefined(newIndex) || index > options.length - 1 || index < 0) throw new Error(`index: ${newIndex ?? 'undefined'} returned from initialisationFunction is not defined, less than 0, or greater than ${options.length - 1}`);
-						const { callback } = options[newIndex];
-						callback(receiver, elementIndex, ...extraArgs);
+						const { callback } = options[newIndex] ?? {};
+						if (callback instanceof Function) callback(receiver, elementIndex, ...extraArgs);
 					});
 				},
 				hasCallback: true

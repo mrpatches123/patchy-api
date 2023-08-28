@@ -11,6 +11,8 @@ import wait from "../wait.js";
 import scoreboardBuilder from "../scoreboard.js";
 import global from "../global.js";
 import propertyBuilder from "../property/export_instance.js";
+import { StructureLoadOptions } from '../structure/class';
+
 const gamemodes = [0, 1, 2];
 const opens = [
 	MinecraftBlockTypes.chest.id,
@@ -62,12 +64,12 @@ interface Teleport {
 	face?: Vector2 | Vector3;
 	dimension: Dimension;
 }
-interface PlotRules<key extends string> {
-	size?: BlockAreaSize;
+interface PlotRules {
+	size: BlockAreaSize;
 	start: { x: number, y: number, z: number; };
 	ruleSets?: PlotRuleSet[];
 	property: boolean;
-	plotNumberIdentifier?: key;
+	plotNumberIdentifier?: string;
 	defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break';
 	defaultGamemode?: 0 | 1 | 2;
 	/**
@@ -77,6 +79,7 @@ interface PlotRules<key extends string> {
 	loopDirection?: 'x' | '-x' | 'z' | '-z';
 	teleport?: Teleport;
 	structure?: StructureLoadOptions;
+	exclusive?: boolean;
 }
 scoreboardBuilder.add('blockPlaceMarginOverideX');
 scoreboardBuilder.add('blockPlaceMarginOverideY');
@@ -95,7 +98,8 @@ global.finishedInitialPlotCreate;
 export class PlotBuilder {
 	subscribedQueue: boolean;
 	registeredProperties: boolean;
-	creates;
+	creates: Record<string, PlotRules>;
+	plots: Record<string, { players: any, rules: PlotRules; }>;
 	constructor() {
 		this.plots = {};
 		this.creates = {};
@@ -118,24 +122,24 @@ export class PlotBuilder {
 							// content.warn(keys);
 							const rules = plotThis.creates[key];
 							delete plotThis.creates[key];
-							const { ruleSets = [], size, start, exclusive } = rules;
+							const { ruleSets = [], size, start, exclusive } = rules ?? {};
 							let maxZ = 0, maxX = 0;
-							const generatedRuleSets = ruleSets.reduce((sumation, ruleSet, i) => {
+							const generatedRuleSets = ruleSets.reduce((sumation: PlotRuleSet[], ruleSet: PlotRuleSet, i: number) => {
 								const { count, start: startRuleSet, direction, size: sizeRuleSet } = ruleSet;
-								const { y } = start;
+								const { y } = start ?? {};
 								if (count) {
-									let change;
+									let change: Vector3;
 									switch (direction) {
 										case 'x':
-											change = { x: sizeRuleSet?.x ?? size.x, z: 0 };
+											change = { x: sizeRuleSet?.x ?? size.x, y: 0, z: 0 };
 											break;
 										case '-x':
-											change = { x: -(sizeRuleSet?.x ?? size.x), z: 0 };
+											change = { x: -(sizeRuleSet?.x ?? size.x), y: 0, z: 0 };
 										case 'z':
-											change = { x: 0, z: sizeRuleSet?.z ?? size.z };
+											change = { x: 0, y: 0, z: sizeRuleSet?.z ?? size.z };
 											break;
 										case '-z':
-											change = { x: 0, z: -(sizeRuleSet?.z ?? size.z) };
+											change = { x: 0, y: 0, z: -(sizeRuleSet?.z ?? size.z) };
 											break;
 									}
 									// content.warn({ size, change });
@@ -149,7 +153,7 @@ export class PlotBuilder {
 											currentSize = { x: ((c === 0) ? 0 : change.x) + lastSize.x, y, z: ((c === 0) ? 0 : change.z) + lastSize.z };
 											lastSize = currentSize;
 										}
-										const { x: xC, z: zC } = currentSize;
+										const { x: xC = 0, z: zC = 0 } = currentSize ?? {};
 										const rX = xC - x + 1;
 										const rZ = zC - z + 1;
 										if (rX > maxX) maxX = rX;
@@ -167,8 +171,8 @@ export class PlotBuilder {
 									return sumation;
 								}
 
-							}, []);
-							plotThis.plots[key] = {};
+							}, [] as PlotRuleSet[]);
+							plotThis.plots[key] = {} as typeof plotThis.plots[typeof key];
 							plotThis.plots[key].rules = rules;
 							plotThis.plots[key].rules.ruleSets = generatedRuleSets;
 							plotThis.plots[key].players = {};
