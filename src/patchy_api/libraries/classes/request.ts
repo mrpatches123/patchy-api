@@ -30,7 +30,7 @@ class RequestBuilder {
 	 * @param {Array<String>} keys 
 	 * @param {boolean} isArray 
 	 */
-	getMemoryTarget(id: string, target: string, keys: string[], type: string, isArray = false) {
+	getMemoryTarget(id: string, target: string, keys: string[], type: string, isArray: boolean = false) {
 		// content.warn({ RequestBuilder: this });
 		const returnType = (isArray) ? [] : {};
 
@@ -97,7 +97,7 @@ class RequestBuilder {
 	 * @param {String | Number} type 
 	 * @param {any} value 
 	 */
-	add(id, key, target, type, value) {
+	add(id: string | number, key: string | number, target: string | number, type: string | number, value: any) {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
@@ -128,97 +128,97 @@ class RequestBuilder {
 	 * @param {(key: String, target: String, type: String, value: any) => {}} findCallback 
 	 * @param {watchOptions} options 
 	 */
-	watch(id, testCallback, findCallback = null, options = {}) {
+	watch(id: string, testCallback?: (key: string, target: string, type: string, value: any) => {}, findCallback?: (key: string, target: string, type: string, value: any) => {}) | null = null, options: watchOptions = {}) {
 
 
 
-		content.warn({ t: 'RequestBuilderwatch', id });
-		if (id instanceof String) throw new Error(`findCallback for id: ${id}, is not a String`);
-		if (!(testCallback instanceof Function)) throw new Error(`testCallback for id: ${id}, is not a Function.`);
-		if (findCallback && !(findCallback instanceof Function)) throw new Error(`findCallback for id: ${id}, is defined and not a Function`);
-		if (options && !(options instanceof Object)) throw new Error(`findCallback for id: ${id}, is defined and not an Object`);
-		// if (key && this.hasOwnProperty(key)) return new Error(`key: ${key}, for options for id: ${id}, is defined and does not exist on requestBuilder`);
-		const { /*key, keys,*/eventKeys = ['playerJoined', 'requestAdded'], removeKey = true } = options;
-		if (removeKey !== null && removeKey !== undefined && !(typeof removeKey === 'boolean')) throw new Error(`removeKey for options for id: ${id}, is not undefined, null or a boolean`);
-		if (!(eventKeys instanceof Array)) throw new Error(`removeKey for options for id: ${id}, is not undefined, null or a boolean`);
+	content.warn({ t: 'RequestBuilderwatch', id });
+	if (id instanceof String) throw new Error(`findCallback for id: ${id}, is not a String`);
+	if (!(testCallback instanceof Function)) throw new Error(`testCallback for id: ${id}, is not a Function.`);
+	if (findCallback && !(findCallback instanceof Function)) throw new Error(`findCallback for id: ${id}, is defined and not a Function`);
+	if (options && !(options instanceof Object)) throw new Error(`findCallback for id: ${id}, is defined and not an Object`);
+	// if (key && this.hasOwnProperty(key)) return new Error(`key: ${key}, for options for id: ${id}, is defined and does not exist on requestBuilder`);
+	const { /*key, keys,*/eventKeys = ['playerJoined', 'requestAdded'], removeKey = true } = options;
+	if (removeKey !== null && removeKey !== undefined && !(typeof removeKey === 'boolean')) throw new Error(`removeKey for options for id: ${id}, is not undefined, null or a boolean`);
+	if (!(eventKeys instanceof Array)) throw new Error(`removeKey for options for id: ${id}, is not undefined, null or a boolean`);
 
-		content.warn(11111, 'RequestBuilderwatch');
-		const call = () => {
-			// content.warn('help');
-			let database = databases.get("requestsAPI") ?? databases.add("requestsAPI");
-			const requests = database.get(id) ?? {};
-			content.warn({ id, requests });
-			if (!requests) return;
-			requests.forEach((key, targets) => {
-				targets.forEach((target, types) => {
-					types.forEach((type, value) => {
-						const test = testCallback(key, target, type, value);
-						// content.warn({ test, removeKey, target, value });
-						if (test) {
-							if (findCallback) findCallback(key, target, type, value);
-							if (removeKey) {
-								this.remove(id, key, target, type);
-							}
-						};
-					});
-
-				}
-				);
-			});
-
-		};
-		eventBuilder.subscribe(`requestsAPI*${id}`, {
-			...eventKeys.accumulate((eventkey, i) => ({ [eventkey]: call }), {})
-		});
-	}
-	/**
-	 * @method terminate removes watch for a request id
-	 * @param {String} id 
-	 */
-	terminate(id) {
-		eventBuilder.unsubscribeEvent(`requestsAPI*${id}`, 'tickAfterLoad');
-	}
-	/**
-	 * 
-	 * @param {String | Number} id 
-	 * @param {String | Number} key 
-	 * @param {String | Number} target 
-	 * @param {String | Number} type
-	 */
-	remove(id, key, target, type) {
-		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
-		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
-		if (target && typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
-		if (type && typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
-		let database = databases.get("requestsAPI"); //?? databases.add("requestsAPI");
+	content.warn(11111, 'RequestBuilderwatch');
+	const call = () => {
+		// content.warn('help');
+		let database = databases.get("requestsAPI") ?? databases.add("requestsAPI");
 		const requests = database.get(id) ?? {};
-		// content.warn({ id, database });
-		// content.warn({ requests: requests, key });
-		if (target) {
-			// content.warn({ id, key, len: requests[key].length() });////len: requests[key].length()
+		content.warn({ id, requests });
+		if (!requests) return;
+		requests.forEach((key, targets) => {
+			targets.forEach((target, types) => {
+				types.forEach((type, value) => {
+					const test = testCallback(key, target, type, value);
+					// content.warn({ test, removeKey, target, value });
+					if (test) {
+						if (findCallback) findCallback(key, target, type, value);
+						if (removeKey) {
+							this.remove(id, key, target, type);
+						}
+					};
+				});
 
-			if (type) {
-				delete requests[key][target][type];
-				const targetLength = requests[key][target].length();
-				if (!targetLength) {
-					delete requests[key][target];
-				}
 			}
-			const keyLength = requests[key].length();
-			if (!keyLength) {
-				delete requests[key];
+			);
+		});
+
+	};
+	eventBuilder.subscribe(`requestsAPI*${id}`, {
+		...eventKeys.accumulate((eventkey, i) => ({ [eventkey]: call }), {})
+	});
+}
+/**
+ * @method terminate removes watch for a request id
+ * @param {String} id 
+ */
+terminate(id: string) {
+	eventBuilder.unsubscribeEvent(`requestsAPI*${id}`, 'tickAfterLoad');
+}
+/**
+ * 
+ * @param {String | Number} id 
+ * @param {String | Number} key 
+ * @param {String | Number} target 
+ * @param {String | Number} type
+ */
+remove(id: string | number, key: string | number, target: string | number, type: string | number) {
+	if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
+	if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
+	if (target && typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
+	if (type && typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
+	let database = databases.get("requestsAPI"); //?? databases.add("requestsAPI");
+	const requests = database.get(id) ?? {};
+	// content.warn({ id, database });
+	// content.warn({ requests: requests, key });
+	if (target) {
+		// content.warn({ id, key, len: requests[key].length() });////len: requests[key].length()
+
+		if (type) {
+			delete requests[key][target][type];
+			const targetLength = requests[key][target].length();
+			if (!targetLength) {
+				delete requests[key][target];
 			}
-		} else {
+		}
+		const keyLength = requests[key].length();
+		if (!keyLength) {
 			delete requests[key];
 		}
-		const requestsLength = requests.length();
-		if (!requestsLength) {
-			database.delete(id);
-		} else {
-			database.set(id, requests);
-		}
-		databases.queueSave("requestsAPI");
+	} else {
+		delete requests[key];
 	}
+	const requestsLength = requests.length();
+	if (!requestsLength) {
+		database.delete(id);
+	} else {
+		database.set(id, requests);
+	}
+	databases.queueSave("requestsAPI");
+}
 }
 
 const requestBuilder = new RequestBuilder();
