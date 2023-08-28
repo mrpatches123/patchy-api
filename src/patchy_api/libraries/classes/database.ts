@@ -101,6 +101,7 @@ export class Databases {
             const { x, z } = location;
             const index = entityArray.findIndex(([fx, fz]) => fx === x && fz === z);
             if (index !== -1) {
+                entityArray[index] ??= [x, z, entity];
                 entityArray[index].push(entity);
             } else {
                 entityArray.push([x, z, entity]);
