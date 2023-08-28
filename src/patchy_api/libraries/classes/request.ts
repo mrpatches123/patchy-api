@@ -4,21 +4,32 @@ import { content, native } from '../utilities.js';
 import global from './global.js';
 import databases from './database.js';
 import eventBuilder from './events/export_instance.js';
-
+function lengthObject(object) {
+	return Object.keys(object).length;
+}
 class RequestBuilder {
-	memory: Record<string, Record<string, Record<string, Record<string, any>>>> = {};
+	memory: Record<string, Record<string, Record<string, Record<string, any>>>>;
+	constructor() {
+		this.memory = {};
+	}
 	addMemory(id: string, key: string, target: string, type: string, value: any) {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
 		if (typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
 		if (value === undefined) throw new Error(`value at params[4] is not defined`);
-		if (!this.hasOwnProperty(id)) this.memory[id] = {};
+		if (!this.memory.hasOwnProperty(id)) this.memory[id] = {};
 		if (!this.memory[id].hasOwnProperty(key)) this.memory[id][key] = {};
 		if (!this.memory[id][key].hasOwnProperty(target)) this.memory[id][key][target] = {};
 		if (!this.memory[id][key][target].hasOwnProperty(type)) this.memory[id][key][target][type] = {};
 		this.memory[id][key][target][type] = value;
 	}
+	/**
+	 * 
+	 * @param {String} target 
+	 * @param {Array<String>} keys 
+	 * @param {boolean} isArray 
+	 */
 	getMemoryTarget(id: string, target: string, keys: string[], type: string, isArray = false) {
 		// content.warn({ RequestBuilder: this });
 		const returnType = (isArray) ? [] : {};
@@ -33,24 +44,27 @@ class RequestBuilder {
 			});
 		}
 		if (!keys) {
-			return this.memory[id].forEach((key, targets) => {
+			const output = {} as Record<string, Record<string, Record<string, any>>>;
+			Object.entries(this.memory[id]).forEach(([key, targets]) => {
 
-				const target = targets[targets];
+				const target = targets[key];
 				if (!target) return;
-				if (type && target.hasOwnProperty(type)) return { [key]: target[type] };
-				else return { [key]: target };
+				if (type && target.hasOwnProperty(type)) output[key] = target[type];
+				else output[key] = target;
 
-			}, returnType);
+			});
+			return output;
 		} else {
-			return keys.accumulate(key => {
-				if (!this?.[id]?.[key]?.[target]) return;
+			const output = {} as Record<string, Record<string, Record<string, any>>>;
+			keys.forEach(key => {
+				if (!this.memory?.[id]?.[key]?.[target]) return;
 
-				if (type && this.memory[id][key][target].hasOwnProperty(type)) return { [key]: this.memory[id][key][target] };
-				else return { [key]: this.memory[id][key][target] };
-			}, returnType);
+				if (type && this.memory[id][key][target].hasOwnProperty(type)) return output[key] = this.memory[id][key][target];
+				else output[key] = this.memory[id][key][target];
+			});
 		}
 	}
-	removeMemory(id, key, target, type) {
+	removeMemory(id: string, key: string, target: string, type: string) {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (target && typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
@@ -58,19 +72,19 @@ class RequestBuilder {
 		if (target) {
 			if (type) {
 				delete this.memory[id][key][target][type];
-				const targetLength = this.memory[id][key][target].length();
+				const targetLength = lengthObject(this.memory[id][key][target]);
 				if (!targetLength) {
 					delete this.memory[id][key][target];
 				}
 			}
-			const keyLength = this.memory[id][key].length();
+			const keyLength = lengthObject(this.memory[id][key]);
 			if (!keyLength) {
 				delete this.memory[id][key];
 			}
 		} else {
 			delete this.memory[id][key];
 		}
-		const requestsLength = this.memory[id].length();
+		const requestsLength = lengthObject(this.memory[id]);
 		if (!requestsLength) {
 			delete this.memory[id];
 		}
@@ -115,6 +129,8 @@ class RequestBuilder {
 	 * @param {watchOptions} options 
 	 */
 	watch(id, testCallback, findCallback = null, options = {}) {
+
+
 
 		content.warn({ t: 'RequestBuilderwatch', id });
 		if (id instanceof String) throw new Error(`findCallback for id: ${id}, is not a String`);
