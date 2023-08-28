@@ -149,7 +149,7 @@ export class Player implements PlayerType {
 	addExperience(...args: Parameters<PlayerType['addExperience']>) {
 		return this.root.addExperience(...args);
 	}
-	get gamemode() {
+	get gamemode(): keyof typeof gamemodeIndexMap {
 		return gamemode.get(this);
 	}
 	set gamemode(value: keyof typeof gamemodeIndexMap) {

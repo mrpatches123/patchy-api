@@ -135,10 +135,10 @@ export class Players {
 	getById(id: string) {
 		return loads?.players?.[id];
 	};
-	get(entityQueryOptions?: EntityQueryOptions, cache: boolean = true, dimension?: Dimension) {
+	get(entityQueryOptions?: EntityQueryOptions, cache: boolean = true, dimension?: Dimension): PlayerIterator {
 
 		let worldPlayers: string[];
-		if (!entityQueryOptions && !dimension) return this.basePlayerIterator;//this.basePlayerIterator;
+		if (!entityQueryOptions && !dimension) return this.basePlayerIterator!;//this.basePlayerIterator;
 		if (!cache) {
 			worldPlayers = ((dimension) ? dimension.getPlayers(entityQueryOptions) : world.getPlayers(entityQueryOptions)).map((({ id }) => id));
 
@@ -149,7 +149,7 @@ export class Players {
 			return new PlayerIterator(playerObject);
 		}
 		const key = JSON.stringify(entityQueryOptions) + ((dimension) ? `:${dimension.id}` : '');
-		if (this.playerQueryIterators.hasOwnProperty(key)) return this.playerQueryIterators[key];
+		if (this.playerQueryIterators.hasOwnProperty(key)) return this.playerQueryIterators[key]!;
 		worldPlayers = ((dimension) ? dimension.getPlayers(entityQueryOptions) : world.getPlayers(entityQueryOptions)).map((({ id }) => id));
 		const playerObject: Record<string, Player> = {};
 		Object.entries(loads.players).filter(([id]) => worldPlayers.includes(id)).forEach(([id, player]) => {
@@ -163,7 +163,7 @@ export class Players {
 	}
 	getInventory(player: Player) {
 		const { id } = player;
-		if (this.inventorys.hasOwnProperty(id)) return this.inventorys[id].container;;
+		if (this.inventorys.hasOwnProperty(id)) return this.inventorys[id]!.container;
 		this.inventorys[id] = {} as typeof this.inventorys[string];
 		const inventory = player.getComponent('inventory').container;
 		const container = [];
@@ -172,16 +172,16 @@ export class Players {
 			const item = inventory.getSlot(i);
 			container.push(item);
 		}
-		this.inventorys[id].container = new Inventory(container, inventory);
+		this.inventorys[id]!.container = new Inventory(container, inventory);
 		const playersObject = this;
 		if (!this.ran) this.ran = true, system.run(() => (playersObject.inventorys = {}, playersObject.ran = false));
-		return this.inventorys[id].container;
+		return this.inventorys[id]!.container;
 	};
 	getRandomPlayer(entityQueryOptions: EntityQueryOptions) {
 		const foundPlayers = this.get(entityQueryOptions).object();
 		if (!foundPlayers) return;
 		const ids = Object.keys(foundPlayers);
-		const id = ids[Math.floor(Math.random() * ids.length)];
+		const id = ids[Math.floor(Math.random() * ids.length)]!;
 		return ({ id: foundPlayers[id] });
 	}
 	getProperty(player: Player, identifier: string) {

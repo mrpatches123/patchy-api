@@ -13,7 +13,7 @@ export class PropertyBuilder {
 	/**
 	 * @param {} data 
 	 */
-	register(data: { [key in EntityWorldKeys]: { [property: string]: { maxLength?: number, type: 'string' | 'number' | 'boolean'; }; }; }) {
+	register(data: { [key in EntityWorldKeys]?: { [property: string]: { maxLength?: number, type: 'string' | 'number' | 'boolean'; }; }; }) {
 		if (!(data instanceof Object)) throw new Error(`data at params[0] is not of type: Object!`);
 		Object.entries(data).forEach(([typeId, properties]) => {
 			if (!(properties instanceof Object)) throw new Error(`properties: ${properties}, in ${typeId} at params[0] is not of type: Object!`);
@@ -111,7 +111,7 @@ export class PropertyBuilder {
 		});
 
 	}
-	get(entity?: Player | Entity | World): Record<string, string | number | boolean> {
+	get(entity?: Player | Entity | World): Record<string, string | number | boolean | undefined> {
 
 		if (entity === undefined) entity = world;
 		let { typeId, id } = (entity instanceof World) ? { typeId: 'world', id: null } : entity;

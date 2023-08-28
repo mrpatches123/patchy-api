@@ -102,7 +102,7 @@ export class Databases {
             const index = entityArray.findIndex(([fx, fz]) => fx === x && fz === z);
             if (index !== -1) {
                 entityArray[index] ??= [x, z, entity];
-                entityArray[index].push(entity);
+                entityArray[index]!.push(entity);
             } else {
                 entityArray.push([x, z, entity]);
             }
@@ -114,10 +114,10 @@ export class Databases {
             const json: [number, string][] = [];
             if (entities) {
 
-                const name = (entities[0].getTags().find(tag => tag.includes('dbName:')) as string).replace('dbName:', '');
+                const name = (entities[0]!.getTags().find(tag => tag.includes('dbName:')) as string).replace('dbName:', '');
                 // content.warn({ dbNmae: name });
                 entities.forEach(entity => {
-                    const order = (entities[0].getTags().find(tag => tag.includes('dbOrder:')) as string).replace('dbName:', '');
+                    const order = (entities[0]!.getTags().find(tag => tag.includes('dbOrder:')) as string).replace('dbName:', '');
                     json.push([Number(order), entity.nameTag]);
                 });
                 if (name) {
@@ -145,8 +145,7 @@ export class Databases {
         // content.chatFormat('prop', propertiesObject);
         this.data[name] = new Database({ __db_properties: propertiesObject });
         // overworld.runCommandAsync(`say db ${JSON.stringify(this[name])}`);
-        return this.data[name];
-
+        return this.data[name]!;
     }
 
     /**
@@ -175,10 +174,10 @@ export class Databases {
         // content.warn({ entities: entities.map(({ nameTag }) => nameTag) });
         if (entities.length) {
             entities = entities.filter(({ typeId }) => typeId === 'patches:database');
-            const name = (entities[0].getTags().find(tag => tag.includes('dbName:')) as string).replace('dbName:', '');
+            const name = (entities[0]!.getTags().find(tag => tag.includes('dbName:')) as string).replace('dbName:', '');
             const json: [number, string][] = [];
             entities.forEach(entity => {
-                const order = (entities[0].getTags().find(tag => tag.includes('dbOrder:')) as string).replace('dbName:', '');
+                const order = (entities[0]!.getTags().find(tag => tag.includes('dbOrder:')) as string).replace('dbName:', '');
                 json.push([Number(order), entity.nameTag]);
             });
             const string = (json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''));
@@ -209,7 +208,7 @@ export class Databases {
      */
     save(name: string) {
         //console.warn(name);
-        const { x, z } = this.data[name].__db_properties['coords'];
+        const { x, z } = this.data[name]!.__db_properties['coords'];
         if (x && z && this.data[name]) {
             console.warn(x, z);
             time.start('test37763');
@@ -232,7 +231,7 @@ export class Databases {
             for (let i = 0; i < Math.abs(difference); i++) {
                 if (getSign(difference) === 1) {
                     overworld.spawnEntity('patches:database', { x, y: -64, z });
-                } else { entities[0].triggerEvent('patches:kill'); }
+                } else { entities[0]!.triggerEvent('patches:kill'); }
             }
             const entityCorrect = time.end('test37763');
             let entitySet;

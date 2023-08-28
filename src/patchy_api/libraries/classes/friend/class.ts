@@ -166,8 +166,8 @@ export class FriendSystem {
 		const { systemKey, data: { properties } } = this;
 		if (!properties.hasOwnProperty(property)) throw new Error(`property: ${property}, is not one of the following: ${orArray(Object.keys(properties))}`);
 		const { id: receiverId } = receiver;
-		const { get } = properties[property];
-		requestBuilder.add(`friends*${this.systemKey}`, receiverId, targetId, `${property}Change`, { [property]: get(receiver), date: Date.now() });
+		const { get } = properties[property] ?? {};
+		requestBuilder.add(`friends*${this.systemKey}`, receiverId, targetId, `${property}Change`, { [property]: (get instanceof Function && get(receiver)), date: Date.now() });
 	};
 	/**
 	 * @param {Player} receiver 
