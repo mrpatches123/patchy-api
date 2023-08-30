@@ -383,13 +383,13 @@ export class FriendSystemBuilder {
 			if (get && !(get instanceof Function)) throw new Error(`init in ${key} in properties in data at params[1] is Defined and not of type: Function!`);
 		});
 		this.friends[systemKey] = {} as typeof this.friends[typeof systemKey];
-		this.friends[systemKey].data = data;
-		this.friends[systemKey].system = new FriendSystem(systemKey, data);;
+		this.friends[systemKey]!.data = data;
+		this.friends[systemKey]!.system = new FriendSystem(systemKey, data);;
 	}
 
 	get(systemKey: string): FriendSystem {
 		if (typeof systemKey !== 'string') throw new Error(`systemKey: ${systemKey}, at params[0] is not of type: String!`);
 		if (!this.friends.hasOwnProperty(systemKey)) throw new Error(`systemKey: ${systemKey}, at params[0] is not one of the following: ${orArray(Object.keys(this.friends))}!`);
-		return this.friends[systemKey].system;
+		return this.friends[systemKey]!.system;
 	}
 }
