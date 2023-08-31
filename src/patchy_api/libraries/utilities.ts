@@ -223,13 +223,8 @@ export function sort3DRange(array: [[number, number, number], [number, number, n
     return [[x1, y1, z1], [x2, y2, z2]];
 }
 const { floor } = Math;
-/**
- * @function sort3DVectors
- * @param {{x: number, y: number, z: number}} vector1 
- * @param {{x: number, y: number, z: number}} vector2 
- * @returns {[{x: number, y: number, z: number}, {x: number, y: number, z: number}]}
- */
-export function sort3DVectors(vector1: Vector3, vector2: Vector3) {
+
+export function sort3DVectors(vector1: Vector3, vector2: Vector3): [{ x: number, y: number, z: number; }, { x: number, y: number, z: number; }] {
     const { x: x1, y: y1, z: z1 } = vector1;
     const { x: x2, y: y2, z: z2 } = vector2;
     const ox1 = (x1 < x2) ? x1 : x2;

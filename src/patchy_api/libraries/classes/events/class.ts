@@ -15,7 +15,7 @@ let clearedKeyTest = false;
  * @returns {String}
  */
 function firstLower(lower: string): string {
-	return lower && lower[0].toLowerCase() + lower.slice(1) || lower;
+	return lower && lower[0]!.toLowerCase() + lower.slice(1) || lower;
 }
 function objectEquals(source: object, object: object): boolean {
 	//// console.log(keys(this).equals(keys(object)))
@@ -112,9 +112,12 @@ function sortKeysObject(objectToSort: any, callback?: (a: [string, unknown], b: 
 	sortedArray.forEach(([key, value]) => object[key] = value);
 	return object;
 }
+type DeepPartial<T> = T extends object ? {
+	[P in keyof T]?: DeepPartial<T[P]>;
+} : T;
 export class EventBuilder {
 	public subscriptions!: { [eventKey: string]: { time: number | undefined, worldSubscribed: boolean, function: Function, oldEventKey: string, keyList: string[], subscriptions: number, keys: { [key: string]: { suppressed: boolean, callback: Function; time: number | undefined, }; }; }; };
-	private registry!: { [newEventKey: string]: typeRegistryObject; };
+	private registry!: { [newEventKey: string]: DeepPartial<typeRegistryObject>; };
 	private classId: number;
 	constructor() {
 		this.subscriptions = {} as typeof this.subscriptions;
@@ -137,6 +140,7 @@ export class EventBuilder {
 			if (!properties.hasOwnProperty('subscription')) throw new Error(`key: ${newEventKey}, does have a the key: subscription!`);
 			if (!(subscription instanceof Object)) throw new Error(`subscription in ${newEventKey} does have a value with the type: Object!`);
 			if (!Object.keys(subscription).length) throw new Error(`subscription: in ${newEventKey}, does not have a key!`);
+
 			(Object.entries(subscription) as Entries<typeof subscription>).forEach(([eventKey, eventProperties]) => {
 				if (!this.registry.hasOwnProperty(newEventKey)) this.registry[newEventKey] = {} as typeRegistryObject;
 				if (!(eventProperties instanceof Object)) throw new Error(`key: ${eventKey}, in subscription in ${newEventKey} does have a value of type: Object!`);
@@ -165,14 +169,14 @@ export class EventBuilder {
 	 * @param {String} eventKey 
 	 * @returns {String}
 	 */
-	private removeBeforeInKey(eventKey: string): string {
+	private removeBeforeInKey(eventKey: string = ""): string {
 		return firstLower(eventKey.replace('before', ''));;
 	}
 	/**
 	 * @param {String} eventKey 
 	 * @returns {'beforeEvents' | 'afterEvents' | 'systemEvents'}
 	 */
-	private getNativeEventSignalKey(eventKey: string): 'beforeEvents' | 'afterEvents' | 'systemAfterEvents' | 'systemBeforeEvents' {
+	private getNativeEventSignalKey(eventKey: string = ""): 'beforeEvents' | 'afterEvents' | 'systemAfterEvents' | 'systemBeforeEvents' {
 		const fixedEventKey = this.removeBeforeInKey(eventKey);
 		return (eventKey.includes('before') && fixedEventKey in world.beforeEvents) ? 'beforeEvents' : (eventKey in world.afterEvents) ? 'afterEvents' : (eventKey in system.afterEvents) ? 'systemAfterEvents' : (eventKey in system.beforeEvents) ? 'systemBeforeEvents' : 'afterEvents';
 	}
@@ -197,11 +201,11 @@ export class EventBuilder {
 					this.worldSubscribe(key, eventKey, undefined, worldSystem, undefined, callback);
 				} else {
 					this.initSubscribe(eventKey);
-					const { subscription } = this.registry[eventKey];
+					const { subscription = {} } = this.registry[eventKey] ?? {};
 					const nativeSubscribeObject = {} as EventObject;
 					//Object.entries(subscription).forEach(([oldEventKey, { function: subscriptionFunction, entityOptions, forceNative, entityOptionsKey }]) => {
-
-					(Object.entries(subscription) as Entries<typeof subscription>).forEach(([oldEventKey, eventProperties]) => {
+					const subscriptionEntries = Object.entries(subscription as any) as Entries<typeof subscription>;
+					subscriptionEntries.forEach(([oldEventKey, eventProperties]) => {
 						const { function: subscriptionFunction, options, forceNative, entityOptionsKey } = eventProperties as any;
 						if (oldEventKey === 'custom') subscriptionFunction(undefined);
 						else {
@@ -218,9 +222,9 @@ export class EventBuilder {
 					this.subscribe(eventKey, nativeSubscribeObject);
 				}
 			}
-			this.subscriptions[eventKey].subscriptions++;
-			this.subscriptions[eventKey].keys[key] = { suppressed: false, callback, time: undefined };
-			this.subscriptions[eventKey].keys = sortKeysObject(this.subscriptions[eventKey].keys);
+			this.subscriptions[eventKey]!.subscriptions++;
+			this.subscriptions[eventKey]!.keys[key] = { suppressed: false, callback, time: undefined };
+			this.subscriptions[eventKey]!.keys = sortKeysObject(this.subscriptions[eventKey]!.keys);
 		});
 	};
 	public suppress(key: string, eventKeys: (keyof EventKeyTypes)[] | (keyof EventKeyTypes)) {
@@ -233,8 +237,8 @@ export class EventBuilder {
 		eventKeys.forEach((eventKey, i) => {
 			if (typeof eventKey !== 'string') throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] is not of type: String!`);
 			if (!this.subscriptions.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] has no keys subscribed`);
-			if (!this.subscriptions[eventKey].hasOwnProperty(key)) { if (eventKeysDefined) throw new Error(`key: ${eventKey}, in params[0] has not been subscribed`); else return; }
-			this.subscriptions[eventKey].keys[key].suppressed = true;
+			if (!this.subscriptions[eventKey]!.hasOwnProperty(key)) { if (eventKeysDefined) throw new Error(`key: ${eventKey}, in params[0] has not been subscribed`); else return; }
+			this.subscriptions[eventKey]!.keys![key]!.suppressed = true;
 		});
 	}
 	public unsuppress(key: string, eventKeys: string[] | string) {
@@ -247,8 +251,8 @@ export class EventBuilder {
 		eventKeys.forEach((eventKey, i) => {
 			if (typeof eventKey !== 'string') throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] is not of type: String!`);
 			if (!this.subscriptions.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] has no keys subscribed`);
-			if (!this.subscriptions[eventKey].hasOwnProperty(key)) { if (eventKeysDefined) throw new Error(`key: ${eventKey}, in params[0] has not been subscribed`); else return; }
-			this.subscriptions[eventKey].keys[key].suppressed = false;
+			if (!this.subscriptions[eventKey]!.hasOwnProperty(key)) { if (eventKeysDefined) throw new Error(`key: ${eventKey}, in params[0] has not been subscribed`); else return; }
+			this.subscriptions[eventKey]!.keys![key]!.suppressed = false;
 		});
 	}
 	public unsubscribe(key: string, eventKeys: string[] | string) {
@@ -264,11 +268,11 @@ export class EventBuilder {
 			if (typeof eventKey !== 'string') throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] is not of type: String!`);
 			if (!this.subscriptions.hasOwnProperty(eventKey)) throw new Error(`eventKey: ${eventKey}, ${(string) ? `` : `in index[${i}] `}in params[1] has no keys subscribed`);
 			// content.warn({ key, eventKey });
-			if (!this.subscriptions[eventKey].keys.hasOwnProperty(key)) { if (!all) throw new Error(`key: ${key}, in params[0] has not been subscribed`); else return; }
-			delete this.subscriptions[eventKey].keys[key];
-			if (!(--this.subscriptions[eventKey].subscriptions)) {
-				const { worldSubscribed, function: subscriptionFunction, oldEventKey } = this.subscriptions[eventKey];
-				const { subscription, unsubscription } = this.registry[eventKey];
+			if (!this.subscriptions[eventKey]!.keys.hasOwnProperty(key)) { if (!all) throw new Error(`key: ${key}, in params[0] has not been subscribed`); else return; }
+			delete this.subscriptions[eventKey]!.keys[key];
+			if (!(--this.subscriptions[eventKey]!.subscriptions)) {
+				const { worldSubscribed, function: subscriptionFunction, oldEventKey } = this.subscriptions[eventKey] ?? {};
+				const { subscription = {}, unsubscription } = this.registry[eventKey] ?? {};
 				if (unsubscription instanceof Function) unsubscription();
 				if (worldSubscribed) {
 					const worldSystem = this.getNativeEventSignalKey(oldEventKey);
@@ -276,8 +280,8 @@ export class EventBuilder {
 					worldSystemEvents[worldSystem][oldEventKey as unknown as keyof typeof worldSystemEvents[typeof worldSystem]].unsubscribe(subscriptionFunction);
 				} else {
 					const eventkeys: string[] = [];
-					Object.entries(subscription).forEach(([oldEventKey, { function: subscriptionFunction, options, forceNative, entityOptionsKey }]) => {
-						eventkeys.push(entityOptionsKey ?? oldEventKey);
+					(Object.entries(subscription) as Entries<typeof subscription>).forEach(([oldEventKey, subscriptionValue]) => {
+						eventkeys.push(subscriptionValue?.entityOptionsKey ?? oldEventKey);
 					});
 					this.unsubscribe(eventKey, eventkeys);
 				}
@@ -287,17 +291,17 @@ export class EventBuilder {
 	};
 	private initSubscribe(eventKey: string) {
 		if (!this.subscriptions.hasOwnProperty(eventKey)) this.subscriptions[eventKey] = {} as typeof this.subscriptions[typeof eventKey];
-		if (!this.subscriptions[eventKey].hasOwnProperty('keys')) this.subscriptions[eventKey].keys = {};
-		if (!this.subscriptions[eventKey].hasOwnProperty('subscriptions')) this.subscriptions[eventKey].subscriptions = 0;
-		if (!this.subscriptions[eventKey].hasOwnProperty('keyList')) this.subscriptions[eventKey].keyList = [];
-		this.subscriptions[eventKey].worldSubscribed = true;
+		if (!this.subscriptions[eventKey]!.hasOwnProperty('keys')) this.subscriptions[eventKey]!.keys = {};
+		if (!this.subscriptions[eventKey]!.hasOwnProperty('subscriptions')) this.subscriptions[eventKey]!.subscriptions = 0;
+		if (!this.subscriptions[eventKey]!.hasOwnProperty('keyList')) this.subscriptions[eventKey]!.keyList = [];
+		this.subscriptions[eventKey]!.worldSubscribed = true;
 	};
 	private getEventProperties(eventInstance: any) {
 		const properties = Object.getOwnPropertyDescriptors(eventInstance?.prototype);
 		let playerKey: (string | { [keyRoot: string]: string[]; })[] | undefined, modifiables: string[] | undefined;
 		for (const key in properties) {
 			if (key === 'constructor') continue;
-			const { set, get, value, configurable, enumerable } = properties[key];
+			const { set, get, value, configurable, enumerable } = properties[key] as TypedPropertyDescriptor<any>;
 			if (configurable) {
 				modifiables ??= [];
 				modifiables.push(key);
@@ -311,12 +315,12 @@ export class EventBuilder {
 	}
 	private worldSubscribe(key: string, oldEventKey: string, entityOptionsKey: string | undefined, worldSystem: keyof typeof worldSystemEvents, entityOptions: EntityEventOptions | undefined, callback: Function) {
 		// content.warn(entityOptionsKey);
-		if (this.subscriptions?.[entityOptionsKey ?? oldEventKey]?.worldSubscribed ?? false) return (Object.assign(this.subscriptions[entityOptionsKey ?? oldEventKey], { oldEventKey, worldSubscribed: true }), this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key] = { suppressed: false, callback, time: undefined });
+		if (this.subscriptions?.[entityOptionsKey ?? oldEventKey]?.worldSubscribed ?? false) return (Object.assign(this.subscriptions[entityOptionsKey ?? oldEventKey] ?? {}, { oldEventKey, worldSubscribed: true }), this.subscriptions[entityOptionsKey ?? oldEventKey]!.keys[key] = { suppressed: false, callback, time: undefined });
 		// content.warn({ oldEventKey });
 		this.initSubscribe(entityOptionsKey ?? oldEventKey);
-		Object.assign(this.subscriptions[entityOptionsKey ?? oldEventKey], { oldEventKey, worldSubscribed: true });
-		this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key] = { suppressed: false, callback, time: undefined };
-		this.subscriptions[entityOptionsKey ?? oldEventKey].subscriptions++;
+		Object.assign(this.subscriptions[entityOptionsKey ?? oldEventKey]!, { oldEventKey, worldSubscribed: true });
+		this.subscriptions[entityOptionsKey ?? oldEventKey]!.keys[key] = { suppressed: false, callback, time: undefined };
+		this.subscriptions[entityOptionsKey ?? oldEventKey]!.subscriptions++;
 		let subscribedEventFunction;
 
 		// content.warn({ oldEventKey });
@@ -361,19 +365,19 @@ export class EventBuilder {
 				}
 			}
 
-			Object.entries(this.subscriptions[entityOptionsKey ?? oldEventKey].keys).forEach(([key, { suppressed, callback }]) => {
+			Object.entries(this.subscriptions[entityOptionsKey ?? oldEventKey]!.keys).forEach(([key, { suppressed, callback }]) => {
 				if (!suppressed) {
 					try {
 						time.start(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
 						callback(eventClone);
 						if (eventClone.cancel) content.warn({ cancel: eventClone.cancel, oldEventKey, key });
-						this.subscriptions[entityOptionsKey ?? oldEventKey].keys[key].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
+						this.subscriptions[entityOptionsKey ?? oldEventKey]!.keys[key]!.time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}*${key}`);
 					} catch (error: any) {
 						errorLogger.log(error, error.stack, { key: key, event: oldEventKey });
 					}
 				}
 			});
-			this.subscriptions[oldEventKey].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}`);
+			this.subscriptions[oldEventKey]!.time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}`);
 			// content.warn({ eventClone });
 			if (modifiables) modifiables.forEach(key => event[key] = eventClone[key]);
 			// content.warn({ cancel: event.cancel, oldEventKey });
@@ -381,7 +385,7 @@ export class EventBuilder {
 
 		};
 
-		this.subscriptions[entityOptionsKey ?? oldEventKey].function = subscribedEventFunction;
+		this.subscriptions[entityOptionsKey ?? oldEventKey]!.function = subscribedEventFunction;
 		// content.warn({ key, oldEventKey, fix: this.removeBeforeInKey(oldEventKey), worldSystemHas: Boolean(world?.[worldSystem]?.[this.removeBeforeInKey(oldEventKey)]), isFunc: subscribedEventFunction instanceof Function });
 		if (entityOptions) worldSystemEvents[worldSystem][this.removeBeforeInKey(oldEventKey)].subscribe(subscribedEventFunction, entityOptions);
 		else worldSystemEvents[worldSystem][this.removeBeforeInKey(oldEventKey)].subscribe(subscribedEventFunction);

@@ -51,12 +51,12 @@ class Fill {
 				try {
 					if (!fillThis.queue.length) return;
 					run();
-					const { fillOptions, iterator, lastValueIfNullBlock = false } = fillThis.queue[0];
-					const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048, replace } = fillOptions;
+					const { fillOptions, iterator, lastValueIfNullBlock = false } = fillThis.queue[0] ?? {};
+					const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048, replace } = fillOptions ?? {};
 					const blocksIsArray = blocks instanceof Array;
 					for (let i = 0; i < maxPlacementsPerTick; i++) {
 
-						const current = (lastValueIfNullBlock) ? lastValueIfNullBlock : iterator.next();
+						const current = (lastValueIfNullBlock) ? lastValueIfNullBlock : iterator!.next();
 						// content.warn({ t: 'wdwwdwd', i, done: current.done, t2: 'why not work' });
 						if (current.done) { fillThis.queue.shift(), await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => { }); break; }
 
@@ -84,7 +84,7 @@ class Fill {
 							if (fillThis.queue[0]) fillThis.queue[0].lastValueIfNullBlock = undefined;
 						}
 
-						const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions.type;
+						const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions!.type;
 						// content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
 						if (replace && block.typeId !== replace.id) continue;
 						block.setType(blockType);
@@ -134,7 +134,7 @@ class Fill {
 	}
 	private getGenerator(fillOptions: FillOptions): () => Iterator<{ blockLocation: Vector3, isFirstBlockOfChunk: boolean; }, { blockLocation: Vector3, isFirstBlockOfChunk: boolean; }> {
 		const [location1, location2] = sort3DVectors(fillOptions.location1, fillOptions.location2);
-		const { x: x1, y: y1, z: z1 } = location1, { x: x2, y: y2, z: z2 } = location2;
+		const { x: x1 = 0, y: y1 = 0, z: z1 = 0 } = location1 ?? {}, { x: x2 = 0, y: y2 = 0, z: z2 = 0 } = location2 ?? {};
 		const startChunkX = Math.floor(x1 / 16);
 		const endChunkX = Math.floor(x2 / 16);
 		const startChunkZ = Math.floor(z1 / 16);

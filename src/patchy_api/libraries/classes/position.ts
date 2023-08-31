@@ -37,7 +37,7 @@ class PositionBuilder {
 	test(player: Player, key: string) {
 		const { location: { x, y, z }, gamemode } = player;
 		if (gamemode === 5) return false;
-		const { location1 = { x: 0, y: 0, z: 0 }, location2, callback } = this.positions[key];
+		const { location1 = { x: 0, y: 0, z: 0 }, location2, callback } = this.positions[key] ?? {};
 		const { x: x1, y: y1, z: z1 } = location1;
 		if (!location2) {
 			return floor(x) === x1 && floor(y) === y1 && floor(z) === z1;
@@ -53,7 +53,7 @@ class PositionBuilder {
 	 * @returns {Boolean}
 	 */
 	check(player: Player, key: string): boolean {
-		const { location1 = { x: 0, y: 0, z: 0 }, location2, callback } = this.positions[key];
+		const { location1 = { x: 0, y: 0, z: 0 }, location2, callback } = this.positions[key] ?? {};
 		if (!this.test(player, key)) return false;
 		if (typeof callback === 'string') {
 			teleportBuilder.teleport(player, callback);

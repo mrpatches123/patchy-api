@@ -3,6 +3,7 @@ import databases from "./database.js";
 import global from "./global.js";
 import players from "./players/export_instance.js";
 import { Player } from "./player/class.js";
+import { Vector } from "@minecraft/server";
 // import { getChatNameTag } from '../../../factions/plugins/player/name_tag.js';
 const ranks = ['§7Low§f', '§6High§f', '§3Master§f'];
 class PromptBuilder {

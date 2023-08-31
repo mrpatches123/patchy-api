@@ -8,8 +8,8 @@ export class CustomEvent {
 	constructor(eventKey: string) {
 		this.eventKey = eventKey;
 		eventBuilder.subscriptions[eventKey] ??= {} as typeof eventBuilder.subscriptions[typeof eventKey];
-		eventBuilder.subscriptions[eventKey].keys ??= {} as typeof eventBuilder.subscriptions[typeof eventKey]['keys'];
-		this.subscriptions = eventBuilder.subscriptions[eventKey];
+		eventBuilder.subscriptions[eventKey]!.keys ??= {} as typeof eventBuilder.subscriptions[typeof eventKey]['keys'];
+		this.subscriptions = eventBuilder.subscriptions[eventKey]!;
 	};
 	// [Symbol.iterator]() {
 	// 	let index = 0;
@@ -50,8 +50,8 @@ export class CustomEvent {
 				// content.warn(this.eventKey, eventBuilder.subscriptions[this.eventKey].keys);
 				const endTime = time.end(`Events*API*${this.eventKey}*${key}`);
 				if (!eventBuilder.subscriptions.hasOwnProperty(this.eventKey)) return;
-				if (!eventBuilder.subscriptions[this.eventKey].keys.hasOwnProperty(key)) return;
-				eventBuilder.subscriptions[this.eventKey].keys[key].time = endTime;
+				if (!eventBuilder.subscriptions[this.eventKey]!.keys.hasOwnProperty(key)) return;
+				eventBuilder.subscriptions[this.eventKey]!.keys[key]!.time = endTime;
 			} catch (error: any) {
 				errorLogger.log(error, error.stack, { event: this.eventKey, key });
 			}
