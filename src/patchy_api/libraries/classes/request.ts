@@ -11,20 +11,42 @@ interface watchOptions {
 	removeKey: boolean;
 	eventKeys: Array<string>;
 }
+
+type Memory = {
+	[id in ID]?: {
+		[key in Key]?: {
+			[target: number]: {
+				[type in Type]?: Value;
+			};
+		};
+	};
+};
+// Record<ID, Record<string, Record<string, Record<string, any>>>>
+
+type ID = "friends";
+
+type Key = "friends" | `friends*${string}`;
+
+type Type = "tpa";
+
+type Value = {
+	date: ReturnType<typeof Date.now>;
+};
+
 class RequestBuilder {
-	memory: Record<string, Record<string, Record<string, Record<string, any>>>>;
-	constructor() {
-		this.memory = {};
-	}
-	addMemory(id: string, key: string, target: string, type: string, value: any) {
+	memory: Memory = {};
+
+	addMemory(id: ID, key: Key, target: number, type: Type, value: Value): void {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
 		if (typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
 		if (value === undefined) throw new Error(`value at params[4] is not defined`);
+
 		if (!this.memory.hasOwnProperty(id)) this.memory[id] = {};
 		if (!this.memory[id]!.hasOwnProperty(key)) this.memory[id]![key] = {};
 		if (!this.memory[id]![key]!.hasOwnProperty(target)) this.memory[id]![key]![target] = {};
+		// @ts-expect-error - looks like this is an extra step in assigning the value, since it gets applied in the call down below in the end.
 		if (!this.memory[id]![key]![target]!.hasOwnProperty(type)) this.memory[id]![key]![target]![type] = {};
 		this.memory[id]![key]![target]![type] = value;
 	}
