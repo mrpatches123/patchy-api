@@ -60,15 +60,16 @@ interface PlotRuleSet {
 	blockPlaceMargin: { x: number, y: number, z: number; };
 }
 interface Teleport {
-	location: Vector3;
+	location?: Vector3;
 	face?: Vector2 | Vector3;
-	dimension: Dimension;
+	dimension?: Dimension;
+	key?: string;
 }
 interface PlotRules {
 	size: BlockAreaSize;
 	start: { x: number, y: number, z: number; };
 	ruleSets?: PlotRuleSet[];
-	property: boolean;
+	property?: boolean;
 	plotNumberIdentifier?: string;
 	defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break';
 	defaultGamemode?: 0 | 1 | 2;
@@ -124,43 +125,43 @@ export class PlotBuilder {
 							delete plotThis.creates[key];
 							const { ruleSets = [], size, start, exclusive } = rules ?? {};
 							let maxZ = 0, maxX = 0;
-							const generatedRuleSets = ruleSets.reduce((sumation: PlotRuleSet[], ruleSet: PlotRuleSet, i: number) => {
-								const { count, start: startRuleSet, direction, size: sizeRuleSet } = ruleSet;
+							const reduceCallback = ((sumation: Array<PlotRuleSet>, ruleSet: PlotRuleSet, i: number): Array<PlotRuleSet> => {
+								const { count = 0, start: startRuleSet, direction, size: sizeRuleSet } = ruleSet;
 								const { y } = start ?? {};
 								if (count) {
 									let change: Vector3;
 									switch (direction) {
 										case 'x':
-											change = { x: sizeRuleSet?.x ?? size.x, y: 0, z: 0 };
+											change = { x: sizeRuleSet?.x ?? size!.x, y: 0, z: 0 };
 											break;
 										case '-x':
-											change = { x: -(sizeRuleSet?.x ?? size.x), y: 0, z: 0 };
+											change = { x: -(sizeRuleSet?.x ?? size!.x), y: 0, z: 0 };
 										case 'z':
-											change = { x: 0, y: 0, z: sizeRuleSet?.z ?? size.z };
+											change = { x: 0, y: 0, z: sizeRuleSet?.z ?? size!.z };
 											break;
 										case '-z':
-											change = { x: 0, y: 0, z: -(sizeRuleSet?.z ?? size.z) };
+											change = { x: 0, y: 0, z: -(sizeRuleSet?.z ?? size!.z) };
 											break;
 									}
 									// content.warn({ size, change });
 									const { x, z } = startRuleSet;
 									// content.warn({ start: { x: start.x, z: start.z }, size: { x: size.x, z: size.z }, startRuleSet });
-									let lastSize = { x: start.x + x * size.x, z: start.z + z * size.z };
+									let lastSize = { x: start!.x + x * size!.x, z: start!.z + z * size!.z };
 									// content.warn({ lastSize });
 									for (let c = 0; c < count; c++) {
-										let currentSize;
+										let currentSize: Vector3;
 										if (startRuleSet instanceof PlotsVector3) {
-											currentSize = { x: ((c === 0) ? 0 : change.x) + lastSize.x, y, z: ((c === 0) ? 0 : change.z) + lastSize.z };
+											currentSize = { x: ((c === 0) ? 0 : change.x) + lastSize.x, y: y!, z: ((c === 0) ? 0 : change.z) + lastSize.z };
 											lastSize = currentSize;
 										}
-										const { x: xC = 0, z: zC = 0 } = currentSize ?? {};
+										const { x: xC = 0, z: zC = 0 } = currentSize! ?? {};
 										const rX = xC - x + 1;
 										const rZ = zC - z + 1;
 										if (rX > maxX) maxX = rX;
 										if (rZ > maxZ) maxZ = rZ;
 										sumation.push({
 											...ruleSet, ...{
-												start: currentSize
+												start: currentSize!
 											},
 											...(sizeRuleSet ? {} : {
 												size
@@ -169,14 +170,15 @@ export class PlotBuilder {
 
 									}
 									return sumation;
-								}
+								} else return [] as Array<PlotRuleSet>;
 
-							}, [] as PlotRuleSet[]);
+							});
+							const generatedRuleSets = ruleSets.reduce(reduceCallback, [] as Array<PlotRuleSet>);
 							plotThis.plots[key] = {} as typeof plotThis.plots[typeof key];
-							plotThis.plots[key].rules = rules;
-							plotThis.plots[key].rules.ruleSets = generatedRuleSets;
-							plotThis.plots[key].players = {};
-							Object.assign(plotThis.plots[key].rules, { maxX, maxZ });
+							plotThis.plots[key]!.rules = rules!;
+							plotThis.plots[key]!.rules.ruleSets = generatedRuleSets;
+							plotThis.plots[key]!.players = {};
+							Object.assign(plotThis.plots[key]!.rules, { maxX, maxZ });
 							const plots = databases.get('plots*API') ?? databases.add('plots*API');
 							// content.warn({ t: '11111111111111111', plots, databases: databases.getFromEntity('plots*API') });
 							let { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key) ?? {};
@@ -221,7 +223,7 @@ export class PlotBuilder {
 			}
 		});
 	}
-	create(key, rules) {
+	create(key: string, rules: PlotRules) {
 		// content.warn('created plot 4983485734290483094853042-9-0-=00-=');
 		if (typeof key !== 'string') throw new Error(`key: ${key}, at params[0] is not of type: String!`);
 		if (!(rules instanceof Object)) throw new Error(`rules in rules at params[1] is not of type: Object!`);
@@ -231,7 +233,7 @@ export class PlotBuilder {
 		if (!exclusive && typeof property !== 'boolean') throw new Error('plotNumberIdentifier in rules at params[1] is not of type: Boolean!');
 		if (size && !(size instanceof BlockAreaSize)) throw new Error(`size, in rules at params[1] is not of type: BlockAreaSize!`);
 		if (!size && !ruleSets) throw new Error(`size and ruleSets, in rules at params[1] are not defined therefore size in either is not defined!`);
-		const indexsSize = ruleSets.reduce((sumation, current, i) => { if (!(current.size instanceof BlockAreaSize)) { sumation.push(i); return sumation; } }, []);
+		const indexsSize = ruleSets.reduce((sumation, current, i) => { if (!(current.size instanceof BlockAreaSize)) { sumation.push(i); return sumation; } else return [] as number[]; }, [] as number[]);
 		if (!size && ruleSets && indexsSize.length) throw new Error(`ruleSets, at indexs: ${andArray(indexsSize)} in rules at params[1]!`);
 		if (!start) throw new Error(`start, in rules at params[1] is not defined!`);
 		if (!isVector3(start)) throw new Error(`start, in rules at params[1] is not of type: Vector3!`);
@@ -285,22 +287,22 @@ export class PlotBuilder {
 		this.creates[key] = rules;
 		if (!this.registeredProperties) this.registeredProperties = true, this.registerOverides();
 		if (!exclusive) {
-			(property) ? players.registerProperty(plotNumberIdentifier, { type: 'number' })
-				: server.objectiveAdd(plotNumberIdentifier);
+			(property) ? players.registerProperty(plotNumberIdentifier!, { type: 'number' })
+				: server.objectiveAdd(plotNumberIdentifier!);
 		}
 		// content.warn(key, rules);
 		this.runCreateQueue();
 		// content.warn({ plot: this });
 	}
-	query(player, key) {
+	query(player: Player, key: string) {
 		if (!this.plots.hasOwnProperty(key)) throw new Error(` key: ${key}, does not exist`);
 		if (this.plots[key]?.rules?.exclusive) throw new Error(`Cannot get list for key: ${key}, as exclusive is true`);
 		const { scores, properties } = player;
-		const { plotNumberIdentifier, property } = this.plots[key].rules;
-		return ((property) ? properties : scores)[plotNumberIdentifier];
+		const { plotNumberIdentifier, property } = this.plots[key]!.rules;
+		return ((property) ? properties : scores)[plotNumberIdentifier!];
 	}
-	list(key) {
-		if (this.plots[key].rules.exclusive) throw new Error(`Cannot get list for key: ${key}, as exclusive is true`);
+	list(key: string) {
+		if (this.plots[key]!.rules.exclusive) throw new Error(`Cannot get list for key: ${key}, as exclusive is true`);
 		const plots = databases.get('plots*API') ?? databases.add('plots*API');
 		const plotObject = plots.get(key);
 		let { availablePlots, currentIndex } = plotObject ?? {};
@@ -310,27 +312,22 @@ export class PlotBuilder {
 	 * @param {Player} player 
 	 * @param {string} key 
 	 */
-	setCurrent(player, key) {
+	setCurrent(player: Player, key: string) {
 		if (!player) throw new Error('player is not defined at setCurrent');
 		player.properties.currentPlot = key;
 		player.memory.lastLocation = undefined;
 		if (!key) return;
-		const { exclusive, teleport: { key: teleportKey } } = this.plots[key].rules;
+		const { exclusive, teleport: { key: teleportKey } = {} } = this.plots[key]!.rules!;
 		if (!exclusive) return;
 		if (!teleportKey) return;
 		teleportBuilder.teleport(player, teleportKey);
 	}
-	/**
-	 * @param {Player} player 
-	 * @param {'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride'} type 
-	 * @param {number | string} value 
-	 */
-	setOveride(player, type, value) {
+	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride', value: number | string) {
 		content.warn({ player: player.name, type, value });
 		const { properties } = player;
 		properties[type] = value;
 	}
-	getRuleSet(key, number) {
+	getRuleSet(key: string, number: number) {
 		// content.warn({ t: 'getRuleSet', key, number });
 		if (!this.plots.hasOwnProperty(key)) throw new Error(`key: ${key}, does not exist!`);
 
@@ -338,12 +335,12 @@ export class PlotBuilder {
 
 		if (exclusive) return ruleSets?.[0];
 		if (typeof number !== 'number') throw new Error('why is number not defined');
-		if (!loop) return ruleSets[number];
+		if (!loop) return ruleSets![number];
 		const row = Math.floor(number / ruleSets.length);
 		const column = number % ruleSets.length;
 		// content.warn({ row, column });
-		const ruleSet = ruleSets[column] ?? {};
-		const { start: startRuleSet, offset: { x: ox = 0, y: oy = 0, z: oz = 0 } = {} } = ruleSet;
+		const ruleSet = ruleSets![column] ?? {};
+		const { start: startRuleSet, offset: { x: ox = 0, y: oy = 0, z: oz = 0 } = {} } = ruleSet ?? {};
 		let { x, y, z } = startRuleSet;
 		// content.warn({ maxX, maxZ, x, y, z, ox });
 		switch (loopDirection) {
@@ -556,7 +553,7 @@ export class PlotBuilder {
 	 * @param {number | undefined} plotNumber 
 	 * @returns {{ wasAdded: boolean, plotNumber: Number | undefined, full: boolean}}
 	 */
-	add(player, key, plotNumber) {
+	add(player: import('../player/class').Player, key: string, plotNumber: number | undefined): { wasAdded: boolean; plotNumber: number | undefined; full: boolean; } {
 		// content.warn({ bool: !isDefined(plotNumber), plotNumber: plotNumber ?? 'undefined' });
 		const { scores, properties } = player;
 		const { subscribed } = this;

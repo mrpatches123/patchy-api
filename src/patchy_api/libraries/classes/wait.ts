@@ -3,10 +3,11 @@ import { content, native } from "../utilities.js";
 import eventBuilder from "./events/export_instance.js";
 
 class Wait {
+	subscriptions: Record<string, { checkCallback: () => boolean; thenCallback: () => void; once: boolean; afterLoad: boolean; remove: boolean; active?: boolean; }>;
 	constructor() {
 		this.subscriptions = {};
 	}
-	add(key, checkCallback, thenCallback, { start = false, once = false, afterLoad = true, remove = false }) {
+	add(key: string, checkCallback: () => boolean, thenCallback: () => boolean, { start = false, once = false, afterLoad = true, remove = false }) {
 		this.subscriptions[key] = {
 			checkCallback,
 			thenCallback,

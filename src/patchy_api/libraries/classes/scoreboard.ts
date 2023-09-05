@@ -29,7 +29,7 @@ class ScoreboardBuilder {
 		content.warn({ scoreboardObjective: scoreboardObjective.id, displaySlotId });
 		world.scoreboard.setObjectiveAtDisplaySlot(displaySlotId, { objective: scoreboardObjective });
 		if (!this.objectives.hasOwnProperty(objective)) this.objectives[objective] = {} as typeof this.objectives[string];
-		this.objectives[objective].displaySlot = displaySlotId;
+		this.objectives[objective]!.displaySlot = displaySlotId;
 	}
 	/**
 	 * @param {string} objective 
@@ -42,7 +42,7 @@ class ScoreboardBuilder {
 			const { objective: { id } } = world.scoreboard.getObjectiveAtDisplaySlot(displaySlotId);
 			if (id !== objective) break;
 			world.scoreboard.clearObjectiveAtDisplaySlot(displaySlotId);
-			if (this.objectives.hasOwnProperty(objective)) delete this.objectives[objective].displaySlot;
+			if (this.objectives.hasOwnProperty(objective)) delete this.objectives[objective]!.displaySlot;
 			return true;
 		}
 		return false;
@@ -72,8 +72,8 @@ class ScoreboardBuilder {
 
 		const { id } = player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
-		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
-		this.players[id][objective].value = value, this.players[id][objective].gotten = true;
+		this.players[id]![objective] ??= {};
+		this.players[id]![objective]!.value = value, this.players[id]![objective]!.gotten = true;
 		// if (objective === 'skycoins') content.warn({ objective, value, player: player.name, objective: this.players[id][objective] });
 		// content.warn({ objective, value, this: this });
 
@@ -109,21 +109,21 @@ class ScoreboardBuilder {
 		const { id } = player;
 		// if (player.hasOwnProperty('player')) player = player.player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
-		if (!this.players[id].hasOwnProperty(objective)) this.players[id][objective] = {};
-		const { value, gotten } = this.players[id][objective];
+		this.players[id]![objective] ??= {};
+		const { value, gotten } = this.players[id]![objective]!;
 		if (!forceDisk && gotten) return value;
 		if (!objective.startsWith('big_')) {
 			const score = server.scoreTest(objective, player);
-			this.players[id][objective].value = score;
-			this.players[id][objective].gotten = true;
+			this.players[id]![objective]!.value = score;
+			this.players[id]![objective]!.gotten = true;
 			return score;
 		};
 		const quotient = server.scoreTest(`${objective}*q`, player) ?? 0;
 		const remainder = server.scoreTest(`${objective}*r`, player) ?? 0;
 		// content.warn({ quotient, remainder });
 		const score = (isDefined(quotient) && isDefined(remainder)) ? quotient * chunk + remainder : undefined;
-		this.players[id][objective].value = score;
-		this.players[id][objective].gotten = true;
+		this.players[id]![objective]!.value = score;
+		this.players[id]![objective]!.gotten = true;
 		return score;
 	};
 };

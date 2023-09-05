@@ -1,5 +1,5 @@
-import { world } from '@minecraft/server';
-export function chunkString(str, length) {
+import { system, world } from '@minecraft/server';
+export function chunkString(str: string, length: number): string[] {
     let size = (str.length / length) | 0;
     const array = Array(++size);
     for (let i = 0, offset = 0; i < size; i++, offset += length) {
@@ -8,29 +8,24 @@ export function chunkString(str, length) {
     return array;
 }
 export class Database {
+    [key: string]: any;
     constructor(json = {}) {
         Object.assign(this, json);
-        // content.warn({ json, __db_properties: this.__db_properties });
     }
-    /**
-     * @method set set a keys for its value in the Database
-     * @param {String} key key for value.
-     * @param {any} value value for key.
-     * @returns {Database} this
-     */
-    set(key, value) {
-        if (!key) {
-            throw new Error('argument zero must be a key');
-        } else if (!value) {
-            throw new Error('Argument one must have a value for the key');
-        } else if (key === '__db_properties') {
-            throw new Error('Key must not be "__db_properties"');
-        } else {
+    has(key: string): boolean {
+        if (!key) throw new Error('argument zero must be a key');
 
-            this[key] = value;
-            // content.warn({ t: 'DatabaseSet', [key]: value, databases });
-            return this;
-        }
+        return key in this;
+
+    }
+    set(key: string, value: any): this {
+        if (!key) throw new Error('argument zero must be a key');
+        if (!value) throw new Error('Argument one must have a value for the key');
+        if (key === '__db_properties') throw new Error('Key must not be "__db_properties"');
+
+
+        this[key] = value;
+        return this;
 
     }
     /**
@@ -38,32 +33,21 @@ export class Database {
      * @param {String} key key for value.
      * @returns {any} value for key
      */
-    get(key) {
-        if (typeof key !== 'number' && typeof key !== 'string') {
-            throw new Error('argument zero must be a key');
-        } else if (key === '__db_properties') {
-            throw new Error('Key must not be "__db_properties"');
-        } else {
-            if (this[key]) {
-                return this[key];
-            } else {
-                return undefined;
-            }
-        }
+    get(key: string): any {
+        if (typeof key !== 'number' && typeof key !== 'string') throw new Error('argument zero must be a key');
+        if (key === '__db_properties') throw new Error('Key must not be "__db_properties"');
+        if (key in this) return this[key];
     }
     /**
      * @method delete deletes a keys and its value from the Database
      * @param {String} name Database name
      */
 
-    delete(key) {
-        if (!key) {
-            throw new Error('argument zero must be a key');
-        } else if (key === '__db_properties') {
-            throw new Error('Key must not be "__db_properties"');
-        } else {
-            delete this[key];
-        }
+    delete(key: string) {
+        if (!key) throw new Error('argument zero must be a key');
+        if (key === '__db_properties') throw new Error('Key must not be "__db_properties"');
+        delete this[key];
+
     }
     /**
      * @method clear remove all entires on the Database
@@ -75,19 +59,19 @@ export class Database {
 }
 const chunkLength = 32760;
 class Databases {
-    constructor() {
-        this.memory = {};
-    }
+    memory: Record<string, Database> = {};
+    saveQueue: string[] = [];
+    subscribedSaveQueue: boolean = false;
     /**
      * @method get
-     * @param {string}databaseName
+     * @param {String}databaseName
      */
-    get(databaseName) {
+    get(databaseName: string) {
         const objective = world.scoreboard.getObjective('sbDB:' + databaseName);
         if (!objective) return;
         if (this.memory[databaseName]) return this.memory[databaseName];
         const participants = objective.getParticipants();
-        const rawData = participants.map(({ displayName }) => [Number(displayName.match(/\d+/)[0]), displayName.replace(/\d+:/, '')]).sort(([a], [b]) => b - a).map(([, data]) => data).join('');
+        const rawData = participants.map(({ displayName }) => [Number(displayName.match(/\d+/)![0]), displayName.replace(/\d+:/, '')]).sort(([a], [b]) => (b as number) - (a as number)).map(([, data]) => data).join('');
         console.warn(rawData);
         const database = JSON.parse(rawData);
         this.memory[databaseName] = new Database(database);
@@ -97,7 +81,7 @@ class Databases {
      * @method add
      * @param {String}databaseName
      */
-    add(databaseName) {
+    add(databaseName: string) {
         console.warn(databaseName);
         const objective = world.scoreboard.getObjective('sbDB:' + databaseName);
         if (!objective) world.scoreboard.addObjective('sbDB:' + databaseName, 'sbDB:' + databaseName);
@@ -107,9 +91,9 @@ class Databases {
     }
     /**
      * @method save
-     * @param {String}databaseName
+     * @param {String} databaseName
      */
-    save(databaseName) {
+    save(databaseName: string) {
         const objective = world.scoreboard.getObjective('sbDB:' + databaseName);
         if (!this.memory[databaseName]) throw new Error(`databaseName: }
 		${databaseName}, at params[0], does not exist!`);
@@ -118,17 +102,64 @@ class Databases {
         chunkString(rawData, chunkLength).map((chunk, i) => i + ':' + chunk).forEach(chunk => objective.setScore(chunk, 0));
     }
     /**
-     * @method forget
-     * @param {String}databaseName
+     * @method subscribeSaveQueue
+     * @private
      */
-    forget(databaseName) {
+    subscribeSaveQueue() {
+        if (this.subscribedSaveQueue) return;
+        this.subscribedSaveQueue = true;
+        this.runSaveQueue();
+    }
+    /**
+     * @method runSaveQueue
+     * @private
+     */
+    async runSaveQueue() {
+        const rerun = await new Promise((resolve) => system.run(async () => {
+            if (!this.saveQueue.length) return resolve(false);;
+            this.savePromise(this.saveQueue.shift()!);
+            resolve(true);
+        }));
+        if (!rerun) return;
+        this.runSaveQueue();
+    }
+    /**
+    * @method savePromise
+    * @param {string} databaseName
+    */
+    async savePromise(databaseName: string) {
+        try {
+            await new Promise((resolve) => {
+                this.save(databaseName);
+                resolve(void 0);
+            });
+        } catch (error: any) {
+            console.warn(error, error.stack);
+        }
+    }
+    /**
+     * @method queueSave
+     * @param {string} databaseName
+     * @returns {boolean}
+     */
+    queueSave(databaseName: string): boolean {
+        if (this.saveQueue.includes(databaseName)) return false;
+        this.saveQueue.push(databaseName);
+        this.subscribeSaveQueue();
+        return true;
+    }
+    /**
+     * @method forget
+     * @param {string}databaseName
+     */
+    forget(databaseName: string) {
         if (this.memory[databaseName]) delete this.memory[databaseName];
     }
     /**
      * @method remove
      * @param {String}databaseName
      */
-    remove(databaseName) {
+    remove(databaseName: string) {
         if (this.memory[databaseName]) delete this.memory[databaseName];
         world.scoreboard.removeObjective('sbDB:' + databaseName);
     }

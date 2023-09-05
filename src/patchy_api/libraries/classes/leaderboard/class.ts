@@ -47,8 +47,8 @@ export class LeaderboardBuilder {
 			if (!entity.hasTag(objective)) entity.addTag(objective);
 			const { id } = entity;
 			this.entities[id] = { savedScores: {}, reversed, modification, location, objective, maxLength, title, formating, type, dimension };
-			this.entities[id].savedScores = {};
-			if (this.entities[id].type === 'offline') {
+			this.entities[id]!.savedScores = {};
+			if (this.entities[id]!.type === 'offline') {
 				const tags = entity.getTags();
 				const scoresStrings = tags.filter(tag => tag.startsWith('scores:')) ?? [];
 				if (!scoresStrings.length) return;
@@ -57,7 +57,7 @@ export class LeaderboardBuilder {
 					return [number, string.replace(/scores:\d+:/, '').replace('scores:', '')];
 				}).sort(([a], [b]) => Number(a) - Number(b)).map(([i, rawData]) => rawData);
 				// content.warn({ objective, data: rawDatas.join('') });
-				this.entities[id].savedScores = JSON.parse(rawDatas.join(''));
+				this.entities[id]!.savedScores = JSON.parse(rawDatas.join(''));
 			}
 		});
 		this.createQueue = [];
@@ -99,38 +99,38 @@ export class LeaderboardBuilder {
 				this.entities[id] = {} as typeof this.entities[typeof id];
 				const tags = entity.getTags();
 				if (!tags) return entity.triggerEvent('kill_lb');
-				this.entities[id].savedScores = {};
-				if (this.entities[id].type === 'offline') {
+				this.entities[id]!.savedScores = {};
+				if (this.entities[id]!.type === 'offline') {
 					const scoresStrings = tags.filter(tag => tag.startsWith('scores:')) ?? [];
 					if (!scoresStrings.length) return;
 					const rawDatas = scoresStrings.map(string => {
 						const number = Number(string.match(/\d+/) ?? '0');
 						return [number, string.replace(/scores:\d+:/, '').replace('scores:', '')];
 					}).sort(([a], [b]) => Number(a) - Number(b)).map(([i, rawData]) => rawData);;
-					this.entities[id].savedScores = JSON.parse(rawDatas.join(''));
+					this.entities[id]!.savedScores = JSON.parse(rawDatas.join(''));
 				}
 				// content.warn({ data: this.entities[id] });
 			}
 
 
 			const entityStorage = this.entities[id];
-			let { modification, reversed, savedScores = {}, type, objective, maxLength, formating, title } = entityStorage;
+			let { modification, reversed, savedScores = {}, type, objective, maxLength, formating, title } = entityStorage ?? {};
 			if (!objective) return;
 			let leaderboardPlayers: Record<string, { value: number, name: string; }> = {};
 			let save = false;
-			if (!this.entities[id].hasOwnProperty('savedScores')) this.entities[id].savedScores = {};
+			this.entities[id]!.savedScores ??= {};
 			playersOnline.iterate(player => {
 				const { id: playerId, name, scores } = player;
 
-				const score = scores[objective];
+				const score = scores[objective!];
 
 				if (!isDefined(score)) return;
 
-				leaderboardPlayers[playerId] = { name, value: score };
+				leaderboardPlayers[playerId] = { name, value: score! };
 				if (type === 'online') return;
 				if (savedScores?.[playerId]?.value === score) return;
-				if (!this.entities[id].savedScores.hasOwnProperty(playerId)) thisLB.entities[id].savedScores[playerId] = {} as typeof thisLB.entities[typeof id]['savedScores'][typeof playerId];
-				this.entities[id].savedScores[playerId].value = score;
+				thisLB.entities[id]!.savedScores[playerId] ??= {} as typeof thisLB.entities[typeof id]['savedScores'][typeof playerId];
+				this.entities[id]!.savedScores[playerId]!.value! = score!;
 				save = true;
 			});
 
@@ -141,7 +141,7 @@ export class LeaderboardBuilder {
 			// content.warn({ leaderboardPlayers, scores });
 			let leaderboard = Object.entries(leaderboardPlayers).map(([playerId, { value, name }]) => ({ id: playerId, value, name })).sort(({ value: aValue }, { value: bValue }) => bValue - aValue);
 			leaderboard = (reversed) ? leaderboard.reverse().slice(0, maxLength) : leaderboard.slice(0, maxLength);
-			entity.nameTag = [title, ...leaderboard.map(({ value, name }, i) => ((formating instanceof Array) ? formating[i] ?? formating[formating.length - 1] : formating).replace('${#}', (i + 1).toString()).replace('${name}', name).replace('${score}', (modification instanceof Function) ? modification(value).toString() : value.toString()).replace('${score*f}', metricNumbers(value, 1)))].join('\n');
+			entity.nameTag = [title, ...leaderboard.map(({ value, name }, i) => ((formating instanceof Array) ? formating[i] ?? formating[formating.length - 1] : formating)!.replace('${#}', (i + 1).toString()).replace('${name}', name).replace('${score}', (modification instanceof Function) ? modification(value).toString() : value.toString()).replace('${score*f}', metricNumbers(value, 1) as string))].join('\n');
 			// content.warn({ tag: entity.nameTag });
 			if (!save) return;
 			const tags = entity.getTags();
