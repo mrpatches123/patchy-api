@@ -24,37 +24,38 @@ function objectVector3(vector3) {
 	return ({ x, y, z });
 
 }
+interface RandomOptions {
+	minRadius: Number;
+	maxRadius: Number;
+	type: 'circle';
+	randomRotation?: Boolean;
+	yMax: Number;
+	yMin: Number;
+}
+interface TeleportOptions {
+	location: { x: number; y: number; z: number; };
+	dimension: Dimension;
+	facing?: { x: number; y: number; z: number; };
+	rotation?: { x: number; y: number; };
+	face?: { x: number; y: number; z: number; };
+	keepVelocity?: Boolean;
+	random?: RandomOptions;
+}
 content.warn({ unsafeBlocks });
 class TeleportBuilder {
+	teleports: { [key: string]: TeleportOptions[]; } = {};
 	constructor() {
 	}
-	/**
-	 * @typedef {Object} RandomOptions
-	 * @property {Number} minRadius optional?
-	 * @property {Number} maxRadius
-	 * @property {'circle'} type optional? default = 'circle'
-	 * @property {Boolean} randomRotation optional? default = 'true'
-	 * @property {Number} yMax optional? 
-	 * @property {Number} yMin optional? default = -64
-	*/
-	/**
-	 * @typedef {Object} TeleportOptions
-	 * @property {{x: number, y: number, z: number}} location
-	 * @property {Dimension} dimension
-	 * @property {{x: number, y: number}} rotation
-	 * @property {{x: number, y: number, z: number}} face
-	 * @property {Boolean} keepVelocity
-	 * @property {RandomOptions} random
-	 */
+
 	/**
 	 * @method add 
 	 * @param {{[key: String]: TeleportOptions | TeleportOptions[]}} teleportObject if array its random
 	 */
-	add(teleportObject) {
+	add(teleportObject: { [key: string]: TeleportOptions | TeleportOptions[]; }) {
 
-		teleportObject.forEach((key, value) => {
+		Object.entries(teleportObject).forEach(([key, value]) => {
 			const isArray = value instanceof Array;
-			if (!(isArray)) value = [value];
+			if (!(value instanceof Array)) value = [value];
 
 			value.forEach((teleportObject, i) => {
 				let { location, dimension, face, keepVelocity = false, random } = teleportObject;
@@ -63,37 +64,37 @@ class TeleportBuilder {
 				const rotation = (isVector3(face)) ? undefined : face;
 				const facing = (rotation) ? undefined : face;
 				if (isArray) {
-					if (!this.hasOwnProperty(key)) this[key] = Array(value.length);
-					this[key][i] = {
+					if (!this.hasOwnProperty(key)) this.teleports[key] = Array((value as TeleportOptions[]).length);
+					this.teleports[key]![i]! = {
 						location,
 						dimension,
 						rotation,
 						facing,
 						keepVelocity,
-						random: (!random) ? false : {
+						random: (!random) ? undefined : {
 							minRadius,
 							maxRadius,
 							type,
 							randomRotation,
 							yMax,
 							yMin
-						}
+						} as RandomOptions
 					};
 				} else {
-					this[key] = {
+					this.teleports[key]![0] = {
 						location,
 						dimension,
 						rotation,
 						facing,
 						keepVelocity,
-						random: (!random) ? false : {
+						random: (!random) ? undefined : {
 							minRadius,
 							maxRadius,
 							type,
 							randomRotation,
 							yMax,
 							yMin
-						}
+						} as RandomOptions
 					};
 				}
 			});
@@ -107,8 +108,8 @@ class TeleportBuilder {
 	 * @method remove
 	 * @param {String} key 
 	 */
-	remove(key) {
-		delete this[key];
+	remove(key: string) {
+		delete this.teleports[key];
 	};
 	/**
 	 * 
@@ -118,9 +119,9 @@ class TeleportBuilder {
 	 * @param {Number} yMin 
 	 * @param {Number} minRadius 
 	 * @param {Number} maxRadius 
-	 * @returns {{blockFloor: Block, blockAbove: Block, location: import('@minecraft/server').Vector3}}
+	 * @returns {{blockFloor: Block, blockAbove: Block, location: {x: number, y: number, z: number}}
 	 */
-	getRandomCoords(dimension, location, yMax, yMin, minRadius, maxRadius, nonRecursive) {
+	getRandomCoords(dimension: Dimension, location: { x: number; y: number; z: number; }, yMax: number, yMin: number, minRadius: number, maxRadius: number) {
 		time.start('tpTest');
 		const yRange = yMax - yMin + 1;
 		const { x, z } = location;
@@ -133,6 +134,7 @@ class TeleportBuilder {
 		location = { x: cx, y: yMax, z: cz };
 
 		const { block: blockFloor } = dimension.getBlockFromRay(location, new Vector(0, -1, 0), { maxDistance: yRange, includeLiquidBlocks: true, includePassableBlocks: true }) ?? {};
+		if (!blockFloor) return false;
 		location = { x: cx, y: blockFloor.location.y + 1, z: cz };
 		const out = { location, blockFloor, blockAbove: dimension.getBlock(offsetVector3(blockFloor.location, { x: 0, y: 1, z: 0 })) };
 		content.warn({ tpTest: time.end('tpTest') });
@@ -149,7 +151,7 @@ class TeleportBuilder {
 	 * @param {Boolean} nonRecursive 
 	 * @returns {location: import('@minecraft/server').Vector3}}
 	 */
-	getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius) {
+	getRandomSafeCoords(dimension: Dimension, location: { x: number; y: number; z: number; }, yMax: number, yMin: number, minRadius: number, maxRadius: number): location {
 		while (true) {
 			const { location: newLocation, blockFloor, blockAbove } = this.getRandomCoords(dimension, location, yMax, yMin, minRadius, maxRadius);
 			content.warn({ floorId: blockFloor.typeId, aboveId: blockAbove.typeId });
@@ -171,7 +173,7 @@ class TeleportBuilder {
 	 * @param {Player} player 
 	 * @param {TeleportObjectOnce} teleportObject 
 	 */
-	teleportOnce(player, teleportObject) {
+	teleportOnce(player: Player, teleportObject: TeleportObjectOnce) {
 		content.warn({ wdljikhwdkwdwdwdwdiwdiozz: '4485789653897867865378653786786879' });
 		const { rotation: rotationPlayer } = player;
 		// if (teleportObject instanceof Array) value = teleportObject[Math.floor(Math.random() * this[key].length)];
@@ -203,7 +205,7 @@ class TeleportBuilder {
 	 * @param {Player} player 
 	 * @param {String} key 
 	 */
-	teleport(player, key) {
+	teleport(player: Player, key: string) {
 		const { rotation: rotationPlayer } = player;
 		if (!this.hasOwnProperty(key)) { return new Error(`teleport: ${key}, does not exist`); }
 		let value;
