@@ -5,7 +5,7 @@ import time from '../time.ts';
 import { setProptotype } from '../player/class.ts';
 import { CustomEvent } from '../custom_event/class.ts';
 import errorLogger from '../error.ts';
-import { EventObject, EventRegisterObject, EventKeyTypes, ReplaceTypes, eventKeys } from './types.ts';
+import { EventObject, EventRegisterObject, EventTypes, EventTypes as EventKeyTypes, eventKeys } from './types.ts';
 let keystest = [];
 let clearedKeyTest = false;
 
@@ -72,8 +72,8 @@ const worldSystemEvents: EventCollection = {
 	systemAfterEvents: system.afterEvents,
 	systemBeforeEvents: system.beforeEvents
 };
-interface eventKeyProperies<eventKey extends keyof EventKeyTypes> { entityOptionsKey: string, function: (arg: ReplaceTypes<EventKeyTypes[eventKey]>) => void; options?: EntityEventOptions; forceNative?: boolean; }
-interface typeRegistryObject { unsubscription: Function, subscription: { [eventKey in keyof EventKeyTypes]: eventKeyProperies<eventKey> }; };
+interface eventKeyProperies<eventKey extends keyof EventTypes> { entityOptionsKey: string, function: (arg: EventTypes[eventKey]) => void; options?: EntityEventOptions; forceNative?: boolean; }
+interface typeRegistryObject { unsubscription: Function, subscription: { [eventKey in keyof EventTypes]: eventKeyProperies<eventKey> }; };
 type Entries<T> = {
 	[K in keyof T]: [K, T[K]];
 }[keyof T] extends infer U ? (U extends [keyof T, infer V] ? [keyof T, V][] : never) : never;

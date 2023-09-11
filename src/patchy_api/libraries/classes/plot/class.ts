@@ -57,11 +57,11 @@ interface PlotRuleSet {
 	start: { x: number, y: number, z: number; } | PlotsVector3;
 	offset?: { x: number, y: number, z: number; };
 	direction: 'x' | '-x' | 'z' | '-z';
-	blockPlaceMargin: { x: number, y: number, z: number; };
+	blockPlaceMargin?: { x: number, y: number, z: number; };
 }
 interface Teleport {
 	location?: Vector3;
-	face?: Vector2 | Vector3;
+	face?: Vector2 | Vector3 | { location: Vector3, offset: Vector3; };
 	dimension?: Dimension;
 	key?: string;
 }
@@ -81,6 +81,8 @@ interface PlotRules {
 	teleport?: Teleport;
 	structure?: StructureLoadOptions;
 	exclusive?: boolean;
+	maxX?: number;
+	maxZ?: number;
 }
 scoreboardBuilder.add('blockPlaceMarginOverideX');
 scoreboardBuilder.add('blockPlaceMarginOverideY');
@@ -331,16 +333,16 @@ export class PlotBuilder {
 		// content.warn({ t: 'getRuleSet', key, number });
 		if (!this.plots.hasOwnProperty(key)) throw new Error(`key: ${key}, does not exist!`);
 
-		const { ruleSets, loop, start, loopDirection, maxX, maxZ, exclusive, size } = this.plots[key].rules;
+		const { ruleSets, loop, start, loopDirection, maxX = 0, maxZ = 0, exclusive, size } = this.plots[key]!.rules ?? {};
 
 		if (exclusive) return ruleSets?.[0];
 		if (typeof number !== 'number') throw new Error('why is number not defined');
 		if (!loop) return ruleSets![number];
-		const row = Math.floor(number / ruleSets.length);
-		const column = number % ruleSets.length;
+		const row = Math.floor(number / ruleSets!.length);
+		const column = number % ruleSets!.length;
 		// content.warn({ row, column });
-		const ruleSet = ruleSets![column] ?? {};
-		const { start: startRuleSet, offset: { x: ox = 0, y: oy = 0, z: oz = 0 } = {} } = ruleSet ?? {};
+		const ruleSet = ruleSets![column]!;
+		const { start: startRuleSet, offset: { x: ox = 0, y: oy = 0, z: oz = 0 } = {} } = ruleSet;
 		let { x, y, z } = startRuleSet;
 		// content.warn({ maxX, maxZ, x, y, z, ox });
 		switch (loopDirection) {
@@ -349,7 +351,7 @@ export class PlotBuilder {
 				x += ox * (column + 1);
 				break;
 			} case '-x': {
-				z -= maxZ * row - offset?.z * (row + 1);
+				z -= maxZ * row - oz * (row + 1);
 				x += ox * (column + 1);
 				break;
 			} case 'z': {
@@ -379,23 +381,23 @@ export class PlotBuilder {
 
 					if (!currentPlot) return;
 					if (ingorePlotSystem) return;
-					const { plotNumberIdentifier, property, teleport, defaultGamemode, exclusive, size: sizePlot, start: startPlot } = this.plots[currentPlot].rules;
+					const { plotNumberIdentifier, property, teleport, defaultGamemode, exclusive, size: sizePlot, start: startPlot } = this.plots[currentPlot as string]!.rules;
 					const { plotNumberOveride, gamemodeOveride = defaultGamemode } = properties;
 					let plotNumber;
 					if (exclusive) plotNumber = 0;
 					else if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
-					else if (property) plotNumber = properties[plotNumberIdentifier];
-					else plotNumber = scores[plotNumberIdentifier];
+					else if (property) plotNumber = properties[plotNumberIdentifier as string];
+					else plotNumber = scores[plotNumberIdentifier as string];
 					// content.warn({ currentPlot, player: player.name, plotNumberOveride: plotNumberOveride ?? 'undefined', plotNumber: plotNumber ?? 'undefined' });
 
 
 					if (!isDefined(plotNumber)) return;
 					// content.warn({ plotNumber, currentPlot });
-					const { size = sizePlot, start = startPlot } = this.getRuleSet(currentPlot, plotNumber) ?? {};
+					const { size = sizePlot, start = startPlot } = this.getRuleSet(currentPlot as string, plotNumber as number) ?? {};
 					// content.warn({ t: 'hellodwkj', gamemodeOveride });
 					if (isDefined(gamemodeOveride)) {
 						const { gamemode: gamemodePlayer } = player;
-						if (gamemodePlayer !== gamemodeOveride) player.gamemode = gamemodeOveride;
+						if (gamemodePlayer !== gamemodeOveride) player.gamemode = gamemodeOveride as 0 | 1 | 2 | 5;
 					}
 					const end = { x: size.x + start.x, y: size.y + start.y, z: size.z + start.z };
 					const { x, y, z } = lastLocation;
@@ -404,7 +406,7 @@ export class PlotBuilder {
 					if (betweenBlockVector3(location, start, end)) return;
 					if (betweenBlockVector3(lastLocation, start, end)) {
 						const { x, y, z } = lastLocation;
-						player.teleport({ x, y, z }, { overworld, rotation });
+						player.teleport({ x, y, z }, { dimension: overworld, rotation });
 					} else {
 						// content.warn({ bool: Boolean(teleport) });
 						if (teleport) {
@@ -642,3 +644,8 @@ export class PlotBuilder {
 		return true;
 	}
 }
+
+
+
+
+
