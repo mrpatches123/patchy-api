@@ -1,4 +1,4 @@
-import * as Server from '@minecraft/server';
+// import * as Server from '@minecraft/server';
 import * as ServerUI from '@minecraft/server-ui';
 export const content = {
 	warn(...messages) {
@@ -73,10 +73,10 @@ function fix(object) {
 		});
 	}
 }
-for (const classKey in Server) {
-	const object = Server[classKey];
-	fix(object);
-}
+// for (const classKey in Server) {
+// 	const object = Server[classKey];
+// 	fix(object);
+// }
 for (const classKey in ServerUI) {
 	const object = ServerUI[classKey];
 	fix(object);
