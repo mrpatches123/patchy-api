@@ -1,6 +1,6 @@
 import { world } from "@minecraft/server";
 
-export function isDefined(input: any) {
+export function isDefined<T>(input: T) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
 }
 export function chunkString(str: string, length: number): string[] {
