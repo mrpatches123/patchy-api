@@ -7,16 +7,19 @@ import { Player, world } from '@minecraft/server';
 import time from './time.js';
 import players from './players/export_instance.js';
 const tagLength = 'tagDB:'.length;
-function byteCount(string) {
+function byteCount(string: string) {
 	let bytes = 0;
 	for (let i = 0; i < string.length; i++) {
-		const char = string[i];
-		if (char.charCodeAt() > 127) bytes += 2;
+		const char = string[i]!;
+		if (char.charCodeAt(0) > 127) bytes += 2;
 		else ++bytes;
 	}
 	return bytes;
 }
 class TagDatabases {
+	__queuedSaves: { subscribed: false; saves: Record<string, { [key: string]: Player; }>; } | { subscribed: true; saves: { [key: string]: { [key: string]: Player; }; }; };
+	initalized: Record<string, boolean>;
+	databases: Record<string, Record<string, Database>> = {};
 	constructor() {
 		this.__queuedSaves = {
 			subscribed: false,
@@ -38,7 +41,7 @@ class TagDatabases {
 			}
 		});
 	}
-	initalize(player) {
+	initalize(player: Player) {
 		if (this.initalized[player.id]) return;
 		this.initalized[player.id] = true;
 		time.start('TagDatabases');
@@ -49,20 +52,20 @@ class TagDatabases {
 		const obfuscatedDatabases = tags.filter(tag => tag.startsWith('tagDB:')).map(tag => tag.slice(tagLength));
 		// content.warn({ obfuscatedDatabases });
 		if (!obfuscatedDatabases.length) return;
-		const rawDatabases = obfuscatedDatabases.map(text => deobfuscate255(text).match(/(.*):(\d+):(.*)/).splice(1));
+		const rawDatabases = obfuscatedDatabases.map(text => deobfuscate255(text).match(/(.*):(\d+):(.*)/)!.splice(1))! as unknown as [string, string, string][];
 		// content.warn({ rawDatabases, tags });
-		const objectDatabase = {};
+		const objectDatabase: Record<string, [string, string][]> = {};
 		rawDatabases.forEach(([databaseId, order, value]) => {
-			if (!objectDatabase.hasOwnProperty(databaseId)) objectDatabase[databaseId] = [];
-			objectDatabase[databaseId].push([order, value]);
+			objectDatabase[databaseId] ??= [];
+			objectDatabase[databaseId]!.push([order, value]);
 		});
-		objectDatabase.forEach((databaseId, valueArray) => {
+		Object.entries(objectDatabase).forEach(([databaseId, valueArray]) => {
 			const test = valueArray.sort(([a], [b]) => Number(a) - Number(b));
 			// content.warn({ test });
 			const fullrawDatabase = test.map(([order, text]) => text).join('');
 			// content.warn({ fullrawDatabase });
-			if (!this.hasOwnProperty(databaseId)) this[databaseId] = {};
-			if (!this[databaseId].hasOwnProperty(id)) this[databaseId][id] = new Database(JSON.parse(fullrawDatabase));
+			this.databases[databaseId] ??= {};
+			this.databases[databaseId]![id] ??= new Database(JSON.parse(fullrawDatabase));
 			// content.warn({ this: this[databaseId][id] });
 		});
 		// content.warn({ TagDatabases: time.end('TagDatabases') });

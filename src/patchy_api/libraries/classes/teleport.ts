@@ -1,4 +1,4 @@
-import { Block, Dimension, MinecraftBlockTypes, Vector } from '@minecraft/server';
+import { Block, Dimension, MinecraftBlockTypes, Vector, Vector2, Vector3 } from '@minecraft/server';
 import { content, isVector2, isVector3, native, offsetVector3, randomCoordsOutsideCircle } from '../utilities.js';
 import { Player } from './player/class.js';
 import time from './time.js';
@@ -19,18 +19,18 @@ const unsafeBlocks = [
 	MinecraftBlockTypes.soulSoil.id,
 	MinecraftBlockTypes.cactus.id
 ];
-function objectVector3(vector3) {
+function objectVector3(vector3: any) {
 	const { x, y, z } = vector3;
 	return ({ x, y, z });
 
 }
 interface RandomOptions {
-	minRadius: Number;
-	maxRadius: Number;
+	minRadius: number;
+	maxRadius: number;
 	type: 'circle';
-	randomRotation?: Boolean;
-	yMax: Number;
-	yMin: Number;
+	randomRotation?: boolean;
+	yMax: number;
+	yMin: number;
 }
 interface TeleportOptions {
 	location: { x: number; y: number; z: number; };
@@ -38,14 +38,23 @@ interface TeleportOptions {
 	facing?: { x: number; y: number; z: number; };
 	rotation?: { x: number; y: number; };
 	face?: { x: number; y: number; z: number; };
-	keepVelocity?: Boolean;
+	keepVelocity?: boolean;
 	random?: RandomOptions;
 }
+interface RelitiveOffset {
+	location: Vector3;
+	offset: Vector3;
+};
+interface TeleportObjectOnce {
+	location: Vector3 | RelitiveOffset;
+	face: { x: number; y: number; } | Vector3 | RelitiveOffset;
+	dimension: Dimension;
+}
 content.warn({ unsafeBlocks });
+
+
 class TeleportBuilder {
 	teleports: { [key: string]: TeleportOptions[]; } = {};
-	constructor() {
-	}
 
 	/**
 	 * @method add 
@@ -140,35 +149,13 @@ class TeleportBuilder {
 		content.warn({ tpTest: time.end('tpTest') });
 		return out;
 	}
-	/**
-	 * 
-	 * @param {Dimension} dimension 
-	 * @param {{x: number, y: number, z: number}} location
-	 * @param {Number} yMax 
-	 * @param {Number} yMin 
-	 * @param {Number} minRadius 
-	 * @param {Number} maxRadius 
-	 * @param {Boolean} nonRecursive 
-	 * @returns {location: import('@minecraft/server').Vector3}}
-	 */
-	getRandomSafeCoords(dimension: Dimension, location: { x: number; y: number; z: number; }, yMax: number, yMin: number, minRadius: number, maxRadius: number): location {
+	getRandomSafeCoords(dimension: Dimension, location: { x: number; y: number; z: number; }, yMax: number, yMin: number, minRadius: number, maxRadius: number) {
 		while (true) {
-			const { location: newLocation, blockFloor, blockAbove } = this.getRandomCoords(dimension, location, yMax, yMin, minRadius, maxRadius);
-			content.warn({ floorId: blockFloor.typeId, aboveId: blockAbove.typeId });
-			if (!unsafeBlocks.includes(blockFloor.typeId) && blockAbove.typeId === MinecraftBlockTypes.air.id) return newLocation;
+			const { location: newLocation, blockFloor, blockAbove } = this.getRandomCoords(dimension, location, yMax, yMin, minRadius, maxRadius) || {};
+			if (!unsafeBlocks.includes(blockFloor?.typeId!) && blockAbove?.typeId === MinecraftBlockTypes.air.id) return newLocation;
 		}
 	}
-	/**
-	 * @typedef {Object} RelitiveOffset 
-	 * @property {import('@minecraft/server').Vector3} location
-	 * @property {import('@minecraft/server').Vector3} offset
-	 */
-	/**
-	 * @typedef {Object} TeleportObjectOnce
-	 * @property {import('@minecraft/server').Vector3 | RelitiveOffset} location
-	 * @property {{x: number, y: number} | import('@minecraft/server').Vector3 | RelitiveOffset} face
-	 * @property {Dimension} dimension
-	 */
+
 	/**
 	 * @param {Player} player 
 	 * @param {TeleportObjectOnce} teleportObject 
@@ -179,7 +166,7 @@ class TeleportBuilder {
 		// if (teleportObject instanceof Array) value = teleportObject[Math.floor(Math.random() * this[key].length)];
 		let { location, face, dimension } = teleportObject;
 		if (!isVector3(location) && location instanceof Object) {
-			let { offset, location: relitiveLocation } = location;
+			let { offset, location: relitiveLocation } = location as RelitiveOffset;
 			content.warn({ offset: objectVector3(offset), relitiveLocation: objectVector3(relitiveLocation) });
 			const { x, y, z } = relitiveLocation;
 			const { x: ox, y: oy, z: oz } = offset;
@@ -187,7 +174,7 @@ class TeleportBuilder {
 		}
 
 		if (face && !isVector2(face) && face instanceof Object) {
-			let { offset, location: relitiveLocation } = face;
+			let { offset, location: relitiveLocation } = face as RelitiveOffset;
 			const { x, y, z } = relitiveLocation;
 			const { x: ox, y: oy, z: oz } = offset;
 			face = { x: x + ox, y: y + oy, z: z + oz };
@@ -195,9 +182,9 @@ class TeleportBuilder {
 		let rotation = (isVector3(face)) ? undefined : face;
 		let facing = (rotation) ? undefined : face;
 		content.warn({ facing: objectVector3(facing), location: objectVector3(location) });
-		if (facing && !rotation) return player.teleport(location, { dimension, facingLocation: facing });
+		if (facing && !rotation) return player.teleport(location as Vector3, { dimension, facingLocation: facing as Vector3 });
 		if (!isVector2(rotation)) { rotation = rotationPlayer; }
-		player.teleport(location, { dimension, rotation });
+		player.teleport(location as Vector3, { dimension, rotation: rotation as Vector2 });
 
 	};
 	/**
@@ -207,19 +194,19 @@ class TeleportBuilder {
 	 */
 	teleport(player: Player, key: string) {
 		const { rotation: rotationPlayer } = player;
-		if (!this.hasOwnProperty(key)) { return new Error(`teleport: ${key}, does not exist`); }
+		if (!this.teleports.hasOwnProperty(key)) { return new Error(`teleport: ${key}, does not exist`); }
 		let value;
-		if (this[key] instanceof Array) value = this[key][Math.floor(Math.random() * this[key].length)];
-		else value = this[key];
-		let { location, facing, rotation, keepVelocity, dimension, random } = value;
+		if (this.teleports[key] instanceof Array) value = this.teleports[key]![Math.floor(Math.random() * this.teleports[key]!.length)];
+		else value = this.teleports[key];
+		let { location, facing, rotation, keepVelocity, dimension, random } = value as TeleportOptions;
 		if (keepVelocity && player instanceof Player) throw new Error(`You cannot keep velocity on players`);
-		const { minRadius = 0, maxRadius, type = 'circle', randomRotation = true, yMin, yMax } = random;
+		const { minRadius = 0, maxRadius, type = 'circle', randomRotation = true, yMin, yMax } = random ?? {};
 		if (random instanceof Object) {
 			content.warn('-----generating--------------');
-			location = this.getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius);
+			location = this.getRandomSafeCoords(dimension, location, yMax!, yMin!, minRadius, maxRadius!)!;
 			if (randomRotation) {
 				facing = undefined;
-				rotation = {};
+				rotation = {} as Vector2;
 				rotation.x = 0; //Math.random() * 180 - 90;
 				rotation.y = Math.random() * 360 - 180;
 			}
