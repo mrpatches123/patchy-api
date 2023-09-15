@@ -853,9 +853,9 @@ export function chunkString(str, length) {
     return array;
 }
 /**
- * @param {String} str 
- * @param {Number} length 
- * @returns {Array}
+ * @param {string} str 
+ * @param {number} length 
+ * @returns {string[]}
  */
 export function chunkStringBytes(str, length) {
     const chunks = [];
@@ -865,15 +865,15 @@ export function chunkStringBytes(str, length) {
     for (let i = 0; i < str.length; i++) {
         const char = str[i];
         const charCode = char.charCodeAt();
-
-        if (byteCount + (charCode > 127 ? 2 : 1) > length) {
+        const bytesChar = (charCode < 128) ? 1 : (charCode < 2024) ? 2 : (charCode < 65536) ? 3 : 4;
+        if (byteCount + bytesChar > length) {
             chunks.push(chunk);
             chunk = '';
             byteCount = 0;
         }
-
+        byteCount += bytesChar;
         chunk += char;
-        byteCount += charCode > 127 ? 2 : 1;
+
     }
 
     if (chunk.length > 0) {
