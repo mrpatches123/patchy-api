@@ -22,7 +22,7 @@
       "listFiles": false,
       "noEmitHelpers": true,
       "noUncheckedIndexedAccess": true,
-      "noEmit": false,
+      "noEmit": true,
       "allowImportingTsExtensions": true
    },
    "include": [

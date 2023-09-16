@@ -1,6 +1,6 @@
 import eventBuilder from "../libraries/classes/events/export_instance.js";
 import global from '../libraries/classes/global.js';
-import { world, system } from '@minecraft/server';
+import { world, system, DefinitionModifier } from '@minecraft/server';
 import { content, native } from '../libraries/utilities.js';
 import errorLogger from "../libraries/classes/error.js";
 import time from '../libraries/classes/time.js';
@@ -18,7 +18,7 @@ eventBuilder.register({
 					const { loaded, loading } = global;
 
 					if (loading && !loaded) {
-						eventBuilder.getEvent('worldLoad').iterate();
+						eventBuilder.getEvent('worldLoad').iterate({});
 						global.loadedPlayers = false;
 						global.loaded = true;
 					}
@@ -78,12 +78,25 @@ eventBuilder.register({
 			}
 		}
 	},
-	playerHit: {
+	playerHitEntity: {
 		subscription: {
-			entityHit: {
+			entityHitEntity: {
 				function: event => {
-					const { entity, hitBlock, hitEntity } = event;
-					eventBuilder.getEvent('playerHit').iterate({ player: entity, hitBlock, hitEntity });
+					const { damagingEntity, hitEntity } = event;
+					if (!(damagingEntity instanceof Player)) return;
+					eventBuilder.getEvent('playerHit').iterate({ player: damagingEntity, hitEntity });
+				},
+				options: { entityTypes: ["minecraft:player"] }
+			}
+		}
+	},
+	playerHitBlock: {
+		subscription: {
+			entityHitBlock: {
+				function: event => {
+					const { damagingEntity, hitBlock } = event;
+					if (!(damagingEntity instanceof Player)) return;
+					eventBuilder.getEvent('playerHit').iterate({ player: damagingEntity, hitBlock });
 				},
 				options: { entityTypes: ["minecraft:player"] }
 			}
@@ -93,8 +106,10 @@ eventBuilder.register({
 		subscription: {
 			entityHurt: {
 				function: event => {
-					const { hurtEntity, damagingEntity, cause, damage, projectile } = event;
-					eventBuilder.getEvent('playerHurt').iterate({ player: hurtEntity, damagingEntity, cause, damage, projectile });
+					const { hurtEntity, damageSource, damage } = event;
+					if (!(hurtEntity instanceof Player)) return;
+					const { damagingEntity, damagingProjectile, cause } = damageSource;
+					eventBuilder.getEvent('playerHurt').iterate({ player: hurtEntity, damagingEntity, cause, damage, projectile: damagingProjectile });
 				},
 				options: { entityTypes: ["minecraft:player"] }
 			}
@@ -114,20 +129,25 @@ eventBuilder.register({
 	dataDrivenPlayerTriggerEvent: {
 		subscription: {
 			dataDrivenEntityTriggerEvent: {
-				function: ({ entity, modifiers, id }) => {
+				function: (event) => {
+					const { entity, id } = event;
+					const modifiers = event.getModifiers();
 					eventBuilder.getEvent('dataDrivenPlayerTriggerEvent').iterate({ player: entity, modifiers, id });
 				},
-				entityOptions: { entityTypes: ["minecraft:player"] }
+				options: { entityTypes: ["minecraft:player"] }
 			}
 		}
 	},
 	beforeDataDrivenPlayerTriggerEvent: {
 		subscription: {
 			beforeDataDrivenEntityTriggerEvent: {
-				function: ({ entity, modifiers, id, cancel }) => {
-					eventBuilder.getEvent('beforeDataDrivenPlayerTriggerEvent').iterate({ cancel, player: entity, modifiers, id });
+				function: (event) => {
+					const { entity, id, cancel } = event;
+
+
+					eventBuilder.getEvent('beforeDataDrivenPlayerTriggerEvent').iterate({ cancel, player: entity, getModifiers() { return event.getModifiers(); }, setModifiers(modifiers: DefinitionModifier[]) { event.setModifiers(modifiers); }, get modifiers() { return event.getModifiers(); }, set modifiers(modifiers) { event.setModifiers(modifiers); }, id });
 				},
-				entityOptions: { entityTypes: ["minecraft:player"] }
+				options: { entityTypes: ["minecraft:player"] }
 			}
 		}
 	},
