@@ -11,12 +11,7 @@ export function chunkString(str: string, length: number): string[] {
 	}
 	return array;
 }
-const p = 'The quick brown fox jumps over the lazy dog. If the dog reacted, was it really lazy?';
-const alphabet = Array.from(Array(26), (_, i) => String.fromCharCode(i + 97));
-function alphabetPosition(text) {
-	return text.replace(/(.)/g, ($1) => (alphabet.indexOf($1.toLowerCase()) > -1) ? ` ${alphabet.indexOf($1.toLowerCase()) + 1}` : '');
-}
-console.log(alphabetPosition(p));
+
 const chunkLength = 32760;
 export class Database {
 	__db_properties: any;
