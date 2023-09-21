@@ -41,7 +41,7 @@ export class FriendSystem {
 	getFriendData(receiver: Player): { saves?: { [property: string]: any; }, requests: { incoming: { [id: string]: {}; }, outgoing: { [id: string]: {}; }; }, mutal: { [id: string]: {}; }; } {
 		const { type } = this.data;
 		const playerStorage = (type === 'remote') ? tagDatabases.get(receiver, 'playerStorage') : databases.get(this.systemKey) ?? databases.add(this.systemKey);
-		const friends = playerStorage.get((type === 'remote') ? this.systemKey : receiver.id) ?? {};
+		const friends = playerStorage!.get((type === 'remote') ? this.systemKey : receiver.id) ?? {};
 		return friends;
 	}
 	getProperties(receiver: Player): { [key: string]: any; } {
@@ -73,7 +73,7 @@ export class FriendSystem {
 	setFriendData(receiver: Player, data: { requests: { incoming: { [id: string]: {}; }, outgoing: { [id: string]: {}; }; }, mutal: { [id: string]: {}; }; }) {
 		const { type } = this.data;
 		if (type === 'remote') {
-			const playerStorage = tagDatabases.get(receiver, 'playerStorage');
+			const playerStorage = tagDatabases.get(receiver, 'playerStorage')!;
 			playerStorage.set(this.systemKey, data);
 			tagDatabases.queueSave(receiver, 'playerStorage');
 		} else {

@@ -1,15 +1,15 @@
-import { Player } from "@minecraft/server";
+
 import { ActionFormData, MessageFormData, ModalFormData, ModalFormResponse, ActionFormResponse, MessageFormResponse } from "@minecraft/server-ui";
 import { content } from "../../utilities.js";
 import { FormBuilder } from "./class.js";
-
+import { Player } from "../player/class.js";
 
 
 
 export type Form = {
-	action: Array<ActionData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<ActionData>);
-	modal: Array<ModalData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<ModalData>);
-	message: Array<MessageData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<MessageData>);
+	action?: Array<ActionData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<ActionData>);
+	modal?: Array<ModalData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<ModalData>);
+	message?: Array<MessageData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<MessageData>);
 };
 export type ActionData = {
 	title?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);

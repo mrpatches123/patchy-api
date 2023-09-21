@@ -83,7 +83,7 @@ export function weightsRandom(...weights: number[]) {
     const sortedTestWeights = sortedWeights.slice(0, -1).map(value => { valueSUm += value; return valueSUm; });
     const random = (Math.random() * sum) | 0;
     const test = [...sortedTestWeights, random].sort((a, b) => a - b);
-    return weights.indexOf(sortedWeights[test.indexOf(random)]);
+    return weights.indexOf(sortedWeights[test.indexOf(random)]!);
 }
 export class RemovableTree {
     array: string[];
@@ -383,8 +383,8 @@ export function blockFaceToCoords(blockFaceDir: Direction, { x, y, z }: Vector3)
         [0, 0, 1],
         [-1, 0, 0],
         [1, 0, 0]
-    ][blockFace].forEach((coord, i) => location[i] += coord);
-    [x, y, z] = location;
+    ][blockFace]!.forEach((coord, i) => location[i] += coord);
+    [x, y, z] = location as [number, number, number];
     return { x, y, z };
 }
 export function offsetVector3(Vector3: Vector3, offsetVector3: Vector3): Vector3 {
@@ -751,7 +751,7 @@ export function obfuscate255(string: string) {
 }
 
 export function deobfuscate255(string: string) {
-    return [...string].map(value => String.fromCharCode(charObject[value])).join('');
+    return [...string].map(value => String.fromCharCode(charObject[value]!)).join('');
 }
 
 
@@ -779,7 +779,7 @@ export function chunkStringBytes(str: string, length: number) {
     let byteCount = 0;
 
     for (let i = 0; i < str.length; i++) {
-        const char = str[i];
+        const char = str[i]!;
         const charCode = char.charCodeAt(0);
 
         if (byteCount + (charCode > 127 ? 2 : 1) > length) {
@@ -876,7 +876,7 @@ export function parseCommand(message: string, prefix: string) {
                         finding = 'string';
                     case 'string':
                         if (!(++quoteCount & 1)) { finding = false; break; };
-                        if (!output[o].length) break;
+                        if (!output[o]!.length) break;
                         output.push('');
                         o++;
                         break;
@@ -970,13 +970,13 @@ const places = ['hundred', 'thousand', 'million', 'billion', 'trillion', 'quadri
 export function fixSciNumberString(string: string | number) {
     if (typeof string !== 'string') string = string.toString();
     let [numberBS, powerBN] = string.split('e');
-    let number = numberBS.split('.');
+    let number = numberBS!.split('.');
     if (number.length === 1) number.push('');
     let power = Number(powerBN);
     if (!power) return (number.length > 1) ? number[0] : number.join('.');
     if (power > 0) {
-        number[0] += number[1].substring(0, power).padEnd(power, '0');
-        number[1] = number[1].substring(power);
+        number[0] += number[1]!.substring(0, power).padEnd(power, '0');
+        number[1] = number[1]!.substring(power);
     } else {
         throw new Error('power cannot be negitive');
     }
@@ -988,7 +988,7 @@ export function formatNumber(number: number | string) {
     if (typeof number === 'number') number = Math.floor(number).toString();
     let negitive = false;
     if (Number(number) < 0) number = number.replaceAll('-', ''), negitive = true;
-    number = fixSciNumberString(number);
+    number = fixSciNumberString(number)!;
     if (number === '0') return 'zero';
     const numberArray = chunkStringReverse(number.toString(), 3).reverse();
     const output = numberArray.map((number, i) => {

@@ -5,7 +5,7 @@ import global from './global.js';
 import eventBuilder from './events/export_instance.js';
 import { Player, world } from '@minecraft/server';
 import time from './time.js';
-import players from './players/export_instance.js';
+import playersManager from './players/export_instance.js';
 const tagLength = 'tagDB:'.length;
 function byteCount(string: string) {
 	let bytes = 0;
@@ -17,7 +17,7 @@ function byteCount(string: string) {
 	return bytes;
 }
 class TagDatabases {
-	__queuedSaves: { subscribed: false; saves: Record<string, { [key: string]: Player; }>; } | { subscribed: true; saves: { [key: string]: { [key: string]: Player; }; }; };
+	__queuedSaves: { subscribed: boolean; saves: { [key: string]: { [key: string]: Player; }; }; };
 	initalized: Record<string, boolean>;
 	databases: Record<string, Record<string, Database>> = {};
 	constructor() {
@@ -29,7 +29,7 @@ class TagDatabases {
 		const thisTag = this;
 		eventBuilder.subscribe('init_TagDatabase*API', {
 			worldLoad: () => {
-				players.get().iterate(player => {
+				playersManager.get().iterate(player => {
 					thisTag.initalize(player);
 				});
 			},
@@ -71,18 +71,18 @@ class TagDatabases {
 		// content.warn({ TagDatabases: time.end('TagDatabases') });
 	}
 	initalizeAll() {
-		this.clear();
+		this.databases = {};
 		this.__queuedSaves ??= {
 			subscribed: false,
 			saves: {}
 		};
 		this.initalized ??= {};
-		global.players.forEach((id, player) => {
+		Object.entries(global.players as Record<string, Player>).forEach(([id, player]) => {
 			this.initalize(player);
 		});
 
 	}
-	getTestRaw(player, databaseId) {
+	getTestRaw(player: Player, databaseId: string) {
 		const { id } = player;
 		const tags = player.getTags();
 		// content.warn("hello", tags);
@@ -90,43 +90,37 @@ class TagDatabases {
 		const obfuscatedDatabases = tags.filter(tag => tag.startsWith('tagDB:')).map(tag => tag.slice(tagLength));
 		// content.warn({ obfuscatedDatabases });
 		if (!obfuscatedDatabases.length) return;
-		const rawDatabases = obfuscatedDatabases.map(text => deobfuscate255(text).match(/(.*):(\d+):(.*)/).splice(1));
+		const rawDatabases = obfuscatedDatabases.map(text => deobfuscate255(text).match(/(.*):(\d+):(.*)/)!.splice(1));
 		// content.warn({ rawDatabases, tags });
-		const objectDatabase = {};
+		const objectDatabase: Record<string, [string, string][]> = {};
 		rawDatabases.forEach(([databaseId, order, value]) => {
-			if (!objectDatabase.hasOwnProperty(databaseId)) objectDatabase[databaseId] = [];
-			objectDatabase[databaseId].push([order, value]);
+			if (!objectDatabase.hasOwnProperty(databaseId!)) objectDatabase[databaseId!] = [];
+			objectDatabase[databaseId!]!.push([order!, value!]);
 		});
-		if (databaseId) return objectDatabase[databaseId];
+		if (databaseId) return objectDatabase[databaseId!];
 		return objectDatabase;
 	}
-	/**
-	 * 
-	 * @param {Player} player 
-	 * @param {String} databaseId 
-	 * @returns {Database}
-	 */
-	get(player, databaseId) {
+	get(player: Player, databaseId: string) {
 		const { id } = player;
-		if (!this.hasOwnProperty(databaseId)) this[databaseId] = {};
-		if (!this[databaseId].hasOwnProperty(id)) this[databaseId][id] = new Database();
-		return this[databaseId][id];
+		this.databases[databaseId] ??= {};
+		this.databases[databaseId]![id] ??= new Database();
+		return this.databases[databaseId]![id];
 
 	}
-	queueSave(player, databaseId) {
+	queueSave(player: Player, databaseId: string) {
 		// content.warn({ name: player.name, databaseId });
 		const { id } = player;
 		if (!this.hasOwnProperty(databaseId)) return new Error(`databaseId: ${databaseId}, does not exist on tag database`);
 		if (!this.__queuedSaves.saves.hasOwnProperty(databaseId)) this.__queuedSaves.saves[databaseId] = {};
-		if (this.__queuedSaves.saves[databaseId].hasOwnProperty(id)) return;
-		if (!this.__queuedSaves.saves[databaseId].hasOwnProperty(id)) this.__queuedSaves.saves[databaseId][id] = player;
+		if (this.__queuedSaves.saves[databaseId]!.hasOwnProperty(id)) return;
+		if (!this.__queuedSaves.saves[databaseId]!.hasOwnProperty(id)) this.__queuedSaves.saves[databaseId]![id] = player;
 
 		if (!this.__queuedSaves.subscribed) {
 			eventBuilder.subscribe('end_tagSaveQueue*API', {
 				tickAfterLoad: () => {
-					if (!this.__queuedSaves.saves.length()) return eventBuilder.unsubscribe('end_tagSaveQueue*API', 'tickAfterLoad');
-					this.__queuedSaves.saves.forEach((key, value) => {
-						value.forEach((id, player) => {
+					if (!Object.keys(this.__queuedSaves.saves).length) return eventBuilder.unsubscribe('end_tagSaveQueue*API', 'tickAfterLoad');
+					Object.entries(this.__queuedSaves.saves).forEach(([key, value]) => {
+						Object.entries(value).forEach(([id, player]) => {
 							this.save(key, player);
 							delete this.__queuedSaves.saves[key];
 						});
@@ -135,7 +129,7 @@ class TagDatabases {
 			});
 		}
 	}
-	save(databaseId, player) {
+	save(databaseId: string, player: Player) {
 		// content.warn({ t: 'tDB', databaseId });
 		const { id } = player;
 		if (!this.hasOwnProperty(databaseId)) return new Error(`databaseId: ${databaseId}, does not exist on tag database`);
@@ -143,32 +137,24 @@ class TagDatabases {
 
 		let players;
 		if (!player) {
-			players = global.players.filter(player => {
-				const { playerMap } = player;
-				const loaded = playerMap[id];
-				if (loaded && this[databaseId].hasOwnProperty(id)) {
-					return true;
-				}
-			});
-
-
+			players = playersManager.get().array();
 		} else {
 			players = [player];
 		}
 		const sliceLength = byteCount(obfuscate255(databaseId + 'tagDB:') + '99999:');
 		players.forEach(player => {
 			const { id } = player;
-			if (!this?.[databaseId]?.[id]) return;
+			if (!this.databases?.[databaseId]?.[id]) return;
 			const tags = player.getTags();
 			let rawTexts;
-			if (tags.length) rawTexts = tags.filter(text => text.startsWith('tagDB:') && deobfuscate255(text.slice('tagDB:'.length)).match(/(.*):(\d+):/).splice(1)[0] === databaseId);
-			if (!this.hasOwnProperty(databaseId)) this[databaseId] = {};
-			if (!this[databaseId].hasOwnProperty(id)) this[databaseId][id] = new Database(JSON.stringify(value));
+			if (tags.length) rawTexts = tags.filter(text => text.startsWith('tagDB:') && deobfuscate255(text.slice('tagDB:'.length)).match(/(.*):(\d+):/)!.splice(1)[0] === databaseId);
+			if (!this.databases.hasOwnProperty(databaseId)) this.databases[databaseId] = {};
+			if (!this.databases[databaseId]!.hasOwnProperty(id)) this.databases[databaseId]![id] = new Database();
 
 			if (rawTexts && rawTexts.length) rawTexts.forEach(tag => player.removeTag(tag));
 			const chunkSize = 255 - sliceLength;
 			// content.warn({ t: 'saveTag', dtata: this[databaseId] });
-			const stringifiedDatabase = JSON.stringify(this[databaseId][id]);
+			const stringifiedDatabase = JSON.stringify(this.databases[databaseId]![id]);
 			// const stringifiedDBLength = stringifiedDatabase.length;
 			const databaseChunks = chunkStringBytes(obfuscate255(stringifiedDatabase), chunkSize);
 			//  Array.from(Array(Math.ceil(stringifiedDBLength / chunkSize)), (item, i) => stringifiedDatabase.substr(i * chunkSize, chunkSize));

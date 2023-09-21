@@ -45,7 +45,7 @@ interface RelitiveOffset {
 	location: Vector3;
 	offset: Vector3;
 };
-interface TeleportObjectOnce {
+export interface TeleportObjectOnce {
 	location: Vector3 | RelitiveOffset;
 	face: { x: number; y: number; } | Vector3 | RelitiveOffset;
 	dimension: Dimension;

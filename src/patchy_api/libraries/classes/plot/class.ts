@@ -3,7 +3,7 @@ import { andArray, betweenBlockVector3, blockFaceToCoords, content, isDefined, i
 import eventBuilder from "../events/export_instance.js";
 import databases from "../database.js";
 import players from "../players/export_instance.js";
-import teleportBuilder from "../teleport.js";
+import teleportBuilder, { TeleportObjectOnce } from "../teleport.js";
 import { Player } from "../player/class.js";
 import gamemode from "../gamemode.js";
 import structureBuilder from "../structure/export_instance.js";
@@ -11,7 +11,7 @@ import wait from "../wait.js";
 import scoreboardBuilder from "../scoreboard.js";
 import global from "../global.js";
 import propertyBuilder from "../property/export_instance.js";
-import { StructureLoadOptions } from '../structure/class';
+import { LoadOptions as StructureLoadOptions } from '../structure/class';
 
 const gamemodes = [0, 1, 2];
 const opens = [
@@ -60,8 +60,8 @@ interface PlotRuleSet {
 	blockPlaceMargin?: { x: number, y: number, z: number; };
 }
 interface Teleport {
-	location?: Vector3;
-	face?: Vector2 | Vector3 | { location: Vector3, offset: Vector3; };
+	location?: Vector3 | { location: Vector3, offset: Vector3; } | PlotsVector3;
+	face?: Vector2 | Vector3 | { location: Vector3, offset: Vector3; } | PlotsVector3;
 	dimension?: Dimension;
 	key?: string;
 }
@@ -103,6 +103,7 @@ export class PlotBuilder {
 	registeredProperties: boolean;
 	creates: Record<string, PlotRules>;
 	plots: Record<string, { players: any, rules: PlotRules; }>;
+	subscribed: boolean = false;
 	constructor() {
 		this.plots = {};
 		this.creates = {};
@@ -314,7 +315,7 @@ export class PlotBuilder {
 	 * @param {Player} player 
 	 * @param {string} key 
 	 */
-	setCurrent(player: Player, key: string) {
+	setCurrent(player: Player, key?: string) {
 		if (!player) throw new Error('player is not defined at setCurrent');
 		player.properties.currentPlot = key;
 		player.memory.lastLocation = undefined;
@@ -413,15 +414,15 @@ export class PlotBuilder {
 							let { location: teleportLocation, face, key } = teleport;
 							if (key) teleportBuilder.teleport(player, key);
 							else {
-								teleportLocation = { location: start, offset: teleportLocation };
-								if (!isVector2(face)) face = { location: start, offset: face };
+								teleportLocation = { location: start as Vector3, offset: teleportLocation as Vector3 };
+								if (!isVector2(face)) face = { location: start, offset: face as Vector3 };
 								const object = { location: teleportLocation, face, dimension: overworld };
 								// content.warn({ teleportLocation: objectVector3(teleportLocation), start: objectVector3(start) });
-								teleportBuilder.teleportOnce(player, object);
+								teleportBuilder.teleportOnce(player, object as TeleportObjectOnce);
 							}
 						} else {
 							const { x: rx, y: ry } = rotation;
-							player.teleport({ x: (size.x) / 2 + start.x, y: start.y, z: (size.z) / 2 + start.z }, overworld, rx, ry);
+							player.teleport({ x: (size.x) / 2 + start.x, y: start.y, z: (size.z) / 2 + start.z }, { dimension: overworld, rotation: { x: rx, y: ry } });
 						}
 					}
 				});
@@ -432,26 +433,26 @@ export class PlotBuilder {
 				const { ingorePlotSystem } = scores;
 				const { currentPlot } = properties;
 				if (!currentPlot || ingorePlotSystem) return;
-				const { plotNumberIdentifier, property, ruleSets, defaultPermision, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot].rules;
+				const { plotNumberIdentifier, property, ruleSets, defaultPermision, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot as string]!.rules;
 				const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
 				let plotNumber;
 				if (exclusive) plotNumber = 0;
 				else if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
-				else if (property) plotNumber = properties[plotNumberIdentifier];
-				else plotNumber = scores[plotNumberIdentifier];
+				else if (property) plotNumber = properties[plotNumberIdentifier!];
+				else plotNumber = scores[plotNumberIdentifier!];
 				if (!isDefined(plotNumber)) return;
 				switch (permision) {
 					case 'break':
 					case 'open-break':
 					case 'write': {
-						const ruleSet = this.getRuleSet(currentPlot, plotNumber) ?? {};
+						const ruleSet = this.getRuleSet(currentPlot as string, plotNumber as number)!;
 
 						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet;
 						const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault ?? {};
 						const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties;
 
-						const start = { x: sx + mx, y: sy + my, z: sz + mz };
-						const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
+						const start = { x: sx + (mx as number), y: sy + (my as number), z: sz + (mz as number) };
+						const end = { x: size.x + sx - (mx as number), y: size.y + sy - (my as number), z: size.z + sz - (mz as number) };
 						if (betweenBlockVector3(block.location, start, end)) return;
 					}
 					case 'open':
@@ -471,35 +472,35 @@ export class PlotBuilder {
 				const { ingorePlotSystem } = scores;
 				const { currentPlot } = properties;
 				if (!currentPlot || ingorePlotSystem) return;
-				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot].rules;
+				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot as string]!.rules;
 				const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
 				let plotNumber;
 				if (exclusive) plotNumber = 0;
 				else if (isDefined(plotNumberOveride)) plotNumber = plotNumberOveride;
-				else if (property) plotNumber = properties[plotNumberIdentifier];
-				else plotNumber = scores[plotNumberIdentifier];
+				else if (property) plotNumber = properties[plotNumberIdentifier!];
+				else plotNumber = scores[plotNumberIdentifier!];
 				if (!isDefined(plotNumber)) return;
 				// content.warn({ permision });
 				switch (permision) {
 					case 'press': {
-						if (buttons.includes(dimension.getBlock(blockLocation)?.typeId) && !isSneaking) {
+						if (buttons.includes(dimension.getBlock(blockLocation)?.typeId!) && !isSneaking) {
 							return;
 						}
 					}
 					case 'open':
 					case 'open-break': {
-						if (opens.includes(dimension.getBlock(blockLocation)?.typeId) && !isSneaking) {
+						if (opens.includes(dimension.getBlock(blockLocation)?.typeId!) && !isSneaking) {
 							return;
 						}
 					}
 					case 'place':
 					case 'write': {
-						const ruleSet = this.getRuleSet(currentPlot, plotNumber);
-						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault = {} } = ruleSet ?? {};
-						const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault;
+						const ruleSet = this.getRuleSet(currentPlot as string, plotNumber as number);
+						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet!;
+						const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault!;
 						const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties;
-						const start = { x: sx + mx, y: sy + my, z: sz + mz };
-						const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
+						const start = { x: sx + (mx as number), y: sy + (my as number), z: sz + (mz as number) };
+						const end = { x: size.x + sx - (mx as number), y: size.y + sy - (my as number), z: size.z + sz - (mz as number) };
 						// content.warn({ t: 'beforeItemUseOn', start, end });
 						const blockPlaceLocation = blockFaceToCoords(blockFace, blockLocation);
 						if (betweenBlockVector3(blockPlaceLocation, start, end)) return;
@@ -555,13 +556,13 @@ export class PlotBuilder {
 	 * @param {number | undefined} plotNumber 
 	 * @returns {{ wasAdded: boolean, plotNumber: Number | undefined, full: boolean}}
 	 */
-	add(player: import('../player/class').Player, key: string, plotNumber: number | undefined): { wasAdded: boolean; plotNumber: number | undefined; full: boolean; } {
+	add(player: import('../player/class').Player, key: string, plotNumber: number | undefined): { wasAdded: boolean; plotNumber?: number | undefined; full: boolean; } {
 		// content.warn({ bool: !isDefined(plotNumber), plotNumber: plotNumber ?? 'undefined' });
 		const { scores, properties } = player;
 		const { subscribed } = this;
-		const { plotNumberIdentifier, property, loop, teleport, structure, ruleSets = [] } = this.plots[key].rules;
+		const { plotNumberIdentifier, property, loop, teleport, structure, ruleSets = [] } = this.plots[key]!.rules;
 		const queryNumber = this.query(player, key);
-		if (isDefined(queryNumber)) return { wasAdded: false, plotNumber: queryNumber, full: false };
+		if (isDefined(queryNumber)) return { wasAdded: false, plotNumber: queryNumber as number, full: false };
 		const plots = databases.get('plots*API');
 		if (!plots) throw new Error('why does the plots*API db not exist');
 		const plot = plots.get(key);
@@ -571,25 +572,25 @@ export class PlotBuilder {
 		if (!isDefined(plotNumber)) {
 			plotNumber = availablePlots.shift();
 			if (availablePlots.length === 0) availablePlots.push(++currentIndex);
-		} else if (availablePlots.includes(plotNumber)) availablePlots = availablePlots.filter(number => number !== plotNumber);
-		else if (currentIndex < plotNumber) {
-			for (let i = currentIndex + 1; i < plotNumber; i++) availablePlots.push(i);
-			currentIndex = plotNumber + 1;
+		} else if (availablePlots.includes(plotNumber)) availablePlots = (availablePlots as number[]).filter(number => number !== plotNumber);
+		else if (currentIndex < plotNumber!) {
+			for (let i = currentIndex + 1; i < plotNumber!; i++) availablePlots.push(i);
+			currentIndex = plotNumber! + 1;
 		}
 		else return { wasAdded: false, full: false };
 
-		if (property) properties[plotNumberIdentifier] = plotNumber;
-		else scores[plotNumberIdentifier] = plotNumber;
+		if (property) properties[plotNumberIdentifier!] = plotNumber;
+		else scores[plotNumberIdentifier!] = plotNumber;
 
 		// content.warn({ plotNumber, property, score: scores[plotNumberIdentifier] });
 		if (!subscribed) {
-			this.subscribe(key);
+			this.subscribe();
 			hasBeenSubscribed = true;
 		}
-		const ruleSet = this.getRuleSet(key, plotNumber);
-		let loadId;
+		const ruleSet = this.getRuleSet(key, plotNumber!);
+		let loadId: number | undefined;
 		if (structure) {
-			const { start: { x, y, z } } = ruleSet;
+			const { start: { x, y, z } } = ruleSet!;
 			const { x: sx, y: sy, z: sz } = structure.location;
 			content.warn({ t: 'structure', sx, sy, sz, x: sx + x, y: sy + y, z: sz + z });
 			loadId = structureBuilder.load({ ...structure, ...{ location: { x: sx + x, y: sy + y, z: sz + z } } });
@@ -599,21 +600,22 @@ export class PlotBuilder {
 		if (teleport) {
 			// content.warn('9090909090909090909');
 			wait.add(`${player}*plot*structure`, () => {
-				const test = (!loadId) ? true : structureBuilder.getLoadStatus(loadId).done;
+				const test = (!loadId) ? true : structureBuilder.getLoadStatus(loadId)!.done;
 				// content.warn({ test, loadId, done: structureBuilder.getLoadStatus(loadId)?.done });
 				return test;
 			},
 				() => {
 					let { location: teleportLocation, face, key } = teleport;
-					if (key) teleportBuilder.teleport(player, key);
+					if (key) { teleportBuilder.teleport(player, key); return true; }
 					else {
-						const { start: { x, y, z } } = ruleSet;
+						const { start: { x, y, z } } = ruleSet!;
 						const startLocation = { x, y, z };
-						teleportLocation = { location: startLocation, offset: teleportLocation };
+						teleportLocation = { location: startLocation, offset: teleportLocation as Vector3 };
 						// content.warn(native.stringify(face));
-						if (isVector3(face)) face = { location: startLocation, offset: face };
+						if (isVector3(face)) face = { location: startLocation, offset: face as Vector3 };
 						// content.warn(native.stringify(face));
-						teleportBuilder.teleportOnce(player, { location: teleportLocation, face, dimension: overworld });
+						teleportBuilder.teleportOnce(player, { location: teleportLocation, face: face as Vector3, dimension: overworld });
+						return true;
 					}
 				}, { once: true, start: true, remove: true, afterLoad: true });
 		}
@@ -622,23 +624,23 @@ export class PlotBuilder {
 		databases.queueSave('plots*API');
 		return { wasAdded: true, plotNumber, full: false };
 	}
-	reset(key) {
+	reset(key: string) {
 		const plots = databases.get('plots*API') ?? databases.add('plots*API');
 		plots.set(key, { availablePlots: [0], currentIndex: 0, hasBeenSubscribed: false });
 		databases.queueSave('plots*API');
 	}
-	remove(player, key) {
+	remove(player: Player, key: string) {
 		const plots = databases.get('plots*API') ?? databases.add('plots*API');
 		const { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key);
 		const { scores, properties } = player;
-		const { plotNumberIdentifier, property } = this.plots[key].rules;
-		const plotNumber = ((property) ? properties : scores)[plotNumberIdentifier];
+		const { plotNumberIdentifier, property } = this.plots[key]!.rules;
+		const plotNumber = ((property) ? properties : scores)[plotNumberIdentifier!];
 		if (!isDefined(plotNumber)) return false;
 		if (!availablePlots.includes(plotNumber)) availablePlots.push(plotNumber);
 		availablePlots.sort();
 		this.setCurrent(player, undefined);
-		if (property) properties[plotNumberIdentifier] = undefined;
-		else scores[plotNumberIdentifier] = undefined;
+		if (property) properties[plotNumberIdentifier!] = undefined;
+		else scores[plotNumberIdentifier!] = undefined;
 		plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });
 		databases.queueSave('plots*API');
 		return true;
