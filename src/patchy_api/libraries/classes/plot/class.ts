@@ -304,12 +304,12 @@ export class PlotBuilder {
 		const { plotNumberIdentifier, property } = this.plots[key]!.rules;
 		return ((property) ? properties : scores)[plotNumberIdentifier!];
 	}
-	list(key: string) {
+	list(key: string): { availablePlots: number[], currentIndex: number; } | undefined {
 		if (this.plots[key]!.rules.exclusive) throw new Error(`Cannot get list for key: ${key}, as exclusive is true`);
 		const plots = databases.get('plots*API') ?? databases.add('plots*API');
 		const plotObject = plots.get(key);
 		let { availablePlots, currentIndex } = plotObject ?? {};
-		return (plotObject) ? { availablePlots, currentIndex } : false;
+		return (plotObject) ? { availablePlots, currentIndex } : undefined;
 	}
 	/**
 	 * @param {Player} player 

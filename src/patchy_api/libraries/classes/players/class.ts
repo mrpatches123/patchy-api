@@ -129,7 +129,7 @@ export class Players {
 	 * @param {boolean} cache 
 	 * @returns {Player}
 	 */
-	find(entityQueryOptions: EntityQueryOptions, cache: boolean) {
+	find(entityQueryOptions?: EntityQueryOptions, cache?: boolean) {
 		return this.get(entityQueryOptions, cache).array()[0];
 	}
 	getById(id: string) {

@@ -9,7 +9,7 @@ interface SaveOptions {
 	name: string, dimension: Dimension, location1: import('@minecraft/server').Vector3, location2: Vector3, saveMode?: 'memory' | 'disk', includesEntites?: boolean, includesBlocks?: boolean;
 }
 type SaveIterator = Iterator<[import('@minecraft/server').Vector3, import('@minecraft/server').Vector3, number, number], [import('@minecraft/server').Vector3, import('@minecraft/server').Vector3, number, number]>;
-interface LoadOptions { dimension: Dimension, location: import('@minecraft/server').Vector3, name: string, rotation?: '0_degrees' | '90_degrees' | '180_degrees' | '270_degrees', mirror?: 'none' | 'x' | 'xz' | 'z', animationMode?: 'block_by_block' | 'layer_by_layer', animationSeconds?: number, includesEntites?: boolean, includesBlocks?: boolean, waterlogged: boolean, integrity: Number, seed: string; }
+export interface LoadOptions { dimension: Dimension, location: import('@minecraft/server').Vector3, name: string, rotation?: '0_degrees' | '90_degrees' | '180_degrees' | '270_degrees', mirror?: 'none' | 'x' | 'xz' | 'z', animationMode?: 'block_by_block' | 'layer_by_layer', animationSeconds?: number, includesEntites?: boolean, includesBlocks?: boolean, waterlogged?: boolean, integrity?: Number, seed?: string; }
 type Vector3 = { x: number, y: number, z: number; };
 
 function floorVector3(vector3: Vector3) {

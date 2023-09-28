@@ -40,23 +40,23 @@ commandBuilder.register('scoreboard', {
 				sender.sendMessage(JSON.stringify(scoreboardBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
 				break;
 			} case 'add': {
-				if (!playerName) return (scoreboardBuilder.add(objective), sender.sendMessage(`you added the scoreboard objective: ${objective}`));
-				const score = scoreboardBuilder.get(player, objective);
-				scoreboardBuilder.set(player, objective, score + number);
+				if (!playerName) return (scoreboardBuilder.add(objective!), sender.sendMessage(`you added the scoreboard objective: ${objective}`));
+				const score = scoreboardBuilder.get(player!, objective!);
+				scoreboardBuilder.set(player!, objective!, score! + number);
 				break;
 			} case 'set': {
-				sender.sendMessage(`you set ${player.name}'s score for objective: ${objective}, to score: ${number}!`);
-				scoreboardBuilder.set(player, objective, number);
+				sender.sendMessage(`you set ${player!.name}'s score for objective: ${objective}, to score: ${number}!`);
+				scoreboardBuilder.set(player!, objective!, number);
 				break;
 			} case 'reset': {
-				scoreboardBuilder.set(player, objective, undefined);
+				scoreboardBuilder.set(player!, objective!, undefined);
 				break;
 			} case 'remove': {
 				// if (!playerName) return (scoreboardBuilder.remove(objective), sender.sendMessage(`you removed the scoreboard objective: ${objective}`));
 				// scoreboardBuilder.set(player, objective, undefined);
 				break;
 			} case 'testraw': {
-				sender.sendMessage(`player: ${player.name}, has score: ${scoreboardBuilder.get(player, objective, true)}, for objective: ${objective}!`);
+				sender.sendMessage(`player: ${player!.name}, has score: ${scoreboardBuilder.get(player!, objective!, true)}, for objective: ${objective}!`);
 				break;
 			}
 

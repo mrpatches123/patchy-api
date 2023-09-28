@@ -3,6 +3,7 @@ import { content, formBuilder, scoreboardBuilder } from "../../modules.js";
 const test = ['hello', 'hi', 'youcoowd', 'wdwdwdwd'];
 
 scoreboardBuilder.add('testabc');
+
 formBuilder.create('actionSoft', {
 
 	action: (receiver) => {
@@ -13,13 +14,14 @@ formBuilder.create('actionSoft', {
 						text: 'back'
 					},
 					callback: (receiver) => {
-						content.warn({ receiver: receiver.name, text: 'back'; });
+						content.warn({ receiver: receiver.name, text: 'back' });
 					}
 				}
 			],
 			{
 				title: receiver.name
-			}, ...test.map(text => ({
+			},
+			test.map(text => ({
 				button: {
 					text
 				},

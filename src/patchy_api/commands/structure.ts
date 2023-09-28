@@ -1,8 +1,9 @@
 
 import { commandBuilder, structureBuilder } from '../modules.js';
 import config from '../config.js';
+import { Player, Vector3 } from '@minecraft/server';
 const { commandPrefix: prefix } = config;
-function relativeParse(player, input, direction) {
+function relativeParse(player: Player, input: string, direction: keyof Vector3) {
 	if (input.includes('~')) {
 		if (input.endsWith('*')) {
 			return ((player.location[direction] + Number(input.replace(/[*~]/g, ''))) | 0) + 0.5;
@@ -26,21 +27,21 @@ commandBuilder.register('structure', {
 	},
 	aliases: ['struct'],
 	callback: (sender, args) => {
-		let [action, name, x1, y1, z1, x2, y2, z2] = args;
+		let [action, name, x1S, y1S, z1S, x2S, y2S, z2S] = args;
 		const { dimension } = sender;
-		x1 = Math.floor(relativeParse(sender, x1, 'x'));
-		y1 = Math.floor(relativeParse(sender, y1, 'y'));
-		z1 = Math.floor(relativeParse(sender, z1, 'z'));
+		const x1 = Math.floor(relativeParse(sender, x1S!, 'x'));
+		const y1 = Math.floor(relativeParse(sender, y1S!, 'y'));
+		const z1 = Math.floor(relativeParse(sender, z1S!, 'z'));
 		const location1 = { x: x1, y: y1, z: z1 };
 
 		switch (action) {
 			case 'save': {
-				x2 = Math.floor(relativeParse(sender, x2, 'x'));
-				y2 = Math.floor(relativeParse(sender, y2, 'y'));
-				z2 = Math.floor(relativeParse(sender, z2, 'z'));
+				const x2 = Math.floor(relativeParse(sender, x2S!, 'x'));
+				const y2 = Math.floor(relativeParse(sender, y2S!, 'y'));
+				const z2 = Math.floor(relativeParse(sender, z2S!, 'z'));
 				const location2 = { x: x2, y: y2, z: z2 };
 				structureBuilder.save({
-					name,
+					name: name!,
 					location1,
 					location2,
 					dimension,
@@ -50,7 +51,7 @@ commandBuilder.register('structure', {
 			} case 'load': {
 				structureBuilder.load({
 					dimension,
-					name,
+					name: name!,
 					location: location1
 				});
 				break;

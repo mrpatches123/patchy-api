@@ -64,7 +64,7 @@ class ScoreboardBuilder {
 	 * @param {String} objective 
 	 * @param {Number} value 
 	 */
-	set(player: Player, objective: string, value: number) {
+	set(player: Player, objective: string, value?: number) {
 		if (player instanceof PlayerType) throw new Error(`Player, at params[0] is of type: PlayerType(world player)!`);
 		if (!(player instanceof Player)) throw new Error(`Player, at params[0] is not of type: Player(not world player)!`);
 		if (!world.scoreboard.getObjective(objective)) throw new Error(`objective, ${objective} at params[1] does not Exist!`);
@@ -92,8 +92,8 @@ class ScoreboardBuilder {
 			eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
 			return bool;
 		}
-		const quotient = Math.floor(value / chunk);
-		const remainder = value % chunk;
+		const quotient = Math.floor(value! / chunk);
+		const remainder = value! % chunk;
 		server.scoreSetPlayer(`${objective}*q`, player, quotient);
 		server.scoreSetPlayer(`${objective}*r`, player, remainder);
 		eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });

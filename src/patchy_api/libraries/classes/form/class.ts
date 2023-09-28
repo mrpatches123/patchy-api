@@ -1,7 +1,8 @@
-import { world, Player } from '@minecraft/server';
+import { world } from '@minecraft/server';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message, FormResponse, FormCancelationReason, MessageFormResponse, ActionFormResponse, ModalFormResponse } from '@minecraft/server-ui';
 import schema, { ActionData, ArrayType, Form, MessageData, ModalData } from './schema.js';
 import errorLogger from '../error.js';
+import { Player } from '../player/class.js';
 /**
  * @type {{[typeKey: String]: {[elementKey: String]: Boolean}}}
  */

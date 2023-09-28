@@ -82,7 +82,7 @@ class TagDatabases {
 		});
 
 	}
-	getTestRaw(player: Player, databaseId: string) {
+	getTestRaw(player: Player, databaseId?: string) {
 		const { id } = player;
 		const tags = player.getTags();
 		// content.warn("hello", tags);

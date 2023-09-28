@@ -108,11 +108,11 @@ class CommandBuilder {
         aliases?: Array<string>;
         usages?: Array<string> | { [subCommand: string]: Array<string>; };
         requires?: {
-            score?: { objective: number; };
-            tag?: { tag: boolean; };
+            score?: { [objective: string]: number; };
+            tag?: { [tag: string]: boolean; };
         } | false;
         prefix?: string;
-        callback: (sender: import('./player/class.js').Player, args: Array<string>) => {};
+        callback: (sender: import('./player/class.js').Player, args: Array<string>) => any;
     }): void {
         const argsLength = arguments.length;
 
