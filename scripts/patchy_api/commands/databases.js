@@ -1,8 +1,5 @@
-
 import commandBuilder from "../libraries/classes/commands.js";
-import errorLogger from "../libraries/classes/error.js";
 import databases from "../libraries/classes/database.js";
-import { overworld, content, assignToPath } from "../libraries/utilities.js";
 import config from '../config.js';
 const { commandPrefix: prefix } = config;
 commandBuilder.register('databases', {
@@ -21,14 +18,19 @@ commandBuilder.register('databases', {
         const [subcommand, key] = args;
         switch (subcommand) {
             case 'print': {
-                if (key) return (sender.sendMessage(databases.getFromEntity(args[0])));
+                if (key)
+                    return (sender.sendMessage(databases.getFromEntity(args[0])));
                 sender.sendMessage(JSON.stringify(databases, (key, value) => (value instanceof Function) ? '<f>' : value));
                 break;
-            } case 'delete': {
-                if (!key) return (sender.sendMessage(`key at params[1] is undefined`));
-                if (!databases.hasOwnProperty(key)) return (sender.sendMessage(`key at params[1] does not exist`));
+            }
+            case 'delete': {
+                if (!key)
+                    return (sender.sendMessage(`key at params[1] is undefined`));
+                if (!databases.hasOwnProperty(key))
+                    return (sender.sendMessage(`key at params[1] does not exist`));
                 databases.delete(key, true);
             }
         }
     }
 });
+//# sourceMappingURL=databases.js.map

@@ -3,7 +3,7 @@
       "target": "es2021",
       "moduleResolution": "node",
       "module": "ES2020",
-      "declaration": false,
+      "declaration": true,
       "noLib": false,
       "emitDecoratorMetadata": true,
       "experimentalDecorators": true,
@@ -17,19 +17,15 @@
       "noImplicitReturns": false,
       "noImplicitUseStrict": false,
       "outDir": "scripts/",
-      "rootDir": "src",
-      "baseUrl": "behavior_packs/",
+      "rootDir": "src/",
+      "baseUrl": "patchy-api/",
       "listFiles": false,
       "noEmitHelpers": true,
       "noUncheckedIndexedAccess": true,
-      "noEmit": true,
-      "allowImportingTsExtensions": true
+      "noEmit": false
    },
    "include": [
       "src/**/*"
    ],
-   "exclude": [
-      "node_modules"
-   ],
-   "compileOnSave": false
+   "compileOnSave": true
 }

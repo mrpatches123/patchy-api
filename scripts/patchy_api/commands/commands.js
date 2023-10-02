@@ -18,3 +18,4 @@ commandBuilder.register('commands', {
         // sender.sendMessage(JSON.stringify(eventBuilder));
     }
 });
+//# sourceMappingURL=commands.js.map

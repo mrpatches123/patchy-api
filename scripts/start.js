@@ -1,14 +1,12 @@
-import { MinecraftBlockTypes, system, world, Container } from '@minecraft/server';
+import { system } from '@minecraft/server';
 function startwodjopwpwdjwwpodjdwo() {
-	console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
+    console.warn(`-----------------------------------------------------------------------------------------------------------------------------------------------\n Start at ${(new Date().toString())}`);
 }
 startwodjopwpwdjwwpodjdwo();
 system.beforeEvents.watchdogTerminate.subscribe((event) => {
-	event.cancel = true;
+    event.cancel = true;
 });
 // String.fromCodePoint(`0xF4${colors[progressColor]}${(i % barFramesCount).toString(16)}`)
-
-
 // function* test() {
 // 	let i = 0;
 // 	while (true) {
@@ -38,11 +36,9 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	"up": 1,
 // 	"west": 4,
 // };
-
 // function blockFaceToCoords(blockFace, { x, y, z }) {
 // 	blockFace = blockFaceToNumber[blockFace];
 // 	// content.warn({ blockFace });
-
 // 	let location = [x, y, z];
 // 	[
 // 		[0, -1, 0],
@@ -59,7 +55,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // world.events.beforeItemUseOn.subscribe(event => {
 // 	const { blockFace, source, item } = event;
 // 	const { id } = source;
-
 // 	if (!players[id]) return console.warn('returned');
 // 	const { x, y, z } = blockFaceToCoords(blockFace, players[id]);
 // 	console.warn(JSON.stringify({ x, y, z }));
@@ -80,14 +75,12 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	event.impactedBlocks = impackedBlocksClone.filter(({ x: bx, y: by, z: bz }) => Math.hypot(bx - x, by - y, bz - z) < 2);
 // });
 // import { world, Player, MinecraftBlockTypes, BlockLocation, ItemStack, MinecraftItemTypes, Container } from '@minecraft/server';
-
 // const cropTypes = [
 // 	MinecraftBlockTypes.wheat.id,
 // 	MinecraftBlockTypes.carrots.id,
 // 	MinecraftBlockTypes.potatoes.id,
 // 	MinecraftBlockTypes.beetroot.id
 // ];
-
 // const cropItems = {
 // 	[MinecraftBlockTypes.wheat.id]: new ItemStack(MinecraftItemTypes.wheat, 1),
 // 	[MinecraftBlockTypes.carrots.id]: new ItemStack(MinecraftItemTypes.carrot, 1),
@@ -122,7 +115,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // world.events.beforeItemUse.subscribe(({ source, item }) => {
 // 	console.warn(JSON.stringify({ source: source.typeId, item: item.typeId }));
 // });
-
 // /**
 //  * @type {string[]}
 //  */
@@ -144,22 +136,18 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	entityTypeIds.forEach(id => {
 // 		if (excludes.includes(id)) return;
 // 		try {
-
 // 			dimension.spawnEntity(id, {x: x, y: y, z: z});
 // 		} catch (error) {
 // 			couldNotSpawn.push(id);
 // 			// console.warn( error, error.stack);
 // 		}
-
 // 	});
 // 	console.warn(JSON.stringify(couldNotSpawn));
-
 // });
 // import { world, Player, MinecraftItemTypes, BlockLocation } from '@minecraft/server';
 // world.events.tick.subscribe(() => {
 //     world.sendMessage("hello there!");
 // });
-
 // const xyz = ['x', 'y', 'z'];
 // const proto = Object.keys(Object.getPrototypeOf({}));
 // world.events.tick.subscribe(() => {
@@ -167,7 +155,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 		console.warn(player.location.constructor.name);
 // 	});
 // });
-
 // import { BlockLocation, world, BlockPermutation } from "@minecraft/server";
 // export const content = {
 // 	warn(...messages) {
@@ -175,7 +162,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	}
 // };
 // const overworld = world.getDimension('overworld');
-
 // function permutationClone(permutation) {
 // 	const permutationProperties = [];
 // 	/**
@@ -193,13 +179,10 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // });
 // const prefix = "!";
 // world.events.tick.subscribe((tickevent) => {
-
 // });
 // world.events.beforeChat.subscribe((data) => {
-
 // 	const { message, sender } = data;
 // 	const isAdmin = sender.hasTag("Admin");
-
 // 	const args = (message.substring(prefix.length).replace(/@(?=\w{2,})/g, '').trim().replace(/ {2,}/g, ' ').match(/".*?"|[\S]+/g) ?? []).map(item => item.replaceAll('"', '')) ?? [];
 // 	const command = args.shift();
 // 	content.warn({ args });
@@ -218,8 +201,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 		case 'b':
 // 		case 'ban': {
 // 			// try {
-
-
 // 			if (!isAdmin) return sender.tell('your not admin');
 // 			// content.warn(player.args[0);
 // 			const player = [...world.getPlayers({ name: args[0] })][0];
@@ -228,20 +209,14 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 			// } catch (error) {
 // 			// 	console.warn(error, error.stack);
 // 			// }
-
 // 		}
 // 	}
 // });
 // import { system, Player, world, MinecraftBlockTypes, BlockLocation, Block, BlockPermutation } from '@minecraft/server';
-
-
-
-
 // const object = { help: 8, heloo: 9, hejkekj: 8 };
 // Object.entries(object).forEach(([key, value]) => {
 // 	console.warn(JSON.stringify({ [key]: value }));
 // });
-
 // system.events.beforeWatchdogTerminate.subscribe(data => {
 // 	data.cancel = true;
 // });
@@ -260,14 +235,10 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	3: "south",
 // 	4: "west",
 // 	5: "east"
-
 // };
-
-
 // export function blockFaceToCoords(blockFace, { x, y, z }) {
 // 	blockFace = blockFaceToNumber[blockFace];
 // 	// content.warn({ blockFace });
-
 // 	let location = [x, y, z];
 // 	[
 // 		[0, -1, 0],
@@ -331,7 +302,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	"minecraft:smoker"
 // ];
 // const allDirectionsRotationPlacement = (blockId) => (id, dimension, blockLocation, blockFace, source) => {
-
 // 	dimension.getBlock(blockLocation).setType(MinecraftBlockTypes[blockId]);
 // 	/**
 // 	 * @type {Block}
@@ -343,7 +313,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	facing_direction.value = reverseDirection[rotationToDirection(source.rotation)];
 // 	block.setPermutation(permutation);
 // 	console.warn(JSON.stringify({ t: 28282, [block.typeId]: permutationClone(block.permutation) }));
-
 // };
 // const ileagalPlacementActions = {
 // 	'minecraft:mob_spawner': true,
@@ -381,7 +350,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 		dimension.spawnEntity('minecraft:tadpole', blockLocation);
 // 	},
 // 	'minecraft:hopper': (id, dimension, blockLocation, blockFace) => {
-
 // 		dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.hopper);
 // 		/**
 // 		 * @type {Block}
@@ -394,7 +362,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 		facing_direction.value = face;
 // 		block.setPermutation(permutation);
 // 		console.warn(JSON.stringify({ t: 28282, [block.typeId]: permutationClone(block.permutation) }));
-
 // 	},
 // 	'minecraft:barrel': allDirectionsRotationPlacement('barrel'),
 // 	'minecraft:dispenser': allDirectionsRotationPlacement('dispenser'),
@@ -422,23 +389,18 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	});
 // 	return permutationProperties;
 // }
-
 // world.events.beforeItemUseOn.subscribe((event) => {
-
 // 	const { blockFace, blockLocation: blockLocationClickedOn, source, item } = event;
 // 	// console.warn();
 // 	const { dimension } = source;
 // 	const blockClicked = dimension.getBlock(blockLocationClickedOn);
 // 	console.warn(blockClicked.typeId);
 // 	if (!item.typeId || clickableBlocks.includes(blockClicked.typeId)) return;
-
 // 	if (!ileagalPlacementActions.hasOwnProperty(item.typeId)) return;
-
 // 	event.cancel = true;
 // 	const value = ileagalPlacementActions[item.typeId];
 // 	console.warn(typeof value);
 // 	if (value instanceof Function) {
-
 // 		console.warn(JSON.stringify({ id: item.typeId }));
 // 		value(item.typeId, dimension, blockFaceToCoords(blockFace, blockLocationClickedOn), blockFace, source);
 // 	} else {
@@ -448,7 +410,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // });
 // function rotationToDirection(rotation) {
 // 	let { x, y } = rotation;
-
 // 	x = (x / 45 + 2) | 0;
 // 	y = ((y + 45) / 90 + 2) | 0;
 // 	console.warn(x, y);
@@ -466,7 +427,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 			return 'west';
 // 	}
 // };
-
 // import { DynamicPropertiesDefinition, MinecraftEntityTypes, world } from "@minecraft/server";
 // world.events.worldInitialize.subscribe((e) => {
 // 	let def = new DynamicPropertiesDefinition();
@@ -475,7 +435,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // });
 // class Time {
 // 	constructor() {
-
 // 	}
 // 	/**
 // 	 * @method start begin counting on the stored key
@@ -511,7 +470,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 		return (new Date()).getTime();
 // 	}
 // }
-
 // const time = new Time();
 // /**
 //  * @function benchmark
@@ -534,7 +492,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // };
 // let i = 0;
 // world.events.tick.subscribe(() => {
-
 // 	[...world.getPlayers()].forEach((player) => {
 // 		if (i++ > 10 && i === 12) {
 // 			try {
@@ -555,10 +512,7 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 		}
 // 	});
 // });
-
 // import { world, EntityEventOptions, MinecraftEntityTypes, MinecraftBlockTypes, BlockLocation } from "@minecraft/server";
-
-
 // export function pathIsObject(pathArray, object, allowArrays) {
 // 	if (!allowArrays) {
 // 		// console.warn(`return typeof object?.${pathArray.join('?.')} === 'object' && !Array.isArray(object?.${pathArray.join('?.')})`);
@@ -600,7 +554,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 		if (!stop) {
 // 			return assignToPath(pathArray, object, value, allowArrays);
 // 		}
-
 // 	}
 // }
 // const native = {
@@ -623,7 +576,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 			} default: {
 // 				return false;
 // 			}
-
 // 		}
 // 	},
 // 	toObject(input) {
@@ -653,8 +605,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 				}
 // 			}
 // 		};
-
-
 // 		return output;
 // 	},
 // 	stringify(input, replacer, spacing) {
@@ -667,7 +617,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	if (health > 0) return;
 // 	console.warn(health);
 // }, { entityTypes: ["minecraft:player"] });
-
 // export const content = {
 // 	warn(...messages) {
 // 		console.warn(messages.map(message => JSON.stringify(message)).join(' '));
@@ -681,12 +630,9 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	"up": 1,
 // 	"west": 4,
 // };
-
-
 // export function blockFaceToCoords(blockFace, { x, y, z }) {
 // 	blockFace = blockFaceToNumber[blockFace];
 // 	content.warn({ blockFace });
-
 // 	let location = [x, y, z];
 // 	[
 // 		[0, -1, 0],
@@ -740,15 +686,12 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	'minecraft:moving_block': false
 // };
 // const ileagalPlacements = Object.keys(ileagalPlacementActions);
-
-
 // world.events.beforeItemUseOn.subscribe((event) => {
 // 	const { blockFace, blockLocation: blockLocationClickedOn, source, item } = event;
 // 	const { dimension } = source;
 // 	content.warn({ id: item.typeId, name: source.name });
 // 	if (!item) return;
 // 	const placementId = ileagalPlacements.find(id => item.typeId.includes(id));
-
 // 	if (!placementId) return;
 // 	event.cancel = true;
 // 	const value = ileagalPlacementActions[placementId];
@@ -758,7 +701,6 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	} else {
 // 		if (value) dimension.getBlock(blockLocation).setType(MinecraftBlockTypes.get(item.typeId));
 // 	}
-
 // });
 // const playersBS = {};
 // // world.events.playerJoin.subscribe(({ player }) => {
@@ -793,5 +735,5 @@ system.beforeEvents.watchdogTerminate.subscribe((event) => {
 // 	json.rawtext[0].text = 'world.sendMessage: ';
 // 	world.sendMessage(json);
 // });
-
 // [{ rawtext: [{ translate: "patchy.hello", with: [{ rawtext: [{ text: "man" }] }] }] }];
+//# sourceMappingURL=start.js.map

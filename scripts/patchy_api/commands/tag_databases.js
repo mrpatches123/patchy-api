@@ -1,7 +1,6 @@
-
 import commandBuilder from "../libraries/classes/commands.js";
 import tagDatabases from "../libraries/classes/tag_database.js";
-import { overworld, content, assignToPath } from "../libraries/utilities.js";
+import { content } from "../libraries/utilities.js";
 import config from '../config.js';
 import { players } from "../modules.js";
 const { commandPrefix: prefix } = config;
@@ -47,3 +46,4 @@ commandBuilder.register('tagdatabases', {
         }
     }
 });
+//# sourceMappingURL=tag_databases.js.map

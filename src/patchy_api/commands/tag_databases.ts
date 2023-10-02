@@ -20,7 +20,7 @@ commandBuilder.register('tagdatabases', {
     callback: (sender, args) => {
         const [subCommand, type, name] = args;
         const player = players.get({ name }).array()[0];
-        content.warn({ tdbs: player.name });
+        content.warn({ tdbs: player!.name });
         switch (subCommand) {
             case 'print': {
                 switch (type) {

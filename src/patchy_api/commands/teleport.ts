@@ -21,8 +21,8 @@ commandBuilder.register('teleport', {
 				sender.sendMessage(JSON.stringify(teleportBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
 				break;
 			default:
-				if (!(teleportBuilder.hasOwnProperty(args[0]))) return sender.sendMessage(`teleport key: ${args[0]} at params[0] does not exist.`);
-				teleportBuilder.teleport(sender, args[0]);
+				if (!(teleportBuilder.hasOwnProperty(args[0]!))) return sender.sendMessage(`teleport key: ${args[0]} at params[0] does not exist.`);
+				teleportBuilder.teleport(sender, args[0]!);
 				break;
 		}
 	}

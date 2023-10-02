@@ -11,32 +11,20 @@ export class Database {
     constructor(json = {}) {
         Object.assign(this, json);
     }
-    /**
-     * @method has set a keys for its value in the Database
-     * @param {string} key key for value.
-     * @returns {boolean}
-     */
     has(key) {
-        if (!key) throw new Error('argument zero must be a key');
-
+        if (!key)
+            throw new Error('argument zero must be a key');
         return key in this;
-
     }
-    /**
-     * @method set set a keys for its value in the Database
-     * @param {String} key key for value.
-     * @param {any} value value for key.
-     * @returns {Database} this
-     */
     set(key, value) {
-        if (!key) throw new Error('argument zero must be a key');
-        if (!value) throw new Error('Argument one must have a value for the key');
-        if (key === '__db_properties') throw new Error('Key must not be "__db_properties"');
-
-
+        if (!key)
+            throw new Error('argument zero must be a key');
+        if (!value)
+            throw new Error('Argument one must have a value for the key');
+        if (key === '__db_properties')
+            throw new Error('Key must not be "__db_properties"');
         this[key] = value;
         return this;
-
     }
     /**
      * @method get gets the value for the key from the Database
@@ -44,20 +32,23 @@ export class Database {
      * @returns {any} value for key
      */
     get(key) {
-        if (typeof key !== 'number' && typeof key !== 'string') throw new Error('argument zero must be a key');
-        if (key === '__db_properties') throw new Error('Key must not be "__db_properties"');
-        if (key in this) return this[key];
+        if (typeof key !== 'number' && typeof key !== 'string')
+            throw new Error('argument zero must be a key');
+        if (key === '__db_properties')
+            throw new Error('Key must not be "__db_properties"');
+        if (key in this)
+            return this[key];
     }
     /**
      * @method delete deletes a keys and its value from the Database
      * @param {String} name Database name
      */
-
     delete(key) {
-        if (!key) throw new Error('argument zero must be a key');
-        if (key === '__db_properties') throw new Error('Key must not be "__db_properties"');
+        if (!key)
+            throw new Error('argument zero must be a key');
+        if (key === '__db_properties')
+            throw new Error('Key must not be "__db_properties"');
         delete this[key];
-
     }
     /**
      * @method clear remove all entires on the Database
@@ -70,19 +61,9 @@ export class Database {
 const chunkLength = 32760;
 class Databases {
     constructor() {
-        /**
-         * @type {Record<string, Database>}
-         */
         this.memory = {};
-        /**
-         * @type {string[]}
-         */
         this.saveQueue = [];
-        /**
-         * @type {boolean}
-         */
         this.subscribedSaveQueue = false;
-
     }
     /**
      * @method get
@@ -90,8 +71,10 @@ class Databases {
      */
     get(databaseName) {
         const objective = world.scoreboard.getObjective('sbDB:' + databaseName);
-        if (!objective) return;
-        if (this.memory[databaseName]) return this.memory[databaseName];
+        if (!objective)
+            return;
+        if (this.memory[databaseName])
+            return this.memory[databaseName];
         const participants = objective.getParticipants();
         const rawData = participants.map(({ displayName }) => [Number(displayName.match(/\d+/)[0]), displayName.replace(/\d+:/, '')]).sort(([a], [b]) => b - a).map(([, data]) => data).join('');
         console.warn(rawData);
@@ -106,8 +89,10 @@ class Databases {
     add(databaseName) {
         console.warn(databaseName);
         const objective = world.scoreboard.getObjective('sbDB:' + databaseName);
-        if (!objective) world.scoreboard.addObjective('sbDB:' + databaseName, 'sbDB:' + databaseName);
-        if (this.memory[databaseName]) return this.memory[databaseName];
+        if (!objective)
+            world.scoreboard.addObjective('sbDB:' + databaseName, 'sbDB:' + databaseName);
+        if (this.memory[databaseName])
+            return this.memory[databaseName];
         this.memory[databaseName] = new Database();
         return this.memory[databaseName];
     }
@@ -117,7 +102,8 @@ class Databases {
      */
     save(databaseName) {
         const objective = world.scoreboard.getObjective('sbDB:' + databaseName);
-        if (!this.memory[databaseName]) throw new Error(`databaseName: }
+        if (!this.memory[databaseName])
+            throw new Error(`databaseName: }
 		${databaseName}, at params[0], does not exist!`);
         const rawData = JSON.stringify(this.memory[databaseName]);
         objective.getParticipants().forEach(participant => objective.removeParticipant(participant));
@@ -128,7 +114,8 @@ class Databases {
      * @private
      */
     subscribeSaveQueue() {
-        if (this.subscribedSaveQueue) return;
+        if (this.subscribedSaveQueue)
+            return;
         this.subscribedSaveQueue = true;
         this.runSaveQueue();
     }
@@ -138,11 +125,14 @@ class Databases {
      */
     async runSaveQueue() {
         const rerun = await new Promise((resolve) => system.run(async () => {
-            if (!this.queueSaves.length) return resolve(false);;
-            this.savePromise(this.queueSaves.shift());
+            if (!this.saveQueue.length)
+                return resolve(false);
+            ;
+            this.savePromise(this.saveQueue.shift());
             resolve(true);
         }));
-        if (!rerun) return;
+        if (!rerun)
+            return;
         this.runSaveQueue();
     }
     /**
@@ -153,9 +143,10 @@ class Databases {
         try {
             await new Promise((resolve) => {
                 this.save(databaseName);
-                resolve();
+                resolve(void 0);
             });
-        } catch (error) {
+        }
+        catch (error) {
             console.warn(error, error.stack);
         }
     }
@@ -165,8 +156,9 @@ class Databases {
      * @returns {boolean}
      */
     queueSave(databaseName) {
-        if (this.queueSaves.includes(databaseName)) return false;
-        this.queueSaves.push(databaseName);
+        if (this.saveQueue.includes(databaseName))
+            return false;
+        this.saveQueue.push(databaseName);
         this.subscribeSaveQueue();
         return true;
     }
@@ -175,17 +167,19 @@ class Databases {
      * @param {string}databaseName
      */
     forget(databaseName) {
-        if (this.memory[databaseName]) delete this.memory[databaseName];
+        if (this.memory[databaseName])
+            delete this.memory[databaseName];
     }
     /**
      * @method remove
      * @param {String}databaseName
      */
     remove(databaseName) {
-        if (this.memory[databaseName]) delete this.memory[databaseName];
+        if (this.memory[databaseName])
+            delete this.memory[databaseName];
         world.scoreboard.removeObjective('sbDB:' + databaseName);
     }
 }
-
 const databases = new Databases();
 export default databases;
+//# sourceMappingURL=scoreboard_database.js.map

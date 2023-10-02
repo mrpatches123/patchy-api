@@ -1,11 +1,6 @@
 import config from '../config.js';
-
 const { commandPrefix: prefix } = config;
-
-
-
-import { commandBuilder, content, native } from '../../patchy_api/modules.js';
-
+import { commandBuilder } from '../../patchy_api/modules.js';
 commandBuilder.register('rename', {
     description: "Used to enchant the item in hand.",
     usages: [
@@ -20,26 +15,23 @@ commandBuilder.register('rename', {
     prefix,
     callback: (sender, args) => {
         const { name, selectedSlot } = sender;
-
         if (args[0] === undefined) {
             sender.sendMessage('§cYou must input a itemName!');
-        } else {
+        }
+        else {
             let inventory = sender.getComponent('minecraft:inventory').container;
             let item = inventory.getItem(selectedSlot);
             if (!item) {
                 sender.sendMessage('§cYou must hold a item to rename!');
-            } else {
+            }
+            else {
                 item.nameTag = args[0].replaceAll('\\n', '\n');
                 inventory.setItem(selectedSlot, item);
             }
         }
-
     }
 });
-
-
 // not required
 // just change the "sender.message" to something else
-
-
 // command stuff
+//# sourceMappingURL=rename.js.map

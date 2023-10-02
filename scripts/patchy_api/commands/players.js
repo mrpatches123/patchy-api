@@ -1,5 +1,4 @@
 import { players, commandBuilder, native, content } from "../modules.js";
-
 import config from '../config.js';
 const { commandPrefix: prefix } = config;
 commandBuilder.register('players', {
@@ -32,3 +31,4 @@ commandBuilder.register('players', {
         // sender.sendMessage(JSON.stringify(eventBuilder));
     }
 });
+//# sourceMappingURL=players.js.map

@@ -1,11 +1,11 @@
 
 import { world, system, EntityEventOptions, Player as PlayerType } from '@minecraft/server';
-import { content, native } from '../../utilities.ts';
-import time from '../time.ts';
-import { setProptotype } from '../player/class.ts';
-import { CustomEvent } from '../custom_event/class.ts';
-import errorLogger from '../error.ts';
-import { EventObject, EventRegisterObject, EventTypes, EventTypes as EventKeyTypes, eventKeys } from './types.ts';
+import { content, native } from '../../utilities';
+import time from '../time';
+import { setProptotype } from '../player/class';
+import { CustomEvent } from '../custom_event/class';
+import errorLogger from '../error';
+import { EventObject, EventRegisterObject, EventTypes, EventTypes as EventKeyTypes, eventKeys } from './types';
 let keystest = [];
 let clearedKeyTest = false;
 

@@ -7,9 +7,9 @@ import { Player } from "../player/class.js";
 
 
 export type Form = {
-	action?: Array<ActionData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<ActionData>);
-	modal?: Array<ModalData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<ModalData>);
-	message?: Array<MessageData> | ((receiver: Player, i: number, ...extraArguments: any[]) => Array<MessageData>);
+	action?: ActionData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ActionData[]);
+	modal?: ModalData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ModalData[]);
+	message?: MessageData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => MessageData[]);
 };
 export type ActionData = {
 	title?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
@@ -20,7 +20,7 @@ export type ActionData = {
 	toggle?: ActionToggle | ((receiver: Player, i: number, ...extraArguments: any[]) => ActionButton);
 	returnOnPress?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 	returnOnClose?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
-	closeCallBack?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	closeCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 } | ((receiver: Player, ...extraArguments: any[]) => (ActionData[] | ActionData)) | ActionData[];
@@ -93,7 +93,7 @@ export type MessageData = {
 	returnOnPress?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 	returnOnClose?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
-	closeCallBack?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	closeCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 } | ((receiver: Player, ...extraArguments: any[]) => (MessageData[] | MessageData));
 

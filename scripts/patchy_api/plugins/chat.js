@@ -6,7 +6,6 @@ eventBuilder.subscribe('commands*API', {
         const { name } = sender;
         const prefix = commandBuilder.getPrefix(message);
         // content.warn({ prefix });
-
         if (prefix) {
             commandBuilder.check(message, sender, prefix);
             event.sendToTargets = true;
@@ -17,12 +16,11 @@ eventBuilder.subscribe('commands*API', {
         //         // const nameTag = getChatNameTag(sender);
         //         world.sendMessage(`[§e${name}§r]: ${message}`);
         //     }
-
         // }
     }
 });
 // } catch (error) {
 //     console.warn(error, error.stack);
 // }
-
 // return = promptBuilder.check(sender, message) ?? false;
+//# sourceMappingURL=chat.js.map

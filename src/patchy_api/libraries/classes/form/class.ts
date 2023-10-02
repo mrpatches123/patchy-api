@@ -248,7 +248,7 @@ export class FormBuilder {
 			if (!(formArray instanceof Array)) throw new Error(`typeKey: ${type}, in formData for key: ${key}, has value of a function that does not return type: Array!`);
 		} else if (!(formData instanceof Array)) throw new Error(`typeKey: ${type}, in formData for key: ${key}, has a value that is not of type: Array!`);
 		else formArray = formData;
-		formArray = [...formArray];
+		formArray = [...formArray] as unknown as typeof formArray;
 		let callbackArray: any[] = [];
 		for (let i = 0; i < formArray.length; i++) {
 			const object = formArray[i];

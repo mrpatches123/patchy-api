@@ -1,58 +1,64 @@
-import { ItemStack, Container, EntityQueryOptions } from "@minecraft/server";
+import { Container, Dimension, ContainerSlot, EntityQueryOptions } from "@minecraft/server";
 import { Player } from "../player/class.js";
-class Inventory {
-	constructor(array: ItemStack[], inventory: Container);
-	iterate(callback: (item: ItemStack, i: number) => {}): void;
+export declare class Inventory {
+    array: (ContainerSlot | undefined)[];
+    container: Container;
+    constructor(array: (ContainerSlot | undefined)[], inventory: Container);
+    iterate(callback: (item: ContainerSlot | undefined, i: number) => (ContainerSlot | undefined)): void;
 }
-class PlayerIterator {
-	constructor(players: { [id: string]: Player; });
-	readonly count: number;
-	iterate(callback: (player: Player, i: number) => {}): void;
-	array(): Player[];
-	object(): { [id: String]: Player; };
-	ids(): String[];
-	names(): String[];
-	[Symbol.iterator](): Iterator<ItemStack, ItemStack, ItemStack>;
-
+declare class PlayerIterator {
+    players: {
+        [playerId: string]: Player;
+    };
+    playerArray: Player[];
+    playerLength: number;
+    constructor(players: {
+        [playerId: string]: Player;
+    });
+    get count(): number;
+    iterate(callback: (player: Player, i: number) => any): void;
+    array(): Player[];
+    object(): {
+        [playerId: string]: Player;
+    };
+    ids(): string[];
+    names(): string[];
+    [Symbol.iterator](): {
+        next: () => {
+            value: Player | undefined;
+            done: boolean;
+        };
+    };
 }
-interface propertyOptionsString {
-	maxLength: Number;
-	type: 'string';
+export declare class Players {
+    objectProperties: Record<string, any>;
+    inventorys: Record<string, {
+        container: Inventory;
+    }>;
+    ran: boolean;
+    memory: Record<string, any>;
+    basePlayerIterator: PlayerIterator;
+    ranGarbage: boolean;
+    playerQueryIterators: Record<string, PlayerIterator>;
+    constructor();
+    refreshBasePlayerIterator(): void; /**
+     * @param {import('@minecraft/server').EntityQueryOptions} entityQueryOptions
+     * @param {boolean} cache
+     * @returns {Player}
+     */
+    find(entityQueryOptions?: EntityQueryOptions, cache?: boolean): Player | undefined;
+    getById(id: string): Player | undefined;
+    get(entityQueryOptions?: EntityQueryOptions, cache?: boolean, dimension?: Dimension): PlayerIterator;
+    getInventory(player: Player): Inventory;
+    getRandomPlayer(entityQueryOptions: EntityQueryOptions): {
+        id: Player | undefined;
+    } | undefined;
+    getProperty(player: Player, identifier: string): string | number | boolean | undefined;
+    setProperty(player: Player, identifier: string, value: string | number | boolean): void;
+    resetProperty(player: Player, identifier: string): void;
+    registerProperty(identifier: string, options: {
+        type: 'string' | 'number' | 'boolean';
+        maxLength?: number;
+    }): void;
 }
-interface propertyOptionsNumberBoolean {
-	type: 'boolean' | 'number';
-}
-export class Players {
-	constructor();
-	getById(id: string): Player;
-	/**
-	 * finds the first player accorinf to the option or just the first player
-	 */
-	find(entityQueryOptions: EntityQueryOptions, cache = true): Player;
-	/**
-	 * gets players that are loaded meaning they can have commands ran them and caches entity querys by default per tick for perfornace
-	 */
-	get(entityQueryOptions: EntityQueryOptions, cache = true): PlayerIterator;
-	/**
-	 * gets the inventory of the player
-	 */
-	getInventory(player: Player): Inventory;
-	/**
-	 * gets a random player that is loaded meaning they can have commands ran them and and caches entity querys by default per tick for perfornace
-	 */
-	getRandomPlayer(entityQueryOptions: EntityQueryOptions): Player;
-	/**
-	 * gets a dynamic property which caching so make sure to only set it with in the class
-	 */
-	getProperty(player: Player, identifier: string, forceDisk = false): string | number | boolean | undefined;
-	/**
-	 * gets a dynamic property which caching so make sure to only set it with in the class
-	 */
-	setProperty(player: Player, identifier: string, value: string | number | boolean): void;
-	resetProperty(player: Player, identifier: string, value: string | number | boolean): void;
-	registerProperty(identifier: string, options: propertyOptionsString | propertyOptionsNumberBoolean): void;
-}
-export class Inventory {
-	constructor(array: ItemStack[], inventory: Container);
-	iterate(callback: (item: ItemStack, i: Number) => {}): void;
-}
+export {};
