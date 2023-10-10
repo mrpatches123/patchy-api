@@ -1,12 +1,8 @@
 import { Entity, Player, Vector3, World, world } from "@minecraft/server";
 import { workerData } from "worker_threads";
-import { isDefined } from "../utilities";
-
-/**
- * @param {string} str 
- * @param {number} length 
- * @returns {string[]}
- */
+export function isDefined(input: any) {
+	return (input !== null && input !== undefined && !Number.isNaN(input));
+}
 function chunkStringBytes(str: string, length: number) {
 	const chunks = [];
 	let chunk = '';
@@ -31,6 +27,10 @@ function chunkStringBytes(str: string, length: number) {
 	}
 
 	return chunks;
+}
+export function isVector3<T>(target: T) {
+	// content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
+	return target instanceof Object && 'x' in target && 'y' in target && 'z' in target;
 }
 class DynamicProperties {
 	public storage: Record<string, DynamicPropertiesForInstance> = {};
@@ -80,16 +80,8 @@ class DynamicPropertiesForInstance {
 		this.instance = instance;
 		this.id = (instance instanceof World) ? 'world' : instance.id;
 	}
-	get jsons() {
-		this.cache!.json ??= {};
-		const thisProperty = this;
-		return new Proxy(this.cache!.json!, {
-			get(target, identifer) {
-				if (typeof identifer !== 'string') return;
-				return thisProperty.getJSON(identifer);
-			}
-		});
-	}
+
+
 	getJSON<T>(identifer: string): T | undefined {
 		if (this.cache?.json?.[identifer]) return this.cache?.json[identifer];
 		const joins = [];
@@ -103,6 +95,28 @@ class DynamicPropertiesForInstance {
 			ouput = JSON.parse(joins.join(''));
 		} catch { }
 		return ouput;
+	}
+	setJSON(identifer: string, value?: any): this {
+		if (!isDefined(value)) {
+			this.cache!.json ??= {};
+			this.cache!.json[identifer] = value;
+			return this;
+		}
+		const rawJSONChunks = chunkStringBytes(JSON.stringify(value), 32767);
+		for (let i = 0; i < rawJSONChunks.length; i++) {
+			this.setString(`${identifer}_${i}`, rawJSONChunks[i]);
+		}
+		return this;
+	}
+	get jsons() {
+		this.cache!.json ??= {};
+		const thisProperty = this;
+		return new Proxy(this.cache!.json!, {
+			get(target, identifer) {
+				if (typeof identifer !== 'string') return;
+				return thisProperty.getJSON(identifer);
+			}
+		});
 	}
 	getString(identifer: string): string | undefined {
 		this.cache!.string ??= {};
@@ -120,14 +134,88 @@ class DynamicPropertiesForInstance {
 		this.cache!.string[identifer] = value;
 		return this;
 	}
-	setJSON(identifer: string, value?: any): this {
-		if (!isDefined(value)) {
-			this.cache!.json ??= {};
-			this.cache!.json[identifer] = value;
-			return this;
-		}
-		const rawJSON = JSON.stringify(value);
-		
+	get strings() {
+		this.cache!.string ??= {};
+		const thisProperty = this;
+		return new Proxy(this.cache!.string!, {
+			get(target, identifer) {
+				if (typeof identifer !== 'string') return;
+				return thisProperty.getString(identifer);
+			}
+		});
+	}
+	getNumber(identifer: string): number | undefined {
+		this.cache!.number ??= {};
+		if (identifer in this.cache?.number!) return this.cache?.number[identifer];
+		const value = this.instance.getDynamicProperty(identifer);
+		if (typeof value !== 'number') return;
+		this.cache!.number![identifer] ??= value;
+		return value;
+	}
+	setNumber(identifer: string, value?: number): this {
+		this.instance.setDynamicProperty(identifer, value);
+		this.cache!.number ??= {};
+		this.cache!.number[identifer] = value;
 		return this;
 	}
+	get numbers() {
+		this.cache!.number ??= {};
+		const thisProperty = this;
+		return new Proxy(this.cache!.number!, {
+			get(target, identifer) {
+				if (typeof identifer !== 'string') return;
+				return thisProperty.getNumber(identifer);
+			}
+		});
+	}
+
+	getBoolean(identifer: string): boolean | undefined {
+		this.cache!.boolean ??= {};
+		if (identifer in this.cache?.boolean!) return this.cache?.boolean[identifer];
+		const value = this.instance.getDynamicProperty(identifer);
+		if (typeof value !== 'boolean') return;
+		this.cache!.boolean![identifer] ??= value;
+		return value;
+	}
+	setBoolean(identifer: string, value?: boolean): this {
+		this.instance.setDynamicProperty(identifer, value);
+		this.cache!.boolean ??= {};
+		this.cache!.boolean[identifer] = value;
+		return this;
+	}
+	get booleans() {
+		this.cache!.boolean ??= {};
+		const thisProperty = this;
+		return new Proxy(this.cache!.boolean!, {
+			get(target, identifer) {
+				if (typeof identifer !== 'string') return;
+				return thisProperty.getBoolean(identifer);
+			}
+		});
+	}
+	getVector3(identifer: string): Vector3 | undefined {
+		this.cache!.vector3 ??= {};
+		if (identifer in this.cache?.vector3!) return this.cache?.vector3[identifer];
+		const value = this.instance.getDynamicProperty(identifer);
+		if (!isVector3(value)) return;
+		this.cache!.vector3![identifer] ??= value as Vector3;
+		return value as Vector3;
+	}
+	setVector3(identifer: string, value?: Vector3): this {
+		this.instance.setDynamicProperty(identifer, value);
+		this.cache!.vector3 ??= {};
+		this.cache!.vector3[identifer] = value;
+		return this;
+	}
+	get vector3s() {
+		this.cache!.vector3 ??= {};
+		const thisProperty = this;
+		return new Proxy(this.cache!.vector3!, {
+			get(target, identifer) {
+				if (typeof identifer !== 'string') return;
+				return thisProperty.getVector3(identifer);
+			}
+		});
+	}
+
 }
