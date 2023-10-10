@@ -14,7 +14,7 @@ commandBuilder.register('tps', {
             global.printTps = Number(args[1]);
         } else {
             const { deltaTimes } = global;
-            const tps = (1 / (deltaTimes.reduce((s, c) => s + c) / deltaTimes.length)).round(2);
+            const tps = Math.round(1 / ((deltaTimes as number[]).reduce((s, c) => s + c) / deltaTimes.length) * 100) / 100;
             sender.sendMessage((tps < 20) ? tps.toString() : '19.99');
         }
     }
@@ -25,7 +25,7 @@ eventBuilder.subscribe('tps', {
         if (global.deltaTimes.length > tpsPrecision) global.deltaTimes.shift();
         if (!global.printTps) return;
         const { deltaTimes } = global;
-        const tps = (1 / (deltaTimes.reduce((s, c) => s + c) / deltaTimes.length)).round(2);
+        const tps = Math.round(1 / ((deltaTimes as number[]).reduce((s, c) => s + c) / deltaTimes.length) * 100) / 100;
         world.sendMessage((tps < 20) ? tps.toString() : '19.99');
     }
 });

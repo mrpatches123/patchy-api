@@ -24,13 +24,13 @@ commandBuilder.register('text', {
 	aliases: ['t'],
 	callback: (sender, args) => {
 		const { dimension } = sender;
-		let [subCommand, x, y, z, ...text] = args;
+		let [subCommand, x, y, z, ...name] = args;
 		if (!subCommand) return sender.sendMessage(`subCommand: ${subCommand}, at args[0] is not defined `);
 		if (!x) return sender.sendMessage(`text: ${x}, at args[1] is not defined `);
 		if (!y) return sender.sendMessage(`text: ${y}, at args[2] is not defined `);
 		if (!z) return sender.sendMessage(`text: ${z}, at args[3] is not defined `);
-		if (!text) return sender.sendMessage(`text: ${text}, at args[4...] is not defined `);
-		text = text.join(' ').replaceAll('\\n', '\n');
+		if (!name) return sender.sendMessage(`text: ${name}, at args[4...] is not defined `);
+		const text = name.join(' ').replaceAll('\\n', '\n');
 		const location = {
 			x: relativeParse(sender, x, 'x'),
 			y: relativeParse(sender, y, 'y'),
@@ -49,6 +49,7 @@ commandBuilder.register('text', {
 			case 'd':
 			case 'delete': {
 				const entity = [...dimension.getEntities({ type: 'patches:floating_text', closest: 1, maxDistance: 2, location })][0];
+				if (!entity) return sender.sendMessage(`No text entity found at ${x} ${y} ${z}!`);
 				entity.triggerEvent('kill_text');
 				break;
 			}

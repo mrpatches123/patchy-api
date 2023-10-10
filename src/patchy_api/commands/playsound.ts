@@ -16,17 +16,21 @@ commandBuilder.register('playsound', {
 	},
 	callback: (sender, args) => {
 		let [subCommand, id, pitch, volume] = args;
+		/*@ts-ignore*/
 		pitch = Number(pitch);
 		content.warn(subCommand, id, pitch, volume);
+		/*@ts-ignore*/
 		volume = Number(volume ?? 100);
 		switch (subCommand) {
 			case 'w':
 			case 'world':
-				world.playSound(id, { pitch, volume });
+				/*@ts-ignore*/
+				world.playSound(id!, { pitch, volume });
 				break;
 			case 's':
 			case 'self':
-				sender.playSound(id, { pitch, volume });
+				/*@ts-ignore*/
+				sender.playSound(id!, { pitch, volume });
 				break;
 		}
 	}

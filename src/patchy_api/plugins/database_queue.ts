@@ -7,7 +7,7 @@ eventBuilder.subscribe('end_databaseSaveQueue*API', {
 		// content.warn('end_databaseSaveQueue', currentTick);
 		if (databases.__queuedSaves.length) {
 			content.warn(databases.__queuedSaves[0]);
-			databases.save(databases.__queuedSaves[0]);
+			databases.save(databases.__queuedSaves[0]!);
 			databases.__queuedSaves.splice(0, 1);
 		}
 		// [...world.getPlayers()].forEach(player => {

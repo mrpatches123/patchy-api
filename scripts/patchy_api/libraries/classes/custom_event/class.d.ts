@@ -1,6 +1,7 @@
-import { EventKeyTypes } from '../events/class';
-
-class CustomEvent<eventKey extends string> {
-	constructor(eventKey: string);
-	iterate(eventResponse: EventKeyTypes[eventKey] | Object, callback: (key: string, eventResponse: EventKeyTypes[eventKey] | Object, callbackForKey: () => {}, i: Number) => {}): void;
+import eventBuilder from "../events/export_instance.js";
+export declare class CustomEvent {
+    eventKey: string;
+    subscriptions: typeof eventBuilder.subscriptions[string];
+    constructor(eventKey: string);
+    iterate(eventResponse: Object, callback?: Function): void;
 }

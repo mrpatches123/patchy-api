@@ -1,34 +1,26 @@
-import { content, formBuilder, ModalForm, scoreboardBuilder } from "../../modules.js";
+import { Form } from "../../libraries/classes/form/schema.js";
+import { content, formBuilder, scoreboardBuilder } from "../../modules.js";
 const test = ['hello', 'hi', 'youcoowd', 'wdwdwdwd'];
 
 scoreboardBuilder.add('testabc');
+
 formBuilder.create('actionSoft', {
 	action: (receiver) => {
 		return [
-			{
-				title: receiver.name
-			}, ...test.map(text => ({
-				button: {
-					text
-				},
-				callback: (receiver) => {
-					content.warn({ receiver: receiver.name, text });
-				}
-			})),
 			{
 				toggle: {
 					reopen: true,
 					cycleCallback: (receiver) => {
 						const { scores } = receiver;
-						(scores.testabc >= 2) ? scores.testabc = 0 : scores.testabc++;
+						(scores.testabc! >= 2) ? scores.testabc = 0 : scores.testabc!++;
 						content.warn({ t: 'cycle', testabc: scores.testabc });
-						return scores.testabc;
+						return scores.testabc!;
 					},
 					initialisationFunction: (receiver) => {
 						const { scores } = receiver;
 						scores.testabc ??= 0;
 						content.warn({ t: 'init', testabc: scores.testabc });
-						return scores.testabc;
+						return scores.testabc!;
 					},
 					options: [
 						{
@@ -56,19 +48,7 @@ formBuilder.create('actionSoft', {
 				},
 
 			},
-			() => [
-				{
-					back: {
-						text: 'bk'
-					}
-				},
-				{
-					button: {
-						reopen: true,
-						text: 'rh'
-					}
-				}
-			]
 		];
 	}
 });
+

@@ -22,8 +22,8 @@ commandBuilder.register('kill', {
 		const [name] = args;
 		const player = players.get({ name }).array()[0];
 		if (!name) return sender.kill();
-		player.tell(`you were killed by ${sender.name}`);
-		player.kill();
+		player!.tell(`you were killed by ${sender.name}`);
+		player!.kill();
 
 	}
 });

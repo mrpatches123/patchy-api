@@ -1,5 +1,5 @@
 import loads from "../load.js";
-import { Player as PlayerType, Container, system, Vector, EntityEquipmentInventoryComponent, EquipmentSlot, world } from "@minecraft/server";
+import { Player as PlayerType, Container, system, Vector, EquipmentSlot, world, ItemStack, ContainerSlot, EntityType, Camera, EntityEquippableComponent } from "@minecraft/server";
 import players from "../players/export_instance.js";
 import errorLogger from "../error.js";
 import { content, native } from "../../utilities.js";
@@ -8,173 +8,234 @@ import gamemode, { gamemodeIndexMap, gamemodeMap } from "../gamemode.js";
 import propertyBuilder from "../property/export_instance.js";
 const player = world.getAllPlayers()[0];
 const armorSlots = [
-	EquipmentSlot.feet,
-	EquipmentSlot.legs,
-	EquipmentSlot.chest,
-	EquipmentSlot.head
+	EquipmentSlot.Feet,
+	EquipmentSlot.Legs,
+	EquipmentSlot.Chest,
+	EquipmentSlot.Head
 ];
-class OnScreenDisplay {
-	/**
-	 * @param {Player} player 
-	 */
-	constructor(player) {
-		this.player = player;
-	}
-	/**
-	 * @param {String} text 
-	 * @param {import("@minecraft/server").TitleDisplayOptions} options 
-	 */
-	setTitle(text, options = {}) {
-		if (!text) throw new Error(`text at params[0] is not defined`);
-		const { subtitle, fadeInSeconds, fadeOutSeconds, staySeconds } = options;
-		this.player.runCommand(`titleraw @s title {"rawtext":[{"text":"${text}"}]}`);
-		if (subtitle) this.player.runCommand(`titleraw @s subtitle {"rawtext":[{"text":"${subtitle}"}]}`);
-		if (fadeInSeconds || fadeOutSeconds || staySeconds) this.player.runCommand(`titleraw @s times ${fadeInSeconds ?? 0} ${staySeconds ?? 999999999} ${fadeOutSeconds ?? 0}`);
-	}
-	/**
-	 * @param {String} text
-	 */
-	updateSubtitle(text) {
-		if (!text) throw new Error(`text at params[0] is not defined`);
-		this.player.runCommand(`titleraw @s subtitle {"rawtext":[{"text":"${text}"}]}`);
-	}
-	/**
-	 * @param {String} text
-	 */
-	setActionBar(text) {
-		if (!text) throw new Error(`text at params[0] is not defined`);
-		this.player.runCommand(`titleraw @s actionbar {"rawtext":[{"text":"${text}"}]}`);
-	}
-	/**
-	 * @param {String} text
-	 */
-	clearTitle() {
-		this.player.clear(`titleraw @s clear`);
-	}
+import { EntityOnFireComponent, EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyeableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
+
+interface EntityComponents {
+	'minecraft:onfire': EntityOnFireComponent;
+	'onfire': EntityOnFireComponent;
+	'minecraft:addrider': EntityAddRiderComponent;
+	'addrider': EntityAddRiderComponent;
+	'minecraft:ageable': EntityAgeableComponent;
+	'ageable': EntityAgeableComponent;
+	'minecraft:breathable': EntityBreathableComponent;
+	'breathable': EntityBreathableComponent;
+	'minecraft:can_climb': EntityCanClimbComponent;
+	'can_climb': EntityCanClimbComponent;
+	'minecraft:can_fly': EntityCanFlyComponent;
+	'can_fly': EntityCanFlyComponent;
+	'minecraft:can_power_jump': EntityCanPowerJumpComponent;
+	'can_power_jump': EntityCanPowerJumpComponent;
+	'minecraft:color': EntityColorComponent;
+	'color': EntityColorComponent;
+	'minecraft:equippable': EntityEquippableComponent;
+	'equippable': EntityEquippableComponent;
+	'minecraft:fire_immune': EntityFireImmuneComponent;
+	'fire_immune': EntityFireImmuneComponent;
+	'minecraft:floats_in_liquid': EntityFloatsInLiquidComponent;
+	'floats_in_liquid': EntityFloatsInLiquidComponent;
+	'minecraft:flying_speed': EntityFlyingSpeedComponent;
+	'flying_speed': EntityFlyingSpeedComponent;
+	'minecraft:friction_modifier': EntityFrictionModifierComponent;
+	'friction_modifier': EntityFrictionModifierComponent;
+	'minecraft:ground_offset': EntityGroundOffsetComponent;
+	'ground_offset': EntityGroundOffsetComponent;
+	'minecraft:healable': EntityHealableComponent;
+	'healable': EntityHealableComponent;
+	'minecraft:health': EntityHealthComponent;
+	'health': EntityHealthComponent;
+	'minecraft:inventory': EntityInventoryComponent;
+	'inventory': EntityInventoryComponent;
+	'minecraft:is_baby': EntityIsBabyComponent;
+	'is_baby': EntityIsBabyComponent;
+	'minecraft:is_charged': EntityIsChargedComponent;
+	'is_charged': EntityIsChargedComponent;
+	'minecraft:is_chested': EntityIsChestedComponent;
+	'is_chested': EntityIsChestedComponent;
+	'minecraft:is_dyeable': EntityIsDyeableComponent;
+	'is_dyeable': EntityIsDyeableComponent;
+	'minecraft:is_hidden_when_invisible': EntityIsHiddenWhenInvisibleComponent;
+	'is_hidden_when_invisible': EntityIsHiddenWhenInvisibleComponent;
+	'minecraft:is_ignited': EntityIsIgnitedComponent;
+	'is_ignited': EntityIsIgnitedComponent;
+	'minecraft:is_illager_captain': EntityIsIllagerCaptainComponent;
+	'is_illager_captain': EntityIsIllagerCaptainComponent;
+	'minecraft:is_saddled': EntityIsSaddledComponent;
+	'is_saddled': EntityIsSaddledComponent;
+	'minecraft:is_shaking': EntityIsShakingComponent;
+	'is_shaking': EntityIsShakingComponent;
+	'minecraft:is_sheared': EntityIsShearedComponent;
+	'is_sheared': EntityIsShearedComponent;
+	'minecraft:is_stackable': EntityIsStackableComponent;
+	'is_stackable': EntityIsStackableComponent;
+	'minecraft:is_stunned': EntityIsStunnedComponent;
+	'is_stunned': EntityIsStunnedComponent;
+	'minecraft:is_tamed': EntityIsTamedComponent;
+	'is_tamed': EntityIsTamedComponent;
+	'minecraft:item': EntityItemComponent;
+	'item': EntityItemComponent;
+	'minecraft:lava_movement': EntityLavaMovementComponent;
+	'lava_movement': EntityLavaMovementComponent;
+	'minecraft:leashable': EntityLeashableComponent;
+	'leashable': EntityLeashableComponent;
+	'minecraft:mark_variant': EntityMarkVariantComponent;
+	'mark_variant': EntityMarkVariantComponent;
+	'minecraft:tamemount': EntityMountTamingComponent;
+	'tamemount': EntityMountTamingComponent;
+	'minecraft:movement.amphibious': EntityMovementAmphibiousComponent;
+	'movement.amphibious': EntityMovementAmphibiousComponent;
+	'minecraft:movement.basic': EntityMovementBasicComponent;
+	'movement.basic': EntityMovementBasicComponent;
+	'minecraft:movement': EntityMovementComponent;
+	'movement': EntityMovementComponent;
+	'minecraft:movement.fly': EntityMovementFlyComponent;
+	'movement.fly': EntityMovementFlyComponent;
+	'minecraft:movement.generic': EntityMovementGenericComponent;
+	'movement.generic': EntityMovementGenericComponent;
+	'minecraft:movement.glide': EntityMovementGlideComponent;
+	'movement.glide': EntityMovementGlideComponent;
+	'minecraft:movement.hover': EntityMovementHoverComponent;
+	'movement.hover': EntityMovementHoverComponent;
+	'minecraft:movement.jump': EntityMovementJumpComponent;
+	'movement.jump': EntityMovementJumpComponent;
+	'minecraft:movement.skip': EntityMovementSkipComponent;
+	'movement.skip': EntityMovementSkipComponent;
+	'minecraft:movement.sway': EntityMovementSwayComponent;
+	'movement.sway': EntityMovementSwayComponent;
+	'minecraft:navigation.climb': EntityNavigationClimbComponent;
+	'navigation.climb': EntityNavigationClimbComponent;
+	'minecraft:navigation.float': EntityNavigationFloatComponent;
+	'navigation.float': EntityNavigationFloatComponent;
+	'minecraft:navigation.fly': EntityNavigationFlyComponent;
+	'navigation.fly': EntityNavigationFlyComponent;
+	'minecraft:navigation.generic': EntityNavigationGenericComponent;
+	'navigation.generic': EntityNavigationGenericComponent;
+	'minecraft:navigation.hover': EntityNavigationHoverComponent;
+	'navigation.hover': EntityNavigationHoverComponent;
+	'minecraft:navigation.walk': EntityNavigationWalkComponent;
+	'navigation.walk': EntityNavigationWalkComponent;
+	'minecraft:push_through': EntityPushThroughComponent;
+	'push_through': EntityPushThroughComponent;
+	'minecraft:rideable': EntityRideableComponent;
+	'rideable': EntityRideableComponent;
+	'minecraft:scale': EntityScaleComponent;
+	'scale': EntityScaleComponent;
+	'minecraft:skin_id': EntitySkinIdComponent;
+	'skin_id': EntitySkinIdComponent;
+	'minecraft:strength': EntityStrengthComponent;
+	'strength': EntityStrengthComponent;
+	'minecraft:tameable': EntityTameableComponent;
+	'tameable': EntityTameableComponent;
+	'minecraft:underwater_movement': EntityUnderwaterMovementComponent;
+	'underwater_movement': EntityUnderwaterMovementComponent;
+	'minecraft:variant': EntityVariantComponent;
+	'variant': EntityVariantComponent;
+	'minecraft:wants_jockey': EntityWantsJockeyComponent;
+	'wants_jockey': EntityWantsJockeyComponent;
 }
 
-export class Player {
-	/**@
-	 * 
-	 * @param {PlayerType} player 
-	 */
-	constructor(player) {
+export class Player implements PlayerType {
+	public root: PlayerType;
+	constructor(player: PlayerType) {
 		/**
 		 * @type {PlayerType}
 		 */
-		this.player = player;
+		this.root = player;
 	}
-	get isSwimming() {
-		return players.objectProperties[this.player.id]?.isSwimming ?? false;
+	resetProperty(...args: Parameters<PlayerType['resetProperty']>) {
+		return this.root.resetProperty(...args);
 	}
-	get gamemode() {
+	setProperty(...args: Parameters<PlayerType['setProperty']>) {
+		return this.root.setProperty(...args);
+	}
+	remove(): void {
+		throw new Error("remove doesn't exist on Players");
+	}
+	getProperty(...args: Parameters<PlayerType['getProperty']>) {
+		return this.root.getProperty(...args);
+	}
+	get isSleeping() {
+		return this.root.isSleeping;
+	}
+	get isEmoting() {
+		return this.root.isEmoting;
+	}
+	get camera() {
+		return this.root.camera;
+	}
+	addExperience(...args: Parameters<PlayerType['addExperience']>) {
+		return this.root.addExperience(...args);
+	}
+	get gamemode(): keyof typeof gamemodeIndexMap {
 		return gamemode.get(this);
 	}
-	set gamemode(value) {
-		this.player.runCommandAsync(`gamemode ${gamemodeIndexMap[value]}`);
+	set gamemode(value: keyof typeof gamemodeIndexMap) {
+		this.root.runCommandAsync(`gamemode ${gamemodeIndexMap[value]}`);
 	}
 	get loaded() {
-		const { id } = this.player;
+		const { id } = this.root;
 		return loads.loads.hasOwnProperty(id);
-	}
-	get armor() {
-
 	}
 	get offhand() {
 
-		const { selectedSlot } = this.player;
-		/**
-		 * @type {EntityEquipmentInventoryComponent}
-		 */
-		const equipmentInventory = this.player.getComponent('equipment_inventory');
+		const { selectedSlot } = this.root;
+		const equipmentInventory = this.getComponent('equippable');
 
-		const offhandSlot = equipmentInventory.getEquipmentSlot(EquipmentSlot.offhand);
-
-		return new Proxy({}, {
-			set(object, key, value) {
-				const item = offhandSlot.getItem();
-				if (!item) return Reflect.set(...arguments);
-				if (key === 'amount' && value <= 0) { offhandSlot.setItem(undefined); return Reflect.set(...arguments); }
-				offhandSlot.setItem(Object.assign(item, { [key]: value }));
-				return Reflect.set(...arguments);
-			},
-			get(target, key, receiver) {
-				return offhandSlot.getItem()?.[key];
-			}
-		});
+		return equipmentInventory.getEquipmentSlot(EquipmentSlot.Offhand);
 	}
-	get mainHand() {
-		const { selectedSlot } = this.player;
-		/**
-		 * @type {Container}
-		 */
-		const container = this.player.getComponent('minecraft:inventory').container;
-		return new Proxy({}, {
-			set(object, key, value) {
-				content.warn({ t: 'mainHandSet', key, value });
-				const item = container.getItem(selectedSlot);
-				if (!item) return Reflect.set(...arguments);
-				if (key === 'amount' && value <= 0) { container.setItem(selectedSlot, undefined); return Reflect.set(...arguments); }
-				container.setItem(selectedSlot, Object.assign(item, { [key]: value }));
-				return Reflect.set(...arguments);
-			},
-			get(target, key, receiver) {
-				const item = container.getItem(selectedSlot);
-				const value = item?.[key];
-				content.warn({ type: value instanceof Function });
-				return (value instanceof Function) ? (...args) => { content.warn({ key, args, value: item[key](...args)?.getDamageChance(0) }); return item[key](...args); } : item?.[key];
-			}
-		});
+	get mainHand(): ContainerSlot {
+		const { selectedSlot } = this.root;
+		const container = this.getComponent('minecraft:inventory').container;
+		return container.getSlot(selectedSlot);
 	}
 
-	set mainHand(value) {
-		const { selectedSlot } = this.player;
-		/**
-		 * @type {Container}
-		 */
-		const container = this.player.getComponent('inventory').container;
-		container.setItem(selectedSlot, value);
+	set mainHand(value: ItemStack | ContainerSlot) {
+		const { selectedSlot } = this.root;
+
+		const container = this.getComponent('inventory').container;
+		container.setItem(selectedSlot, (value instanceof ContainerSlot) ? value.getItem() : value);
 	}
 	get container() {
-		return this.player.getComponent('inventory').container;
+		return this.getComponent('inventory').container;
 	}
 	get inventory() {
-		return players.getInventory(this.player);
+		return players.getInventory(this);
 	}
-	get scores() {
+	get scores(): Record<string, number | undefined> {
 		const player = this;
 		return new Proxy({}, {
 			get(target, objectiveId) {
 
-				const value = scoreboardBuilder.get(player, objectiveId);
+				const value = scoreboardBuilder.get(player, objectiveId as string);
 				// if (objectiveId === 'skycoins') content.warn({ t: 'get', objectiveId, value });
 				return value;
 			},
-			set(target, objectiveId, value) {
-				scoreboardBuilder.set(player, objectiveId, value);
+			set(target, objectiveId, value, receiver) {
+				scoreboardBuilder.set(player, objectiveId as string, value);
 				// content.warn({ t: 'set', objectiveId, value });
-				return Reflect.set(...arguments);
+				return Reflect.set(target, objectiveId, value, receiver);
 			}
 		});
 	}
 	get properties() {
-		return propertyBuilder.get(this.player);
+		return propertyBuilder.get(this.root);
 	}
 	get memory() {
-		const player = this.player;
+		const player = this.root;
 		const { id } = player;
 		if (!players.memory.hasOwnProperty(id)) players.memory[id] = {};
 		return new Proxy(players.memory[id], {
 			get(target, identifier) {
 				return players.memory?.[id]?.[identifier];
 			},
-			set(target, identifier, value) {
-				try {
-					players.memory[id][identifier] = value;
-					return Reflect.set(...arguments);
-				} catch (error) {
-					errorLogger.log(error, error.stack, { key: 'PlayerDynamicProperties', event: 'N/A' });
-				}
+			set(target, identifier, value, receiver) {
+				players.memory[id][identifier] = value;
+				return Reflect.set(target, identifier, value, receiver);
+
 			},
 			has(target, key) {
 				return key in players.memory[id];
@@ -183,287 +244,271 @@ export class Player {
 		});
 	}
 	get dimension() {
-		return this.player.dimension;
+		return this.root.dimension;
 	}
 	get headLocation() {
-		return this.player.getHeadLocation();
+		return this.root.getHeadLocation();
 	}
 	get id() {
-		return this.player.id;
+		return this.root.id;
 	}
 	get isSneaking() {
-		return this.player.isSneaking;
-	}
-	get isFlying() {
-		return this.player.isFlying;
+		return this.root.isSneaking;
 	}
 	get isGliding() {
-		return this.player.isGliding;
+		return this.root.isGliding;
 	}
 	get isJumping() {
-		return this.player.isJumping;
+		return this.root.isJumping;
 	}
 	get fallDistance() {
-		return this.player.fallDistance;
-	}
-	get isFlying() {
-		return this.player.isFlying;
+		return this.root.fallDistance;
 	}
 	get isClimbing() {
-		return this.player.isClimbing;
+		return this.root.isClimbing;
 	}
 	get isFlying() {
-		return this.player.isFlying;
+		return this.root.isFlying;
 	}
 	get isInWater() {
-		return this.player.isInWater;
+		return this.root.isInWater;
 	}
 	get isOnGround() {
-		return this.player.isOnGround;
+		return this.root.isOnGround;
 	}
 	get isSprinting() {
-		return this.player.isSprinting;
+		return this.root.isSprinting;
+	}
+	get isFalling() {
+		return this.root.isSprinting;
 	}
 	get isSwimming() {
-		return this.player.isSwimming;
+		return this.root.isSwimming;
 	}
 	get lifetimeState() {
-		return this.player.lifetimeState;
+		return this.root.lifetimeState;
 	}
 	isValid() {
-		return this.player.isValid();
+		return this.root.isValid();
 	}
 	get level() {
-		return this.player.level;
+		return this.root.level;
 	}
 	get location() {
-		return this.player.location;
+		return this.root.location;
 	}
 	get name() {
-		return this.player.name;
+		return this.root.name;
 	}
 	get nameTag() {
-		return this.player.nameTag;
+		return this.root.nameTag;
 	}
 	set nameTag(value) {
-		this.player.nameTag = value;
+		this.root.nameTag = value;
 	}
 	get onScreenDisplay() {
-		return this.player.onScreenDisplay;
+		return this.root.onScreenDisplay;
 	}
 	get rotation() {
-		return this.player.getRotation();
+		return this.root.getRotation();
 	}
 	get scoreboard() {
-		return this.player.scoreboardIdentity;
+		return this.root.scoreboardIdentity;
 	}
 	get scoreboardIdentity() {
-		return this.player.scoreboardIdentity;
+		return this.root.scoreboardIdentity;
 	}
 	get selectedSlot() {
-		return this.player.selectedSlot;
+		return this.root.selectedSlot;
 	}
 	set selectedSlot(value) {
-		this.player.selectedSlot = value;
-	}
-	get target() {
-		return this.player.target;
+		this.root.selectedSlot = value;
 	}
 	get totalXpNeededForNextLevel() {
-		return this.player.totalXpNeededForNextLevel;
+		return this.root.totalXpNeededForNextLevel;
 	}
 	get xpEarnedAtCurrentLevel() {
-		return this.player.xpEarnedAtCurrentLevel;
+		return this.root.xpEarnedAtCurrentLevel;
 	}
 	get target() {
-		return this.player.target;
-	}
-	get target() {
-		return this.player.target;
+		return this.root.target;
 	}
 	get typeId() {
-		return this.player.typeId;
+		return this.root.typeId;
 	}
 	get velocity() {
-		return this.player.getVelocity();
+		return this.root.getVelocity();
 	}
 	get viewVector() {
-		const { x, y, z } = this.player.getViewDirection();
+		const { x, y, z } = this.root.getViewDirection();
 		return new Vector(x, y, z);
 	}
 	get viewDirection() {
-		return this.player.getViewDirection();
+		return this.root.getViewDirection();
 	}
-	applyDamage(...args) {
-		return this.player.applyDamage(...args);
+	applyDamage(...args: Parameters<PlayerType['applyDamage']>) {
+		return this.root.applyDamage(...args);
 	}
-	applyImpulse(...args) {
-		return this.player.applyImpulse(...args);
+	applyImpulse(...args: Parameters<PlayerType['applyImpulse']>) {
+		return this.root.applyImpulse(...args);
 	}
-	applyKnockback(...args) {
-		return this.player.applyKnockback(...args);
+	applyKnockback(...args: Parameters<PlayerType['applyKnockback']>) {
+		return this.root.applyKnockback(...args);
 	}
-	addEffect(...args) {
-		return this.player.addEffect(...args);
+	addEffect(...args: Parameters<PlayerType['addEffect']>) {
+		return this.root.addEffect(...args);
 	}
-	addLevels(...args) {
-		return this.player.addLevels(...args);
+	addLevels(...args: Parameters<PlayerType['addLevels']>) {
+		return this.root.addLevels(...args);
 	}
 	clearSpawn() {
-		return this.player.clearSpawn();
+		return this.root.setSpawnPoint();
 	}
 	clearVelocity() {
-		return this.player.clearVelocity();
+		return this.root.clearVelocity();
 	}
-	addTag(...args) {
-		return this.player.addTag(...args);
+	addTag(...args: Parameters<PlayerType['addTag']>) {
+		return this.root.addTag(...args);
 	}
-	extinguishFire(...args) {
-		return this.player.extinguishFire(...args);
+	extinguishFire(...args: Parameters<PlayerType['extinguishFire']>) {
+		return this.root.extinguishFire(...args);
 	}
-	getBlockFromViewVector(...args) {
-		return this.player.getBlockFromViewDirection(...args);
+	getBlockFromViewVector(...args: Parameters<PlayerType['getBlockFromViewDirection']>) {
+		return this.root.getBlockFromViewDirection(...args);
 	}
-	getBlockFromViewDirection(...args) {
-		return this.player.getBlockFromViewDirection(...args);
+	getBlockFromViewDirection(...args: Parameters<PlayerType['getBlockFromViewDirection']>) {
+		return this.root.getBlockFromViewDirection(...args);
 	}
-	getComponent(...args) {
-		return this.player.getComponent(...args);
+	getComponent<componentKey extends keyof EntityComponents>(componentId: componentKey): EntityComponents[componentKey] {
+		return this.root.getComponent(componentId) as EntityComponents[componentKey];
 	}
-	getComponents(...args) {
-		return this.player.getComponents(...args);
+	getComponents(...args: Parameters<PlayerType['getComponents']>) {
+		return this.root.getComponents(...args);
 	}
-	getDynamicProperty(...args) {
-		return this.player.getDynamicProperty(...args);
+	getDynamicProperty(...args: Parameters<PlayerType['getDynamicProperty']>) {
+		return this.root.getDynamicProperty(...args);
 	}
-	getEffect(...args) {
-		return this.player.getEffect(...args);
+	getEffect(...args: Parameters<PlayerType['getEffect']>) {
+		return this.root.getEffect(...args);
 	}
-	getEffects(...args) {
-		return this.player.getEffects(...args);
+	getEffects(...args: Parameters<PlayerType['getEffects']>) {
+		return this.root.getEffects(...args);
 	}
-	getEntitiesFromViewVector(...args) {
-		return this.player.getBlockFromViewDirection(...args);
+	getEntitiesFromViewVector(...args: Parameters<PlayerType['getEntitiesFromViewDirection']>) {
+		return this.root.getEntitiesFromViewDirection(...args);
 	}
-	getEntitiesFromViewVector(...args) {
-		return this.player.getBlockFromViewDirection(...args);
+	getEntitiesFromViewDirection(...args: Parameters<PlayerType['getEntitiesFromViewDirection']>) {
+		return this.root.getEntitiesFromViewDirection(...args);
 	}
-	getHeadLocation(...args) {
-		return this.player.getHeadLocation(...args);
+	getHeadLocation(...args: Parameters<PlayerType['getHeadLocation']>) {
+		return this.root.getHeadLocation(...args);
 	}
-	getItemCooldown(...args) {
-		return this.player.getItemCooldown(...args);
+	getItemCooldown(...args: Parameters<PlayerType['getItemCooldown']>) {
+		return this.root.getItemCooldown(...args);
 	}
 	getRotation() {
-		return this.player.getRotation();
+		return this.root.getRotation();
 	}
 	getSpawnPoint() {
-		return this.player.getSpawnPoint();
+		return this.root.getSpawnPoint();
 	}
 	getSpawnPosition() {
-		return this.player.getSpawnPoint();
+		return this.root.getSpawnPoint();
 	}
-	getTags(...args) {
-		return this.player.getTags(...args);
+	getTags(...args: Parameters<PlayerType['getTags']>) {
+		return this.root.getTags(...args);
 	}
 	getTotalXp() {
-		return this.player.getTotalXp();
+		return this.root.getTotalXp();
 	}
 	getVelocity() {
-		return this.player.getVelocity();
+		return this.root.getVelocity();
 	}
 	getViewDirection() {
-		return this.player.getViewDirection();
+		return this.root.getViewDirection();
 	}
-	getSpawnPoint() {
-		this.player.getSpawnPoint();
+	hasComponent(...args: Parameters<PlayerType['hasComponent']>) {
+		return this.root.hasComponent(...args);
 	}
-	hasComponent(...args) {
-		return this.player.hasComponent(...args);
+	hasTag(...args: Parameters<PlayerType['hasTag']>) {
+		return this.root.hasTag(...args);
 	}
-	hasTag(...args) {
-		return this.player.hasTag(...args);
+	isOp(...args: Parameters<PlayerType['isOp']>) {
+		return this.root.isOp(...args);
 	}
-	isOp(...args) {
-		return this.player.isOp(...args);
+	kill(...args: Parameters<PlayerType['kill']>) {
+		return this.root.kill(...args);
 	}
-	kill(...args) {
-		return this.player.kill(...args);
+	playAnimation(...args: Parameters<PlayerType['playAnimation']>) {
+		return this.root.playAnimation(...args);
 	}
-	playAnimation(...args) {
-		return this.player.playAnimation(...args);
+	playSound(...args: Parameters<PlayerType['playSound']>) {
+		return this.root.playSound(...args);
+
 	}
-	playSound(...args) {
-		try {
-			return this.player.playSound(...args);
-		} catch (error) {
-			if (error.message.includes('have required privileges')) return system.runTimeout(() => this.player.playSound(...args), 0);
-			new Error(error.message);
-		}
+	postClientMessage(...args: Parameters<PlayerType['postClientMessage']>) {
+		return this.root.postClientMessage(...args);
 	}
-	postClientMessage(...args) {
-		return this.player.postClientMessage(...args);
-	}
-	removeEffect(...args) {
-		return this.player.removeEffect(...args);
+	removeEffect(...args: Parameters<PlayerType['removeEffect']>) {
+		return this.root.removeEffect(...args);
 	}
 	removeAllEffects() {
-		return this.player.getEffects().forEach(({ typeId }) => this.player.removeEffect(typeId));
+		return this.root.getEffects().forEach(({ typeId }) => this.root.removeEffect(typeId));
 	}
-	removeDynamicProperty(...args) {
-		return this.player.removeDynamicProperty(...args);
+	removeDynamicProperty(...args: Parameters<PlayerType['removeDynamicProperty']>) {
+		return this.root.removeDynamicProperty(...args);
 	}
-	removeTag(...args) {
-		return this.player.removeTag(...args);
+	removeTag(...args: Parameters<PlayerType['removeTag']>) {
+		return this.root.removeTag(...args);
 	}
-	resetLevel(...args) {
-		return this.player.resetLevel(...args);
+	resetLevel(...args: Parameters<PlayerType['resetLevel']>) {
+		return this.root.resetLevel(...args);
 	}
-	runCommandAsync(...args) {
-		return this.player.runCommandAsync(...args);
+	runCommandAsync(...args: Parameters<PlayerType['runCommandAsync']>) {
+		return this.root.runCommandAsync(...args);
 	}
-	runCommand(...args) {
-		return this.player.runCommand(...args);
+	runCommand(...args: Parameters<PlayerType['runCommand']>) {
+		return this.root.runCommand(...args);
 	}
-	setDynamicProperty(...args) {
-		return this.player.setDynamicProperty(...args);
+	setDynamicProperty(...args: Parameters<PlayerType['setDynamicProperty']>) {
+		return this.root.setDynamicProperty(...args);
 	}
-	setOnFire(...args) {
-		return this.player.setOnFire(...args);
+	setOnFire(...args: Parameters<PlayerType['setOnFire']>) {
+		return this.root.setOnFire(...args);
 	}
-	setOp(...args) {
-		return this.player.setOp(...args);
+	setOp(...args: Parameters<PlayerType['setOp']>) {
+		return this.root.setOp(...args);
 	}
-	setRotation(...args) {
-		return this.player.setRotation(...args);
+	setRotation(...args: Parameters<PlayerType['setRotation']>) {
+		return this.root.setRotation(...args);
 	}
-	setSpawn(...args) {
-		return this.player.setSpawnPoint(...args);
+	setSpawn(...args: Parameters<PlayerType['setSpawnPoint']>) {
+		return this.root.setSpawnPoint(...args);
 	}
-	setSpawnPoint(...args) {
-		return this.player.setSpawnPoint(...args);
+	setSpawnPoint(...args: Parameters<PlayerType['setSpawnPoint']>) {
+		return this.root.setSpawnPoint(...args);
 	}
-	startItemCooldown(...args) {
-		return this.player.startItemCooldown(...args);
+	startItemCooldown(...args: Parameters<PlayerType['startItemCooldown']>) {
+		return this.root.startItemCooldown(...args);
 	}
-	teleport(...args) {
-		return this.player.teleport(...args);
+	teleport(...args: Parameters<PlayerType['teleport']>) {
+		return this.root.teleport(...args);
 	}
-	tryTeleport(...args) {
-		return this.player.tryTeleport(...args);
+	tryTeleport(...args: Parameters<PlayerType['tryTeleport']>) {
+		return this.root.tryTeleport(...args);
 	}
-	sendMessage(...args) {
-		return this.player.sendMessage(...args);
+	sendMessage(...args: Parameters<PlayerType['sendMessage']>) {
+		return this.root.sendMessage(...args);
 	}
-	tell(...args) {
-		return this.player.sendMessage(...args);
+	tell(...args: Parameters<PlayerType['sendMessage']>) {
+		return this.root.sendMessage(...args);
 	}
-	triggerEvent(...args) {
-		return this.player.triggerEvent(...args);
+	triggerEvent(...args: Parameters<PlayerType['triggerEvent']>) {
+		return this.root.triggerEvent(...args);
 	}
 }
 
-export function setProptotype(entity) {
+export function setProptotype(entity: PlayerType | EntityType) {
 	if (!(entity instanceof PlayerType)) return entity;
 	return new Player(entity);
 }

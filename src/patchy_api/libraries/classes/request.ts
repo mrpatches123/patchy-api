@@ -4,30 +4,37 @@ import { content, native } from '../utilities.js';
 import global from './global.js';
 import databases from './database.js';
 import eventBuilder from './events/export_instance.js';
-
+function lengthObject(object: any) {
+	return Object.keys(object).length;
+}
+interface watchOptions {
+	removeKey: boolean;
+	eventKeys: Array<string>;
+}
 class RequestBuilder {
+	memory: Record<string, Record<string, Record<string, Record<string, any>>>>;
 	constructor() {
-
+		this.memory = {};
 	}
-	addMemory(id, key, target, type, value) {
+	addMemory(id: string, key: string, target: string, type: string, value: any) {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
 		if (typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
 		if (value === undefined) throw new Error(`value at params[4] is not defined`);
-		if (!this.hasOwnProperty(id)) this[id] = {};
-		if (!this[id].hasOwnProperty(key)) this[id][key] = {};
-		if (!this[id][key].hasOwnProperty(target)) this[id][key][target] = {};
-		if (!this[id][key][target].hasOwnProperty(type)) this[id][key][target][type] = {};
-		this[id][key][target][type] = value;
+		if (!this.memory.hasOwnProperty(id)) this.memory[id] = {};
+		if (!this.memory[id]!.hasOwnProperty(key)) this.memory[id]![key] = {};
+		if (!this.memory[id]![key]!.hasOwnProperty(target)) this.memory[id]![key]![target] = {};
+		if (!this.memory[id]![key]![target]!.hasOwnProperty(type)) this.memory[id]![key]![target]![type] = {};
+		this.memory[id]![key]![target]![type] = value;
 	}
 	/**
 	 * 
-	 * @param {String} target 
-	 * @param {Array<String>} keys 
+	 * @param {string} target 
+	 * @param {Array<string>} keys 
 	 * @param {boolean} isArray 
 	 */
-	getMemoryTarget(id, target, keys, type, isArray = false) {
+	getMemoryTarget(id: string, target: string, keys: string[], type: string, isArray: boolean = false) {
 		// content.warn({ RequestBuilder: this });
 		const returnType = (isArray) ? [] : {};
 
@@ -41,46 +48,49 @@ class RequestBuilder {
 			});
 		}
 		if (!keys) {
-			return this[id].forEach((key, targets) => {
+			const output = {} as Record<string, Record<string, Record<string, any>>>;
+			Object.entries(this.memory[id] ?? {}).forEach(([key, targets]) => {
 
-				const target = targets[targets];
+				const target = targets[key];
 				if (!target) return;
-				if (type && target.hasOwnProperty(type)) return { [key]: target[type] };
-				else return { [key]: target };
+				if (type && target.hasOwnProperty(type)) output[key] = target[type];
+				else output[key] = target;
 
-			}, returnType);
+			});
+			return output;
 		} else {
-			return keys.accumulate(key => {
-				if (!this?.[id]?.[key]?.[target]) return;
+			const output = {} as Record<string, any>;
+			keys.forEach(key => {
+				if (!this.memory?.[id]?.[key]?.[target]) return;
 
-				if (type && this[id][key][target].hasOwnProperty(type)) return { [key]: this[id][key][target] };
-				else return { [key]: this[id][key][target] };
-			}, returnType);
+				if (type && this.memory[id]![key]![target]!.hasOwnProperty(type)) return output[key] = this.memory[id]![key]![target]!;
+				else output[key] = this.memory[id]![key]![target];
+			});
 		}
 	}
-	removeMemory(id, key, target, type) {
+	removeMemory(id: string, key: string, target: string, type: string) {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (target && typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
 		if (type && typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
 		if (target) {
 			if (type) {
-				delete this[id][key][target][type];
-				const targetLength = this[id][key][target].length();
+				delete this.memory[id]![key]![target]![type];
+				const targetLength = lengthObject(this.memory[id]![key]![target]);
 				if (!targetLength) {
-					delete this[id][key][target];
+					delete this.memory[id]![key]![target];
 				}
 			}
-			const keyLength = this[id][key].length();
+			const keyLength = lengthObject(this.memory[id]![key]);
 			if (!keyLength) {
-				delete this[id][key];
+				delete this.memory[id]![key];
 			}
 		} else {
-			delete this[id][key];
+			delete this.memory[id]![key];
 		}
-		const requestsLength = this[id].length();
+		const requestsLength = lengthObject(this.memory[id]);
 		if (!requestsLength) {
-			delete this[id];
+			delete this.memory[id];
 		}
 	}
 	/**
@@ -91,7 +101,7 @@ class RequestBuilder {
 	 * @param {String | Number} type 
 	 * @param {any} value 
 	 */
-	add(id, key, target, type, value) {
+	add(id: string | number, key: string | number, target: string | number, type: string | number, value: any) {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
@@ -109,12 +119,7 @@ class RequestBuilder {
 		global.requestAddEvent.push({ id, key, target, type, value });
 		// content.warn({ requests });
 	}
-	/**
-	 * @typedef {Object} watchOptions
-	 * @property {Boolean} removeKey when return is true for a iteration of the rquest the value is automatically removed
-	 * @property {Array<String>} eventKeys
-	 
-	*/
+
 	/**
 	 * @method watch watches callbacks for a true return
 	 * @param {String} id 
@@ -122,17 +127,17 @@ class RequestBuilder {
 	 * @param {(key: String, target: String, type: String, value: any) => {}} findCallback 
 	 * @param {watchOptions} options 
 	 */
-	watch(id, testCallback, findCallback = null, options = {}) {
+	watch(id: string, testCallback?: (key: string, target: string, type: string, value: any) => boolean | void, findCallback?: (key: string, target: string, type: string, value: any) => boolean | void, options?: watchOptions) {
 
 
 
 		content.warn({ t: 'RequestBuilderwatch', id });
-		if (id instanceof String) throw new Error(`findCallback for id: ${id}, is not a String`);
+		if (typeof id !== 'string') throw new Error(`findCallback for id: ${id}, is not a String`);
 		if (!(testCallback instanceof Function)) throw new Error(`testCallback for id: ${id}, is not a Function.`);
 		if (findCallback && !(findCallback instanceof Function)) throw new Error(`findCallback for id: ${id}, is defined and not a Function`);
 		if (options && !(options instanceof Object)) throw new Error(`findCallback for id: ${id}, is defined and not an Object`);
 		// if (key && this.hasOwnProperty(key)) return new Error(`key: ${key}, for options for id: ${id}, is defined and does not exist on requestBuilder`);
-		const { /*key, keys,*/eventKeys = ['playerJoined', 'requestAdded'], removeKey = true } = options;
+		const { /*key, keys,*/eventKeys = ['playerJoined', 'requestAdded'], removeKey = true } = options ?? {};
 		if (removeKey !== null && removeKey !== undefined && !(typeof removeKey === 'boolean')) throw new Error(`removeKey for options for id: ${id}, is not undefined, null or a boolean`);
 		if (!(eventKeys instanceof Array)) throw new Error(`removeKey for options for id: ${id}, is not undefined, null or a boolean`);
 
@@ -140,12 +145,12 @@ class RequestBuilder {
 		const call = () => {
 			// content.warn('help');
 			let database = databases.get("requestsAPI") ?? databases.add("requestsAPI");
-			const requests = database.get(id) ?? {};
+			const requests: Record<string, Record<string, Record<string, any>>> = database.get(id) ?? {} as Record<string, Record<string, Record<string, any>>>;
 			content.warn({ id, requests });
 			if (!requests) return;
-			requests.forEach((key, targets) => {
-				targets.forEach((target, types) => {
-					types.forEach((type, value) => {
+			Object.entries(requests).forEach(([key, targets]) => {
+				Object.entries(targets).forEach(([target, types]) => {
+					Object.entries(types).forEach(([type, value]) => {
 						const test = testCallback(key, target, type, value);
 						// content.warn({ test, removeKey, target, value });
 						if (test) {
@@ -160,17 +165,19 @@ class RequestBuilder {
 				);
 			});
 
+			eventBuilder.subscribe(`requestsAPI*${id}`, {
+				...eventKeys.reduce((sum, eventkey, i) => { (sum as any)[eventkey] = call; return sum; }, {})
+			});
 		};
-		eventBuilder.subscribe(`requestsAPI*${id}`, {
-			...eventKeys.accumulate((eventkey, i) => ({ [eventkey]: call }), {})
-		});
 	}
+
+
 	/**
 	 * @method terminate removes watch for a request id
 	 * @param {String} id 
 	 */
-	terminate(id) {
-		eventBuilder.unsubscribeEvent(`requestsAPI*${id}`, 'tickAfterLoad');
+	terminate(id: string) {
+		eventBuilder.unsubscribe(`requestsAPI*${id}`, ['tickAfterLoad']);
 	}
 	/**
 	 * 
@@ -179,12 +186,12 @@ class RequestBuilder {
 	 * @param {String | Number} target 
 	 * @param {String | Number} type
 	 */
-	remove(id, key, target, type) {
+	remove(id: string | number, key: string | number, target: string | number, type: string | number) {
 		if (typeof id !== 'string' && typeof id !== 'number') throw new Error(`id: ${id}, at params[0] is not a String or Number!`);
 		if (typeof key !== 'string' && typeof key !== 'number') throw new Error(`key: ${key}, at params[1] is not a String or Number!`);
 		if (target && typeof target !== 'string' && typeof target !== 'number') throw new Error(`target: ${target}, at params[2] is not a String or Number!`);
 		if (type && typeof type !== 'string' && typeof type !== 'number') throw new Error(`type: ${type}, at params[3] is not a String or Number!`);
-		let database = databases.get("requestsAPI"); //?? databases.add("requestsAPI");
+		let database = databases.get("requestsAPI") ?? databases.add("requestsAPI");
 		const requests = database.get(id) ?? {};
 		// content.warn({ id, database });
 		// content.warn({ requests: requests, key });

@@ -1,35 +1,42 @@
-import { MinecraftEntityTypes, EntityTypes, world, DynamicPropertiesDefinition, Entity, EntityType } from "@minecraft/server";
+import { EntityTypes, world, DynamicPropertiesDefinition, Entity, EntityType, World, Vector3 } from "@minecraft/server";
+MinecraftEntityTypes;
 import { content, isDefined } from "../../utilities.js";
+import { Player } from "../player/class.js";
+import { MinecraftEntityTypes } from "@minecraft/vanilla-data/lib/mojang-entity.js";
 const types = ['string', 'number', 'boolean'];
 const overworld = world.getDimension('overworld');
+type EntityKeys = MinecraftEntityTypes;
+type EntityWorldKeys = EntityKeys | 'world';
+type Entries<T> = {
+	[K in keyof T]: [K, T[K]];
+}[keyof T] extends infer U ? (U extends [keyof T, infer V] ? [keyof T, V][] : never) : never;
+
 export class PropertyBuilder {
-	constructor() {
-		this.registry = {};
-		this.properties = {};
-		this.proxys = {};
-		this.registeredProperties = false;
-		this.subscribedRegistration = false;
-	}
+	registry: { [key in EntityWorldKeys]?: Record<string, { type?: 'string' | 'number' | 'boolean' | 'Vector3', maxLength?: number; }> } = {};
+	properties: { [key in EntityWorldKeys]?: Record<string, { value?: number | string | boolean | Vector3, values?: Record<string, number | string | boolean>, type?: 'string' | 'number' | 'boolean' | 'Vector3', maxLength?: number; }>; } = {};
+	subscribedRegistration: boolean = false;
+	registeredProperties: boolean = false;
 	/**
-	 * @param {{ [typeId in keyof typeof MinecraftEntityTypes | 'world']: { [property: string]: { maxLength?: number, type: 'string' | 'number' | 'boolean' } } }} data 
+	 * @param {} data 
 	 */
-	register(data) {
-		if (!(data instanceof Object)) throw new Error(`data: ${maxLength}, at params[0] is not of type: Object!`);
-		Object.entries(data).forEach(([typeId, properties]) => {
-			if (!(properties instanceof Object)) throw new Error(`properties: ${properties}, in ${identifier} at params[0] is not of type: Object!`);
-			const entityType = (MinecraftEntityTypes.hasOwnProperty(typeId)) ? MinecraftEntityTypes[typeId] : EntityTypes.get(typeId);
-			const currentTypeId = (typeId === 'world') ? 'world' : entityType?.id;
+	register(data: { [key in EntityWorldKeys]?: { [property: string]: { maxLength?: number, type: 'string' | 'number' | 'boolean'; }; }; }) {
+		if (!(data instanceof Object)) throw new Error(`data at params[0] is not of type: Object!`);
+		(Object.entries(data) as Entries<typeof data>).forEach(([typeId, properties]) => {
+			if (!(properties instanceof Object)) throw new Error(`properties: ${properties}, in ${typeId} at params[0] is not of type: Object!`);
+			const entityType = (MinecraftEntityTypes.hasOwnProperty(typeId)) ? typeId : EntityTypes.get(typeId);
+			const currentTypeId = ((typeId === 'world') ? 'world' : (entityType instanceof EntityType) ? entityType?.id : entityType) as unknown as MinecraftEntityTypes;
 			if (!currentTypeId) throw new Error(`typeId: ${typeId}, in data at parms[0] is not associated with a entity, player, or is 'world'!`);
 			this.registry[currentTypeId] ??= {};
 			Object.entries(properties).forEach(([identifier, { type, maxLength }]) => {
 				if (!type) throw new Error(`type: ${type}, in ${typeId} in data at params[0] is not defined in ${identifier}!`);
 				if (type !== 'string' && maxLength) throw new Error(`maxLength: ${maxLength}, in ${identifier} in ${typeId} in data at params[0] is defined and type is not 'string'!`);
 				// content.warn({ t: 'registerwwfomwpfjhweobi', type, registry: this.registry[currentTypeId] });
-				this.registry[currentTypeId][identifier] = {};
-				this.registry[currentTypeId][identifier].type = type;
+
+				this.registry[currentTypeId]![identifier] = {};
+				this.registry[currentTypeId]![identifier]!.type = type;
 				// content.warn({ typeId, identifier, type, registry: this.registry[currentTypeId] });
 				if (type !== 'string') return;
-				this.registry[currentTypeId][identifier].maxLength = maxLength;
+				this.registry[currentTypeId]![identifier]!.maxLength = maxLength;
 			});
 
 			this.subscribeRegistration();
@@ -54,19 +61,19 @@ export class PropertyBuilder {
 			this.properties.world ??= {};
 			const value = world.getDynamicProperty(identifier);
 			if (!isDefined(value)) return;
-			this.properties.world[identifier].value = value;
+			this.properties.world![identifier] ??= {};
+			this.properties.world![identifier]!.value = value;
 		});
 	};
 	/**
 	 * @param {Entity} entity 
 	 */
-	initialize(entity) {
-		const { typeId, id, name = 'null' } = entity;
-		// content.warn({ typeId, id, name });
-		Object.entries(this.properties?.[typeId] ?? {}).forEach(([identifier, { type, maxLength }]) => {
+	initialize(entity: Entity | Player) {
+		const { typeId, id } = entity;
+		Object.entries(this.properties?.[typeId as MinecraftEntityTypes] ?? {}).forEach(([identifier, { type, maxLength }]) => {
 			const value = entity.getDynamicProperty(identifier);
 			if (!value) return;
-			this.properties[typeId][identifier].values[id] = value;
+			(this.properties[typeId as MinecraftEntityTypes] as any)[identifier].values[id] = value;
 		});
 
 	}
@@ -78,16 +85,18 @@ export class PropertyBuilder {
 			// content.warn({ registry: propertyThis.registry });
 			Object.entries(propertyThis.registry).forEach(([typeId, properties]) => {
 				const dynamicPropertiesDefinition = new DynamicPropertiesDefinition();
-				propertyThis.properties[typeId] ??= {};
+				propertyThis.properties[typeId as EntityWorldKeys] ??= {};
 				Object.entries(properties).forEach(([identifier, { type, maxLength }]) => {
 					// content.warn({ typeId, identifier, type });
-					propertyThis.properties[typeId][identifier] = {};
-					propertyThis.properties[typeId][identifier].type = type;
-					if (typeId !== 'world') propertyThis.properties[typeId][identifier].values = {};
+
+					propertyThis.properties[typeId as EntityWorldKeys] ??= {};
+					propertyThis.properties[typeId as EntityWorldKeys]![identifier] = {};
+					propertyThis.properties[typeId as EntityWorldKeys]![identifier]!.type = type;
+					if (typeId !== 'world') propertyThis.properties[typeId as EntityWorldKeys]![identifier]!.values = {};
 					switch (type) {
 						case 'string': {
-							dynamicPropertiesDefinition.defineString(identifier, maxLength);
-							propertyThis.properties[typeId][identifier].maxLength = maxLength;
+							dynamicPropertiesDefinition.defineString(identifier, maxLength as number);
+							propertyThis.properties[typeId as EntityWorldKeys]![identifier]!.maxLength = maxLength;
 							break;
 						}
 						case 'number': {
@@ -108,34 +117,51 @@ export class PropertyBuilder {
 		});
 
 	}
-	get(entity) {
+	get(entity?: Player | Entity | World): Record<string, string | number | boolean | undefined> {
 
-		let isWorld = false;
-		if (!arguments.length) (entity = world, isWorld = true);
-		let { typeId, id } = entity;
-		if (isWorld) typeId = 'world';
+		if (entity === undefined) entity = world;
+		let { typeId, id } = (entity instanceof World) ? { typeId: 'world', id: null } : entity;
 		const thisProperty = this;
 		if (!thisProperty.properties.hasOwnProperty(typeId)) throw new Error(`${typeId.replace(/\w:/, '')} has no properties registered`);
 		return new Proxy({}, {
 			get(target, key) {
-				if (!thisProperty.properties[typeId].hasOwnProperty(key)) throw new Error(`dynamic property, ${key} does not exist on ${typeId.replace(/\w:/, '')}`);
-				return (typeId === 'world') ? thisProperty.properties?.[typeId]?.[key]?.value : thisProperty.properties?.[typeId]?.[key]?.values[id];
+				if (!thisProperty.properties[typeId as EntityWorldKeys]!.hasOwnProperty(key)) throw new Error(`dynamic property, ${key as string} does not exist on ${typeId.replace(/\w:/, '')}`);
+				return (typeId === 'world') ? thisProperty.properties?.[typeId as EntityWorldKeys]?.[key as string]?.value : (thisProperty.properties?.[typeId as MinecraftEntityTypes] as any)?.[key]?.values[id as string];
 			},
 			has(target, key) {
-				if (!thisProperty.properties[typeId].hasOwnProperty(key)) throw new Error(`dynamic property, ${key} does not exist on ${typeId.replace(/\w:/, '')}`);
-				return thisProperty.properties?.[typeId]?.[key]?.values.hasOwnProperty(id);
+				if (!thisProperty.properties[typeId as EntityWorldKeys]!.hasOwnProperty(key)) throw new Error(`dynamic property, ${key as string} does not exist on ${typeId.replace(/\w:/, '')}`);
+				return (thisProperty.properties?.[typeId as EntityWorldKeys] as any)?.[key]?.values.hasOwnProperty(id);
 			},
-			set(target, key, value) {
-				if (!thisProperty.properties[typeId].hasOwnProperty(key)) throw new Error(`dynamic property, ${key} does not exist on ${typeId.replace(/\w:/, '')}`);
-				const { type } = thisProperty.properties[typeId][key];
-				if (isDefined(value) && typeof value !== type) throw new Error(`value for dynamic property: ${key} is not of type: ${type}`);
-				if (typeId === 'world') thisProperty.properties[typeId][key].value = value;
-				else thisProperty.properties[typeId][key].values[id] = value;
-				if (!isDefined(value)) { entity.removeDynamicProperty(key); return Reflect.set(...arguments); };
-				entity.setDynamicProperty(key, value);
-				return Reflect.set(...arguments);
+			set(target, key, value, reciveir) {
+				if (!thisProperty.properties[typeId as EntityWorldKeys]!.hasOwnProperty(key)) throw new Error(`dynamic property, ${key as string} does not exist on ${typeId.replace(/\w:/, '')}`);
+				const { type } = thisProperty.properties[typeId as EntityWorldKeys]![key as string] ?? {};
+				if (isDefined(value) && typeof value !== type) throw new Error(`value for dynamic property: ${key as string} is not of type: ${type}`);
+				if (typeId === 'world') thisProperty.properties[typeId]![key as string]!.value = value;
+				else (thisProperty.properties[typeId as EntityKeys] as any)[key].values[id as string] = value;
+				if (!isDefined(value)) { (entity as Player | Entity | World).removeDynamicProperty(key as string); return Reflect.set(target, key, value, reciveir); };
+				(entity as Player | Entity | World).setDynamicProperty(key as string, value);
+				return Reflect.set(target, key, value, reciveir);
 			}
 		});
 	};
 }
-content;
+
+
+
+class Test<T extends (number | string)[] = []> {
+	public result: T = [] as unknown as T;
+
+	test(): Test<[...T, string]> {
+		return this as any; // Type assertion needed for inference
+	}
+
+	test2(): Test<[...T, number]> {
+		return this as any; // Type assertion needed for inference
+	}
+
+	show(): T {
+		return this.result;
+	}
+}
+const result = new Test().test().test2().test2().test().test().show();
+const [a1, a2, a3, a4] = result;

@@ -18,3 +18,4 @@ commandBuilder.register('properties', {
         // sender.sendMessage(JSON.stringify(eventBuilder));
     }
 });
+//# sourceMappingURL=properties.js.map

@@ -1,7 +1,8 @@
 
-import { commandBuilder, players } from '../modules.js';
+import { commandBuilder, players, global } from '../modules.js';
 import config from '../config.js';
 const { commandPrefix: prefix } = config;
+global.unbannWindows ??= [] as string[];
 commandBuilder.register('unban', {
 	description: "Used to unban a player",
 	usages: [
@@ -18,12 +19,12 @@ commandBuilder.register('unban', {
 		const [subcommand, playerName] = args;
 		switch (subcommand) {
 			case 'add': {
-				if (unbannWindows.includes(playerName)) return sender.sendMessage(`You already opened an unban window for $playerName}!`);
+				if (global.unbannWindows.includes(playerName)) return sender.sendMessage(`You already opened an unban window for $playerName}!`);
 				global.unbanWindows.push(playerName);
 				return sender.sendMessage(`You opened an unban window for ${playerName}!`);
 			} case 'remove': {
 				if (!global.unbanWindows.includes(playerName)) return sender.sendMessage(`You have not opened an unban window for $playerName}!`);
-				global.unbanWindows = global.unbanWindows.filter(name => name !== playerName);
+				global.unbanWindows = (global.unbanWindows as string[]).filter(name => name !== playerName);
 				return sender.sendMessage(`You removed an unban window for ${playerName}!`);
 			}
 		}

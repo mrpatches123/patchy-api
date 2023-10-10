@@ -1,15 +1,17 @@
-import { world } from "@minecraft/server";
+import { world, Player as PlayerType } from "@minecraft/server";
 import { Player } from './player/class.js';
 import global from "./global.js";
 const content = {
-	warn(...messages) {
+	warn(...messages: any[]) {
 		console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
 	}
 };
 
 class Loads {
+	public loads: { [playerId: string]: Player; };
+	loaded: boolean;
 	constructor() {
-		this.loads = {};
+		this.loads = {} as typeof this.loads;
 		this.loaded = false;
 		world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
 			if (!initialSpawn) return;
@@ -29,10 +31,7 @@ class Loads {
 			leftIds.forEach(id => delete this.loads[id]);
 		});
 	}
-	/**
-	 * @param {Player} player 
-	 */
-	async awaitLoad(player) {
+	async awaitLoad(player: PlayerType) {
 		try {
 
 
@@ -47,7 +46,7 @@ class Loads {
 			this.loaded = true;
 			global.refreshBasePlayerIterator = true;
 			this.loads[id] = new Player(player);
-		} catch (error) {
+		} catch (error: any) {
 			console.warn(error, error.stack);
 		}
 	}

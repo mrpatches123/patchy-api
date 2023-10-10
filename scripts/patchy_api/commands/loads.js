@@ -15,8 +15,9 @@ commandBuilder.register('loads', {
     prefix,
     aliases: ['cmds'],
     callback: (sender, args) => {
+        /*@ts-ignore*/
         sender.sendMessage(native.stringify(loads, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
         // sender.sendMessage(JSON.stringify(eventBuilder));
     }
 });
-
+//# sourceMappingURL=loads.js.map

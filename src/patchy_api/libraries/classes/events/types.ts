@@ -1,5 +1,5 @@
 import { Player } from "../player/class.js";
-import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, BlockPistonComponent, BlockPermutation, Effect, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, Vector, PropertyRegistry, world, EntityQueryOptions, EntityEventOptions, EntityHitInformation, Vector3, Vector2, ScriptEventSource, BlockBreakAfterEvent, BlockPlaceAfterEvent, ButtonPushAfterEvent, ChatSendAfterEvent, BlockExplodeAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, DataDrivenEntityTriggerAfterEvent, EffectAddAfterEvent, EntityDieAfterEvent, EntitySpawnAfterEvent, EntityHealthChangedAfterEvent, EntityHitBlockAfterEvent, EntityHitEntityAfterEvent, EntityHurtAfterEvent, ExplosionAfterEvent, ItemStopUseAfterEvent, ItemDefinitionTriggeredAfterEvent, ItemReleaseUseAfterEvent, ItemStartUseAfterEvent, ItemStartUseOnAfterEvent, ItemStopUseOnAfterEvent, ItemUseAfterEvent, ItemUseOnAfterEvent, LeverActionAfterEvent, PressurePlatePushAfterEvent, TargetBlockHitAfterEvent, TripWireTripAfterEvent, PlayerJoinAfterEvent, PlayerLeaveAfterEvent, ProjectileHitAfterEvent, WeatherChangeAfterEvent, WorldInitializeAfterEvent, PlayerSpawnAfterEvent, ScriptEventCommandMessageAfterEvent } from '@minecraft/server';
+import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
 
 
@@ -82,9 +82,15 @@ export interface BeforePlayerScaffoldPlaceEvent {
 	player: Player;
 	blockLocation: Vector3;
 }
-export interface EventKeyTypes {
-	beforeChat: ChatSendAfterEvent;
-	beforeChatSend: ChatSendAfterEvent;
+type Mutable<T> = {
+	-readonly [K in keyof T]: T[K];
+};
+type AfterEventTypes = Mutable<{
+	[K in keyof WorldAfterEvents]: Parameters<Parameters<WorldAfterEvents[K]["subscribe"]>[0]>[0]
+}>;
+export interface CustomEventKeyTypes {
+	beforeChat: ChatSendBeforeEvent;
+	beforeChatSend: ChatSendBeforeEvent;
 	beforeDataDrivenEntityTriggerEvent: DataDrivenEntityTriggerBeforeEvent;
 	beforeDataDrivenPlayerTriggerEvent: BeforeDataDrivenPlayerTriggerEvent;
 	beforeExplosion: ExplosionBeforeEvent;
@@ -93,42 +99,9 @@ export interface EventKeyTypes {
 	beforeItemUseOn: ItemUseOnBeforeEvent;
 	beforeItemUseOnStart: ItemUseBeforeEvent;
 	beforePistonActivate: PistonActivateAfterEvent;
-	blockBreak: BlockBreakAfterEvent;
-	blockExplode: BlockExplodeAfterEvent;
-	blockPlace: BlockPlaceAfterEvent;
-	buttonPush: ButtonPushAfterEvent;
 	chat: ChatSendAfterEvent;
-	chatSend: ChatSendAfterEvent;
-	dataDrivenEntityTriggerEvent: DataDrivenEntityTriggerAfterEvent;
 	dataDrivenPlayerTriggerEvent: DataDrivenPlayerTriggerEvent;
-	effectAdd: EffectAddAfterEvent;
-	entityDie: EntityDieAfterEvent;
-	entitySpawn: EntitySpawnAfterEvent;
-	entityHealthChanged: EntityHealthChangedAfterEvent;
-	entityHitBlock: EntityHitBlockAfterEvent;
-	entityHitEntity: EntityHitEntityAfterEvent;
-	entityHurt: EntityHurtAfterEvent;
-	explosion: ExplosionAfterEvent;
-	itemStopUse: ItemStopUseAfterEvent;
-	itemDefinitionEvent: ItemDefinitionTriggeredAfterEvent;
-	itemReleaseCharge: ItemReleaseUseAfterEvent;
-	itemStartCharge: ItemStartUseAfterEvent;
-	itemStartUseOn: ItemStartUseOnAfterEvent;
-	itemStopUseOn: ItemStopUseOnAfterEvent;
-	itemUse: ItemUseAfterEvent;
-	itemUseOn: ItemUseOnAfterEvent;
-	itemPickup: ItemPickupEvent;
-	leverAction: LeverActionAfterEvent;
-	pistonActivate: PistonActivateAfterEvent;
-	pressurePlatePush: PressurePlatePushAfterEvent;
-	targetBlockHit: TargetBlockHitAfterEvent;
-	tripWireTrip: TripWireTripAfterEvent;
-	playerJoin: PlayerJoinAfterEvent;
-	playerLeave: PlayerLeaveAfterEvent;
-	projectileHit: ProjectileHitAfterEvent;
 	tick: TickEvent;
-	weatherChange: WeatherChangeAfterEvent;
-	worldInitialize: WorldInitializeAfterEvent;
 	tickAfterLoad: TickEvent;
 	playerJoined: PlayerJoinedEvent;
 	playerHit: PlayerHitEvent;
@@ -136,20 +109,44 @@ export interface EventKeyTypes {
 	playerDeath: PlayerDeathEvent;
 	requestAdded: RequestAddedEvent;
 	stepOnBlock: StepOnBlockEvent;
-	playerSpawn: PlayerSpawnAfterEvent;
 	playerSpawned: PlayerJoinedEvent;
 	playerJoinAwaitMove: PlayerJoinAwaitMoveEvent;
-	scriptEventReceive: ScriptEventCommandMessageAfterEvent;
 	worldLoad: undefined;
 	scoreboardChange: ScoreboardChangeEvent;
 	beforePlayerScaffoldPlace: BeforePlayerScaffoldPlaceEvent;
-	custom: any;
+	blockBreak: PlayerBreakBlockAfterEvent;
+	custom: undefined;
+};
+type EventKeyTypes = AfterEventTypes & CustomEventKeyTypes;
+
+type ToCustom<T extends any> = {
+	[K in keyof T]: T[K] extends PlayerType ? Player : T[K] extends EntityType ? Entity | Player : T[K] extends EntityDamageSourceType ? EntityDamageSource : T[K]
 };
 
-export type ReplaceTypes<T> = T extends EntityType ? Entity | Player : T extends PlayerType ? Player : T extends EntityDamageSourceType ? EntityDamageSource : T;
+export type EventTypes = {
+	[K in keyof EventKeyTypes]: ToCustom<EventKeyTypes[K]>
+};
+// type Equals<T, U> = (<G>() => G extends T ? 1 : 2) extends (<G>() => G extends U ? 1 : 2) ? true : false;
+// type Identity<T> = { [P in keyof T]: T[P] };
+// type EventPlayer = Identity<Replace<EventKeyTypes, PlayerType, Player>>;
+// type EventEntity = Identity<Replace<EventPlayer, EntityType, Entity | Player>>;
+// type EventEntity = Identity<Replace<EventPlayer, EntityType, Entity | Player>>;
+// type test = EventObject['beforeChat']['sender'];
 
-export type EventObject = { [key in keyof EventKeyTypes]: (arg: ReplaceTypes<EventKeyTypes[key]>) => void };
-export type EventRegisterObject = { [key: string]: { subscription: { [key in keyof EventKeyTypes | string]: { function: (arg: ReplaceTypes<EventKeyTypes[key]>) => void; options?: EntityEventOptions; forceNative?: boolean; } }; }; };
+// type test1 = Equals<EventTypes['beforeChat']['sender'], Player>; // true
+// type test2 = Equals<ReplacedEventKeyTypes['entitySpawn']['entity'], Entity | Player>; // true
+// type test3 = Equals<ReplacedEventKeyTypes['entityDie']['damageSource'], EntityDamageSource>; // true
+// type test4 = Equals<ReplacedEventKeyTypes['entityDie']['damageSource'], EntityDamageSourceType>; // false
+
+export type EventObject = { [key in keyof EventKeyTypes]?: (arg: EventTypes[key]) => void };
+
+export type EventRegisterObject = {
+	[key: string]: {
+		subscription: { [key in keyof EventKeyTypes]?: { function: (arg: EventTypes[key]) => void; options?: EntityEventOptions; forceNative?: boolean; entityOptionsKey?: string; } };
+		unsubscription?: Function;
+	};
+};
+export const eventKeys: (keyof EventRegisterObject)[] = ['beforeChat', 'beforeChatSend', 'beforeDataDrivenEntityTriggerEvent', 'beforeDataDrivenPlayerTriggerEvent', 'beforeExplosion', 'beforeItemDefinitionEvent', 'beforeItemUse', 'beforeItemUseOn', 'beforeItemUseOnStart', 'beforePistonActivate', 'blockBreak', 'blockExplode', 'blockPlace', 'buttonPush', 'chat', 'chatSend', 'dataDrivenEntityTriggerEvent', 'dataDrivenPlayerTriggerEvent', 'effectAdd', 'entityDie', 'entitySpawn', 'entityHealthChanged', 'entityHitBlock', 'entityHitEntity', 'entityHurt', 'explosion', 'itemStopUse', 'itemDefinitionEvent', 'itemReleaseCharge', 'itemStartCharge', 'itemStartUseOn', 'itemStopUseOn', 'itemUse', 'itemUseOn', 'itemPickup', 'leverAction', 'pistonActivate', 'pressurePlatePush', 'targetBlockHit', 'tripWireTrip', 'playerJoin', 'playerLeave', 'projectileHit', 'tick', 'weatherChange', 'worldInitialize', 'tickAfterLoad', 'playerJoined', 'playerHit', 'playerHurt', 'playerDeath', 'requestAdded', 'stepOnBlock', 'playerSpawn', 'playerSpawned', 'playerJoinAwaitMove', 'scriptEventReceive', 'worldLoad', 'scoreboardChange', 'beforePlayerScaffoldPlace', 'custom',];
 
 // export class EventBuilder {
 

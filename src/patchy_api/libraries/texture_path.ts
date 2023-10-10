@@ -1,12 +1,4 @@
-export const texturePathObject = {
-	get(id, data = 0) {
-		id = id.replace('minecraft:', '');
-		const texture = this[id];
-		if (!texture) return;
-		if (texture instanceof Array) return texture[data];
-		return texture;
-
-	},
+const texturePathObject = {
 
 	"acacia_door": "textures/items/door_acacia",
 	"apple": "textures/items/apple",
@@ -571,8 +563,8 @@ export const texturePathObject = {
 
 export const texturePaths = new Proxy({}, {
 	get(target, id, value) {
-		id = id.replace('minecraft:', '');
-		const texture = texturePathObject[id];
+		id = (id as keyof typeof texturePathObject).replace('minecraft:', '');
+		const texture = texturePathObject[id as keyof typeof texturePathObject] as unknown as string | string[] | undefined;
 		if (!texture) return;
 		return texture;
 	}

@@ -1,6 +1,7 @@
 
 import { commandBuilder, players } from '../modules.js';
 import config from '../config.js';
+import { world } from '@minecraft/server';
 const { commandPrefix: prefix } = config;
 commandBuilder.register('ban', {
 	description: "Used to ban a player",

@@ -3,18 +3,27 @@ import { content, sort3DRange, sort3DVectors, isVector3 } from '../utilities.js'
 import global from "./global.js";
 import players from "./players/export_instance.js";
 import teleportBuilder from './teleport.js';
-import { Player } from "@minecraft/server";
+import { Player } from './player/class.js';
+import { Vector3 } from "@minecraft/server";
 const { floor } = Math;
+interface PostionObject {
+	location1: { x: number; y: number; z: number; };
+	location2?: { x: number; y: number; z: number; };
+	callback?: (player: Player, location1: { x: number; y: number; z: number; }, location2?: { x: number; y: number; z: number; }) => {};
+	noLoop?: boolean;
+	testOnly?: boolean;
+}
 class PositionBuilder {
+	positions: Record<string, { noLoop?: boolean; location1?: Vector3; location2?: Vector3; callback?: (player: Player, location1: { x: number, y: number, z: number; }, location2?: { x: number, y: number, z: number; }) => any; }> = {};
 	constructor() {
-		const PositionThis = this;
+		const positionThis = this;
 		eventBuilder.subscribe('position*API', {
 			tickAfterLoad: () => {
 				players.get().iterate((player) => {
 					// content.warn(PositionThis);
-					PositionThis.forEach((key, { noLoop = false }) => {
+					Object.entries(positionThis).forEach(([key, { noLoop = false }]) => {
 						if (noLoop) return;
-						PositionThis.check(player, key);
+						positionThis.check(player, key);
 					});
 				});
 			}
@@ -25,10 +34,10 @@ class PositionBuilder {
 	 * @param {Player} player
 	 * @param {String} key
 	 */
-	test(player, key) {
+	test(player: Player, key: string) {
 		const { location: { x, y, z }, gamemode } = player;
 		if (gamemode === 5) return false;
-		const { location1, location2, callback } = this[key];
+		const { location1 = { x: 0, y: 0, z: 0 }, location2, callback } = this.positions[key] ?? {};
 		const { x: x1, y: y1, z: z1 } = location1;
 		if (!location2) {
 			return floor(x) === x1 && floor(y) === y1 && floor(z) === z1;
@@ -43,28 +52,23 @@ class PositionBuilder {
 	 * @param {String} key
 	 * @returns {Boolean}
 	 */
-	check(player, key) {
-		const { location1, location2, callback } = this[key];
+	check(player: Player, key: string): boolean {
+		const { location1 = { x: 0, y: 0, z: 0 }, location2, callback } = this.positions[key] ?? {};
 		if (!this.test(player, key)) return false;
 		if (typeof callback === 'string') {
 			teleportBuilder.teleport(player, callback);
 		} else {
-			callback(player, location1, location2);
+			if (callback instanceof Function) callback(player, location1, location2);
 		}
 		return true;
 	}
-	/**
-	 * @typedef {Object} PostionObject
-	 * @property {{x: number, y: number, z: number}} location1
-	 * @property {{x: number, y: number, z: number}} location2
-	 * @property {(player: Player, location1: {x: number, y: number, z: number}, location2: {x: number, y: number, z: number}) => {}} callback
-	 */
+
 	/**
 	 * @method add 
 	 * @param {{[key: String] : PostionObject}} postionObject 
 	 */
-	add(postionObject) {
-		postionObject.forEach((key, value) => {
+	add(postionObject: { [key: string]: PostionObject; }) {
+		Object.entries(postionObject).forEach(([key, value]) => {
 
 			let { callback, location1, location2, noLoop, testOnly } = value;
 			if (testOnly && typeof testOnly !== 'boolean') return new Error(`testOnly key of postionObject Key: ${key}, should be a boolean`);
@@ -76,7 +80,7 @@ class PositionBuilder {
 			if (location2) {
 				// const { x: x1, y: y1, z: z1 } = location1, { x: x2, y: y2, z: z2 } = location2;
 				const [{ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }] = sort3DVectors(location1, location2);
-				this[key] = {
+				this.positions[key] = {
 					location1: { x: x1, y: y1, z: z1 },
 					location2: { x: x2, y: y2, z: z2 },
 					callback,
@@ -84,7 +88,7 @@ class PositionBuilder {
 				};
 			} else {
 				const { x, y, z } = location1;
-				this[key] = {
+				this.positions[key] = {
 					location1: { x, y, z },
 					callback,
 					noLoop
@@ -98,17 +102,17 @@ class PositionBuilder {
 	 * @method remove 
 	 * @param {string} key 
 	 */
-	remove(key) {
-		delete this[key];
+	remove(key: string) {
+		delete this.positions[key];
 	}
 	/**
 	 * @method removeKeys 
 	 * @param {string} key 
 	 * @param ...
 	 */
-	removeKeys(...keys) {
+	removeKeys(...keys: string[]) {
 		keys.forEach(key => {
-			delete this[key];
+			delete this.positions[key];
 		});
 	}
 }
