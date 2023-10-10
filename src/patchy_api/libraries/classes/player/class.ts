@@ -1,5 +1,5 @@
 import loads from "../load.js";
-import { Player as PlayerType, Container, system, Vector, EntityEquipmentInventoryComponent, EquipmentSlot, world, ItemStack, ContainerSlot, EntityType } from "@minecraft/server";
+import { Player as PlayerType, Container, system, Vector, EquipmentSlot, world, ItemStack, ContainerSlot, EntityType, Camera, EntityEquippableComponent } from "@minecraft/server";
 import players from "../players/export_instance.js";
 import errorLogger from "../error.js";
 import { content, native } from "../../utilities.js";
@@ -8,10 +8,10 @@ import gamemode, { gamemodeIndexMap, gamemodeMap } from "../gamemode.js";
 import propertyBuilder from "../property/export_instance.js";
 const player = world.getAllPlayers()[0];
 const armorSlots = [
-	EquipmentSlot.feet,
-	EquipmentSlot.legs,
-	EquipmentSlot.chest,
-	EquipmentSlot.head
+	EquipmentSlot.Feet,
+	EquipmentSlot.Legs,
+	EquipmentSlot.Chest,
+	EquipmentSlot.Head
 ];
 import { EntityOnFireComponent, EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyeableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
 
@@ -32,8 +32,8 @@ interface EntityComponents {
 	'can_power_jump': EntityCanPowerJumpComponent;
 	'minecraft:color': EntityColorComponent;
 	'color': EntityColorComponent;
-	'minecraft:equipment_inventory': EntityEquipmentInventoryComponent;
-	'equipment_inventory': EntityEquipmentInventoryComponent;
+	'minecraft:equippable': EntityEquippableComponent;
+	'equippable': EntityEquippableComponent;
 	'minecraft:fire_immune': EntityFireImmuneComponent;
 	'fire_immune': EntityFireImmuneComponent;
 	'minecraft:floats_in_liquid': EntityFloatsInLiquidComponent;
@@ -139,12 +139,33 @@ interface EntityComponents {
 }
 
 export class Player implements PlayerType {
-	root: PlayerType;
+	public root: PlayerType;
 	constructor(player: PlayerType) {
 		/**
 		 * @type {PlayerType}
 		 */
 		this.root = player;
+	}
+	resetProperty(...args: Parameters<PlayerType['resetProperty']>) {
+		return this.root.resetProperty(...args);
+	}
+	setProperty(...args: Parameters<PlayerType['setProperty']>) {
+		return this.root.setProperty(...args);
+	}
+	remove(): void {
+		throw new Error("remove doesn't exist on Players");
+	}
+	getProperty(...args: Parameters<PlayerType['getProperty']>) {
+		return this.root.getProperty(...args);
+	}
+	get isSleeping() {
+		return this.root.isSleeping;
+	}
+	get isEmoting() {
+		return this.root.isEmoting;
+	}
+	get camera() {
+		return this.root.camera;
 	}
 	addExperience(...args: Parameters<PlayerType['addExperience']>) {
 		return this.root.addExperience(...args);
@@ -162,9 +183,9 @@ export class Player implements PlayerType {
 	get offhand() {
 
 		const { selectedSlot } = this.root;
-		const equipmentInventory = this.getComponent('equipment_inventory');
+		const equipmentInventory = this.getComponent('equippable');
 
-		return equipmentInventory.getEquipmentSlot(EquipmentSlot.offhand);
+		return equipmentInventory.getEquipmentSlot(EquipmentSlot.Offhand);
 	}
 	get mainHand(): ContainerSlot {
 		const { selectedSlot } = this.root;

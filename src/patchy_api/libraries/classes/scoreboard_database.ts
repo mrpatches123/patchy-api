@@ -94,7 +94,7 @@ class Databases {
      * @param {String} databaseName
      */
     save(databaseName: string) {
-        const objective = world.scoreboard.getObjective('sbDB:' + databaseName);
+        const objective = world.scoreboard.getObjective('sbDB:' + databaseName)!;
         if (!this.memory[databaseName]) throw new Error(`databaseName: }
 		${databaseName}, at params[0], does not exist!`);
         const rawData = JSON.stringify(this.memory[databaseName]);

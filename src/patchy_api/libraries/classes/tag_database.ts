@@ -3,9 +3,10 @@ import { content, obfuscate255, deobfuscate255, chunkString, chunkStringBytes } 
 import { Database } from './database.js';
 import global from './global.js';
 import eventBuilder from './events/export_instance.js';
-import { Player, world } from '@minecraft/server';
+import { world } from '@minecraft/server';
 import time from './time.js';
 import playersManager from './players/export_instance.js';
+import { Player } from './player/class.js';
 const tagLength = 'tagDB:'.length;
 function byteCount(string: string) {
 	let bytes = 0;

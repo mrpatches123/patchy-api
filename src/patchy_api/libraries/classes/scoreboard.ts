@@ -39,7 +39,7 @@ class ScoreboardBuilder {
 		if (typeof objective !== 'string') throw new Error(`objective: ${objective}, at params[0] is of type: String!`);
 		if (objective.startsWith('big_')) throw new Error(`objective: ${objective}, at params[0] starts with 'big_' so it cannot be displayed in a scoreboardDisplay!`);
 		for (const displaySlotId of displaySlotIds) {
-			const { objective: { id } } = world.scoreboard.getObjectiveAtDisplaySlot(displaySlotId);
+			const { objective: { id = undefined } = {} } = world.scoreboard.getObjectiveAtDisplaySlot(displaySlotId) ?? {};
 			if (id !== objective) break;
 			world.scoreboard.clearObjectiveAtDisplaySlot(displaySlotId);
 			if (this.objectives.hasOwnProperty(objective)) delete this.objectives[objective]!.displaySlot;
@@ -94,7 +94,7 @@ class ScoreboardBuilder {
 		}
 		const quotient = Math.floor(value! / chunk);
 		const remainder = value! % chunk;
-		server.scoreSetPlayer(`${objective}*q`, player, quotient);
+		server.scoreSetPlayer(`${objective}*q`, player.root, quotient);
 		server.scoreSetPlayer(`${objective}*r`, player, remainder);
 		eventBuilder.getEvent('scoreboardChange').iterate({ player, objective, value });
 	}

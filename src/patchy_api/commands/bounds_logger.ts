@@ -1,6 +1,6 @@
 
 
-import { MinecraftBlockTypes, Vector3 } from '@minecraft/server';
+import { Vector3 } from '@minecraft/server';
 import config from '../config.js';
 
 import { commandBuilder, content, fill } from '../modules.js';

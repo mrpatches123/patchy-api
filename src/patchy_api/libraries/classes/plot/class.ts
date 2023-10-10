@@ -1,4 +1,5 @@
-import { BlockAreaSize, Vector, world, MinecraftBlockTypes, Dimension, system, Vector2, Vector3 } from "@minecraft/server";
+import { BlockAreaSize, Vector, world, Dimension, system, Vector2, Vector3 } from "@minecraft/server";
+
 import { andArray, betweenBlockVector3, blockFaceToCoords, content, isDefined, isVector2, isVector3, native, orArray, overworld, server, sort3DVectors } from "../../utilities.js";
 import eventBuilder from "../events/export_instance.js";
 import databases from "../database.js";
@@ -12,24 +13,25 @@ import scoreboardBuilder from "../scoreboard.js";
 import global from "../global.js";
 import propertyBuilder from "../property/export_instance.js";
 import { LoadOptions as StructureLoadOptions } from '../structure/class';
+import { MinecraftBlockTypes } from "@minecraft/vanilla-data/lib/mojang-block.js";
 
 const gamemodes = [0, 1, 2];
-const opens = [
-	MinecraftBlockTypes.chest.id,
+const opens: string[] = [
+	MinecraftBlockTypes.Chest,
 ];
-const buttons = [
-	MinecraftBlockTypes.stoneButton.id,
-	MinecraftBlockTypes.birchButton.id,
-	MinecraftBlockTypes.acaciaButton.id,
-	MinecraftBlockTypes.cherryButton.id,
-	MinecraftBlockTypes.jungleButton.id,
-	MinecraftBlockTypes.spruceButton.id,
-	MinecraftBlockTypes.warpedButton.id,
-	MinecraftBlockTypes.woodenButton.id,
-	MinecraftBlockTypes.bambooButton.id,
-	MinecraftBlockTypes.crimsonButton.id,
-	MinecraftBlockTypes.darkOakButton.id,
-	MinecraftBlockTypes.mangroveButton.id
+const buttons: string[] = [
+	MinecraftBlockTypes.StoneButton,
+	MinecraftBlockTypes.BirchButton,
+	MinecraftBlockTypes.AcaciaButton,
+	MinecraftBlockTypes.CherryButton,
+	MinecraftBlockTypes.JungleButton,
+	MinecraftBlockTypes.SpruceButton,
+	MinecraftBlockTypes.WarpedButton,
+	MinecraftBlockTypes.WoodenButton,
+	MinecraftBlockTypes.BambooButton,
+	MinecraftBlockTypes.CrimsonButton,
+	MinecraftBlockTypes.DarkOakButton,
+	MinecraftBlockTypes.MangroveButton
 ];
 export class PlotsVector3 {
 	x: number;

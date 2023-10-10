@@ -537,10 +537,10 @@ export const server = {
     async setPlayerScoreboard(objective: string, player: Player, value: number, updateId?: DisplaySlotId) {
         try {
             await player.runCommandAsync('scoreboard players set @s scoreIdentityInit 0');
-            world.scoreboard.getObjective(objective).setScore(player, value);
+            world.scoreboard.getObjective(objective)?.setScore(player, value);
             if (!updateId) return;
             const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
-            if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return;
+            if (scoreboardObjectiveDisplayOptions?.objective?.id !== objective) return;
             world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
             world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
         } catch (error: any) {
@@ -596,7 +596,7 @@ export const server = {
     scoreResetPlayer(objective: string, target: Player | Entity | string) {
         try {
             world.scoreboard.getObjective(objective)
-                .removeParticipant(target);
+                ?.removeParticipant(target);
             return true;
         } catch (error: any) {
             console.warn(error, error.stack);
@@ -605,10 +605,10 @@ export const server = {
     },
     scoreSetPlayer(objective: string, target: Player | Entity | string, value = 0, updateId?: DisplaySlotId) {
         // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
-        world.scoreboard.getObjective(objective).setScore(target, value);
+        world.scoreboard.getObjective(objective)?.setScore(target, value);
         if (!updateId) return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
-        if (scoreboardObjectiveDisplayOptions.objective.id !== objective) return;
+        if (scoreboardObjectiveDisplayOptions?.objective.id !== objective) return;
         world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
         world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
         return value;

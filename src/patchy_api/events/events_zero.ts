@@ -48,5 +48,14 @@ eventBuilder.register({
 				}
 			}
 		}
+	},
+	blockBreak: {
+		subscription: {
+			playerBreakBlock: {
+				function: (event) => {
+					eventBuilder.getEvent('blockBreak').iterate(event);
+				}
+			}
+		}
 	}
 });

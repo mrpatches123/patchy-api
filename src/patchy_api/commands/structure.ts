@@ -1,7 +1,7 @@
 
-import { commandBuilder, structureBuilder } from '../modules.js';
+import { commandBuilder, structureBuilder, Player } from '../modules.js';
 import config from '../config.js';
-import { Player, Vector3 } from '@minecraft/server';
+import { Vector3 } from '@minecraft/server';
 const { commandPrefix: prefix } = config;
 function relativeParse(player: Player, input: string, direction: keyof Vector3) {
 	if (input.includes('~')) {
