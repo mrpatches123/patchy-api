@@ -1,29 +1,23 @@
 import config from "../../config.js";
 import { content, parseCommand } from "../utilities.js";
 import errorLogger from "./error.js";
+import { Player } from "./player/class.js";
 const { commandPrefix } = config;
 const { isArray } = Array;
 const { isInteger } = Number;
 class CommandBuilder {
-    constructor() {
-        this.__aliasesObject = {};
-    };
+    private __aliasesObject: Record<string, Record<string, string>> = {};
+    private commandsObject: { [prefix: string]: Record<string, { description: string; requires: { score: { [objective: string]: number; }; tag: { [tag: string]: boolean; }; }; usages: { [subCommand: string]: { examples: Array<string>; subDescription: string; }; }; aliases: Array<string>; callback: (sender: import('./player/class.js').Player, args: Array<string>, command: string, prefix: string) => {}; }>; } = {};
 
-    /**
-     * @method invalid Sends invalid syntax message to the command invoker.
-     * @param {String} cmdName Command name.
-     * @param {import('./player/class.js').Player} sender Command invoker username.
-     * @param {Array<String>} error invalid syntaxes.
-     * @returns {void}
-     */
-    invalidSyntax(command, sender, prefix, error) {
+
+    invalidSyntax(command: string, sender: import('./player/class.js').Player, prefix: string, error: Array<string>): void {
         sender.playSound('note.bass');
         sender.sendMessage({ "rawtext": [{ "text": "§c" }, { "translate": "commands.generic.syntax", "with": [`${prefix}${command} `, `${error[0]}`, `${error.filter((item, i) => { if (i !== 0) return item; }).join(" ")}`] }] });
     }
     getPrefixs() {
-        return Object.keys(this).filter(key => !key.startsWith('__')) ?? [];
+        return Object.keys(this.commandsObject).filter(key => !key.startsWith('__')) ?? [];
     }
-    getPrefix(message) {
+    getPrefix(message: string) {
         // content.warn(Object.keys(this))
         for (const prefix of this.getPrefixs()) {
             if (message.startsWith(prefix)) {
@@ -33,25 +27,25 @@ class CommandBuilder {
     }
     /**
      * 
-     * @param {String} prefix
+     * @param {string} prefix
      * @param {import('./player/class.js').Player} sender 
-     * @returns { String }
+     * @returns { string }
      */
-    listCommands(prefix, sender) {
+    listCommands(prefix: string, sender: import('./player/class.js').Player): string {
         // content.warn({ t: 'listCommands', prefix });
-        const commandList = this[prefix].filter((command, { requires, callback }) => {
+        const commandList = Object.entries(this.commandsObject[prefix]!).filter(([command, { requires, callback }]) => {
             const { score, tag } = requires ?? {};
             if (requires) {
                 let notPermissions;
                 if (score) {
-                    score.forEach((objective, value) => {
+                    Object.entries(score).forEach(([objective, value]) => {
                         // content.warn({ value, objective, score: sender.scores[objective] ?? 'undefined' });
                         if (sender.scores[objective] !== value) { notPermissions = true; }
                     });
                 }
                 if (tag) {
                     const tags = sender.getTags();
-                    tag.forEach((tag) => { if (tags.includes(tag)) { notPermissions = true; } });
+                    Object.entries(tag).forEach(([tag]) => { if (tags.includes(tag)) { notPermissions = true; } });
                 }
                 if (notPermissions) {
                     sender.sendMessage(`§cyou do not have permission to use this command!`);
@@ -59,46 +53,40 @@ class CommandBuilder {
                 }
             }
             return true;
-        }).map((command, { description }) => `\n §r§f- §a§l${prefix}§r§a${command} | ${description}`).join('');
+        }).map(([command, { description }]) => `\n §r§f- §a§l${prefix}§r§a${command} | ${description}`).join('');
         return `§l§e---------------\n§r§eCommands List:${commandList} \n§l§e---------------`;
     }
-    /**
-     * @method check Checks if command exists if it does runs the command. Returns error message to the command executor.
-     * @param {String} command Command name.
-     * @param {import('./player/class.js').Player} sender player Class.
-     * @param {Array<String>} args Array of strings.
-     */
-    check(message, sender, prefix) {
+    check(message: string, sender: import('./player/class.js').Player, prefix: string) {
 
         const args = parseCommand(message, prefix);
-        let command = args.shift();
+        let command = args.shift()!;
         const argsLength = arguments.length;
         if (argsLength !== 3) {
-            throw new Error(`check got ${argsLength} arguments, but expected 3 arguments: command: {String}, sender: {player}, args: {Array<String>}`);
+            throw new Error(`check got ${argsLength} arguments, but expected 3 arguments: command: {string}, sender: {player}, args: {Array<string>}`);
         }
-        if (!this[prefix][command]) {
-            if (this.__aliasesObject[prefix][command]) {
-                command = this.__aliasesObject[prefix][command];
+        if (!this.commandsObject[prefix]![command]) {
+            if (this.__aliasesObject[prefix]![command]) {
+                command = this.__aliasesObject[prefix]![command]!;
             } else {
                 sender.playSound('note.bass');
                 sender.sendMessage({ "rawtext": [{ "text": "§c" }, { "translate": "commands.generic.unknown", "with": [`§f${command}§c`] }] });
                 return true;
             }
         }
-        const { requires, callback } = this[prefix][command];
+        const { requires, callback } = this.commandsObject[prefix]![command]!;
         const { score, tag } = requires ?? {};
         // content.warn(this[prefix][command]);
         if (requires) {
             let notPermissions;
             if (score) {
-                score.forEach((objective, value) => {
+                Object.entries(score).forEach(([objective, value]) => {
                     // content.warn({ value, objective, score: sender.scores[objective] ?? 'undifened' });
                     if (sender.scores[objective] !== value) { notPermissions = true; }
                 });
             }
             if (tag) {
                 const tags = sender.getTags();
-                tag.forEach((tag) => { if (tags.includes(tag)) { notPermissions = true; } });
+                Object.entries(tag).forEach(([tag]) => { if (tags.includes(tag)) { notPermissions = true; } });
             }
             if (notPermissions) {
                 sender.sendMessage(`§cyou do not have permission to use this command!`);
@@ -109,57 +97,27 @@ class CommandBuilder {
 
         try {
             callback(sender, args, command, prefix);
-        } catch (error) {
+        } catch (error: any) {
             errorLogger.log(error, error.stack, { event: 'command', key: `${prefix}${command}` });
             return true;
         }
         return true;
     }
-
-    /**
-     * @method getList Returns a string with all the available commands with their descriptions.
-     * @param {String} name Username
-     * @returns {Array<object>}
-     */
-    // getList(name) {
-    //     let returnArray = [];
-    //     this.forEach((command,data) => {
-    //         let notPermissions;
-    //         if (requires) {
-    //             const { requires, callback, usages, description } = this[prefix];
-    //             const { score, tag } = requires;
-    //             const name = sender.getName();
-    //             if (score) {
-    //                 const scores = global.scoreObject[name];
-    //                 score.forEach((objective, value) => { if (global.scoreObject[name][objective] !== value) { notPermissions = true; } });
-    //             }
-    //             if (tag) {
-    //                 const tags = sender.getTags();
-    //                 tag.forEach((objective, value) => { if (global.scoreObject[name][objective] !== value) { notPermissions = true; } });
-    //             }
-    //             if (notPermissions) {
-    //                 sender.sendMessage(`§cyou do not have permission to use view this command!`);
-    //             }
-    //         }
-    //         if (!notPermissions) {
-
-    //         }
-    //     });
-    //     return returnArray;
-    // }
-
-    /**
-     * @method register Add command.
-     * @param {String} command
-     * @param {{description: String, aliases: Array<String>, usages: Array<String>|{subCommand: Array<String>},requires:{score?:{objective: Number},tag?:{tag:boolean}},callback: (sender: import('./player/class.js').Player, args: Array<String>) => {}}} data Command Data.
-     
-     * @returns {void}
-     */
-    register(command, { description = '', aliases = [], usages = {}, requires = false, prefix = config.commandPrefix, callback }) {
+    register(command: string, { description = '', aliases = [], usages = {}, requires = false, prefix = config.commandPrefix, callback }: {
+        description?: string;
+        aliases?: Array<string>;
+        usages?: Array<string> | { [subCommand: string]: Array<string>; };
+        requires?: {
+            score?: { [objective: string]: number; };
+            tag?: { [tag: string]: boolean; };
+        } | false;
+        prefix?: string;
+        callback: (sender: import('./player/class.js').Player, args: Array<string>) => any;
+    }): void {
         const argsLength = arguments.length;
 
         if (argsLength !== 2) {
-            throw new Error(`register got ${argsLength} arguments, but expected 2 arguments: command: {String}, data: {Object}`);
+            throw new Error(`register got ${argsLength} arguments, but expected 2 arguments: command: {string}, data: {Object}`);
         }
         // console.warn(command, typeof usages, usages);
         if (typeof description !== 'string') throw new Error('Description must to be a string.');
@@ -169,20 +127,20 @@ class CommandBuilder {
         else if (!isArray(aliases) || !aliases.every(value => typeof value === 'string')) {
             throw new Error('Aliases must to be an Array of Strings');
         } else if (typeof requires === 'object' && !isArray(requires)) {
-            requires.forEach((key, value) => {
+            Object.entries(requires).forEach(([key, value]) => {
                 if (key !== 'tag' && key !== 'score') {
                     throw new Error(`The key: ${key}, in requires is must be tag or score`);
                 } else if (typeof value !== 'object') {
                     throw new Error(`The value for the key: ${key}, must of type: Object`);
                 } else {
                     if (key === 'score') {
-                        value.forEach((key, value) => {
+                        Object.entries(value).forEach(([key, value]) => {
                             if (!isInteger(value)) {
                                 throw new Error(`The value for the score: ${key}, must be of type: integer!`);
                             }
                         });
                     } else {
-                        value.forEach((key, value) => {
+                        Object.entries(value).forEach(([key, value]) => {
                             if (typeof value !== 'boolean') {
                                 throw new Error(`The value to the tag: ${key} must of type: Boolean!`);
                             }
@@ -192,7 +150,7 @@ class CommandBuilder {
             });
         }
         if (typeof usages === 'object' && !isArray(usages)) {
-            usages.forEach((subcommand, value) => {
+            Object.entries(usages).forEach(([subcommand, value]) => {
                 if (typeof value === 'object') {
                     value.forEach((key, value) => {
                         if (key !== 'subDescription' && key !== 'examples') {
@@ -200,7 +158,7 @@ class CommandBuilder {
                         } else if (key === 'examples' && !isArray(value)) {
                             throw new Error(`The value for {usuages: {${subcommand}: examples}}, must be of type: Array!`);
                         } else if (key === 'subDescription' && typeof value !== 'string') {
-                            throw new Error(`The value for {usuages: {${subcommand}: subDescription}}, must be of type: String!`);
+                            throw new Error(`The value for {usuages: {${subcommand}: subDescription}}, must be of type: string!`);
                         }
                     });
                 } else {
@@ -212,46 +170,40 @@ class CommandBuilder {
             this.__aliasesObject[prefix] = {};
         }
         aliases.forEach(aliase => {
-            this.__aliasesObject[prefix][aliase] = command;
+            this.__aliasesObject[prefix]![aliase] = command;
         });
-        if (!this[prefix]) {
-            this[prefix] = {};
+        if (!this.commandsObject[prefix]) {
+            this.commandsObject[prefix] = {};
         }
-        this[prefix][command] = {
+        this.commandsObject[prefix]![command] = {
             description,
-            requires,
-            usages,
+            requires: requires as typeof this.commandsObject[string][string]['requires'],
+            usages: usages as unknown as typeof this.commandsObject[string][string]['usages'],
             aliases,
             callback,
         };
     }
 
-    /**
-     * @method getInfo Sends information about the command to the invoker.
-     * @param {String} name Command invoker username. 
-     * @param {String} cmdName Command Name.
-     * @returns {void}
-     */
-    getInfo(sender, prefix, command, subCommand = false, permissions = true) {
+    getInfo(sender: Player, prefix: string, command: string, subCommand?: string, permissions = true): void {
         const argsLength = arguments.length;
         if (argsLength > 3 || argsLength > 5) {
-            throw new Error(`getInfo got ${argsLength} arguments, but expected 3-5 arguments: sender: {Player}, command: {String}, permissions?:true: {Boolean}`);
+            throw new Error(`getInfo got ${argsLength} arguments, but expected 3-5 arguments: sender: {Player}, command: {string}, permissions?:true: {Boolean}`);
         }
-        if (this[prefix]) {
-            const { requires, description, usages } = this[prefix][command];
+        if (this.commandsObject[prefix]) {
+            const { requires, description, usages } = this.commandsObject[prefix]![command]!;
             const { score, tag } = requires;
             // content.warn(this[prefix][command]);
             if (requires) {
                 let notPermissions;
                 if (score) {
-                    score.forEach((objective, value) => {
+                    Object.entries(score).forEach(([objective, value]) => {
                         // content.warn({ [objective]: sender.scores[objective] });
                         if (sender.scores[objective] !== value) { notPermissions = true; }
                     });
                 }
                 if (tag) {
                     const tags = sender.getTags();
-                    tag.forEach((tag) => { if (tags.includes(tag)) { notPermissions = true; } });
+                    Object.entries(tag).forEach(([tag]) => { if (tags.includes(tag)) { notPermissions = true; } });
                 }
                 if (notPermissions && permissions) {
                     sender.sendMessage(`§cyou do not have permission to use view this command!`);
@@ -259,16 +211,16 @@ class CommandBuilder {
                 }
             }
             if (subCommand && typeof usages === 'object' && !isArray(usages)) {
-                const { examples, subDescription } = this[prefix][command].usages[subCommand];
+                const { examples, subDescription } = this.commandsObject[prefix]![command]!.usages[subCommand]!;
                 sender.playSound('note.bass');
-                sender.sendMessage(`§e${command}:\n${description}\n§fUsage:${usages.map((item, i) => `\n - ${prefix}${command} ${usages[i]}`).join("")}`);
+                sender.sendMessage(`§e${command}:\n${description}\n§fUsage:${Object.entries(usages).map(([item], i) => `\n - ${prefix}${command} ${usages[i]}`).join("")}`);
 
 
 
             } else {
                 if (!isArray(usages)) {
-                    let usagesArray = [];
-                    usages.forEach((subCommand, { examples, subDescription }) => usagesArray.push(`\n - ${prefix}${command} ${subCommand}\n    - description: ${subDescription}\n    - examples: \n${examples.map(example => `      - ${prefix}${example}\n`).join('')}`));
+                    let usagesArray: string[] = [];
+                    Object.entries(usages).forEach(([subCommand, { examples, subDescription }]) => usagesArray.push(`\n - ${prefix}${command} ${subCommand}\n    - description: ${subDescription}\n    - examples: \n${examples.map(example => `      - ${prefix}${example}\n`).join('')}`));
                     console.warn(JSON.stringify(usagesArray));
 
                     sender.runCommandAsync('playsound note.hat @s');
@@ -285,11 +237,12 @@ class CommandBuilder {
 
 
         } else {
-            if (!command) return this.invalidSyntax(`help`, sender, [command]);
+            if (!command) return this.invalidSyntax(`help`, sender, command, ['']);
         }
     };
-    getCommandFromAliases(aliase) {
-        this.forEach((command, { aliases }) => {
+    getCommandFromAliases(prefix: string, aliase: string) {
+        if (!this.commandsObject[prefix]) return;
+        Object.entries(this.commandsObject[prefix]!).forEach(([command, { aliases }]) => {
             if (aliases.includes(aliase)) {
                 return command;
             }
@@ -297,9 +250,9 @@ class CommandBuilder {
     }
     /**
      * @method run Run command callback.
-     * @param {String} cmdName Command name.
-     * @param {String} sender Command invoker sender class.
-     * @param {Array<String>} args Args.
+     * @param {string} cmdName Command name.
+     * @param {string} sender Command invoker sender class.
+     * @param {Array<string>} args Args.
      */
 }
 

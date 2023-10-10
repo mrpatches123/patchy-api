@@ -1,62 +1,49 @@
-import { rainbowWeight } from "../utilities.js";
-import databases from "./database.js";
-import global from "./global.js";
 import players from "./players/export_instance.js";
-import { Player } from "./player/class.js";
 // import { getChatNameTag } from '../../../factions/plugins/player/name_tag.js';
 const ranks = ['§7Low§f', '§6High§f', '§3Master§f'];
 class PromptBuilder {
     constructor() {
-
+        this.data = {};
     }
-    /**
-     * @method add Add command.
-     * @param {Player} sender
-     * @param {String} message
-     * @param {{<anwser>String:<callback>(sender: <sender>)}} anwsers 
-     * @returns {void}
-     */
     add(sender, message, anwsers) {
         // console.warn('add', JSON.stringify(arguments));
         if (!sender) {
             throw new Error(`sender, args 0, is required`);
-        } else if (!message) {
+        }
+        else if (!message) {
             throw new Error(`message, args 1, is required`);
-        } else if (!anwsers) {
+        }
+        else if (!anwsers) {
             throw new Error(`anwsers, args 2, is required`);
-        } else if (typeof sender !== 'object') {
+        }
+        else if (typeof sender !== 'object') {
             throw new Error(`sender, args 0, must be a player`);
-        } else if (typeof message !== 'string') {
+        }
+        else if (typeof message !== 'string') {
             throw new Error(`${message}, args 1, must be a string`);
-        } else if (typeof anwsers !== 'object') {
+        }
+        else if (typeof anwsers !== 'object') {
             throw new Error(`anwsers, args 2, must be a object`);
-        } else {
-            anwsers.forEach((key, value) => { if (typeof value !== 'function') throw new Error(`the callback for ${key} must be a function`); });
-            this[id] = { message, anwsers };
+        }
+        else {
+            const { id } = sender;
+            Object.entries(anwsers).forEach(([key, value]) => { if (typeof value !== 'function')
+                throw new Error(`the callback for ${key} must be a function`); });
+            this.data[id] = { message, anwsers };
             console.warn(message);
             // console.warn('add', message, JSON.stringify({ message, anwsers }));
         }
-    } /**
-    * @method remove Add command.
-    * @param {Player} sender
-    * @returns {void}
-    */
-    remove(sender) {
-        delete this[id];
     }
-    /**
-    * @method check Add command.
-    * @param {Player} sender
-    * @param {String} message
-    * @returns {void}
-    */
+    remove(sender) {
+        delete this.data[sender.id];
+    }
     check(sender, message) {
         const { name, id } = sender;
-        if (this[id]) {
-            const { anwsers } = this[id];
+        if (this.data[id]) {
+            const { anwsers } = this.data[id] ?? {};
             if (anwsers) {
                 let bool = false;
-                anwsers.forEach((key, value) => {
+                Object.entries(anwsers).forEach(([key, value]) => {
                     if (key.toLowerCase() === message.toLowerCase() || key.toLowerCase() === '%any%') {
                         // const nameTag = getChatNameTag(sender);
                         sender.sendMessage(`${name}: ${message}`);
@@ -65,11 +52,8 @@ class PromptBuilder {
                     }
                 });
                 return bool;
-
             }
-
         }
-
     }
     /**
     * @method ask Add command.
@@ -77,7 +61,10 @@ class PromptBuilder {
     * @returns {void}
     */
     ask(sender) {
-        const { message } = this[id];
+        const { id } = sender;
+        const { message } = this.data[id] ?? {};
+        if (!message)
+            return;
         sender.sendMessage(message);
     }
     /**
@@ -89,7 +76,6 @@ class PromptBuilder {
         players.get().iterate(sender => this.ask(sender));
     }
 }
-
 let promptBuilder = new PromptBuilder();
-
 export default promptBuilder;
+//# sourceMappingURL=prompt.js.map

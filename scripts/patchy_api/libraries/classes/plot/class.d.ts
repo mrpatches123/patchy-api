@@ -1,49 +1,111 @@
-import { BlockAreaSize, Vector, Vector3, Dimension, Vector2 } from '@minecraft/server';
-import { Player } from '../player/class.js';
-import { StructureLoadOptions } from '../structure/class';
-export class PlotsVector3 extends Vector {
-	constructor(x: number, y: number, z: number);
+import { BlockAreaSize, Dimension, Vector2, Vector3 } from "@minecraft/server";
+import { Player } from "../player/class.js";
+import { LoadOptions as StructureLoadOptions } from '../structure/class';
+export declare class PlotsVector3 {
+    x: number;
+    y: number;
+    z: number;
+    constructor(x: number, y: number, z: number);
 }
-export class BlockVector3 extends Vector {
-	constructor(x: number, y: number, z: number);
+export declare class BlockVector3 {
+    x: number;
+    y: number;
+    z: number;
+    constructor(x: number, y: number, z: number);
 }
 interface PlotRuleSet {
-	count?: number;
-	size?: BlockAreaSize;
-	start: { x: number, y: number, z: number; } | PlotsVector3;
-	offset?: { x: number, y: number, z: number; };
-	direction: 'x' | '-x' | 'z' | '-z';
-	blockPlaceMargin: { x: number, y: number, z: number; };
+    count?: number;
+    size?: BlockAreaSize;
+    start: {
+        x: number;
+        y: number;
+        z: number;
+    } | PlotsVector3;
+    offset?: {
+        x: number;
+        y: number;
+        z: number;
+    };
+    direction: 'x' | '-x' | 'z' | '-z';
+    blockPlaceMargin?: {
+        x: number;
+        y: number;
+        z: number;
+    };
 }
 interface Teleport {
-	location: Vector3;
-	face?: Vector2 | Vector3;
-	dimension: Dimension;
+    location?: Vector3 | {
+        location: Vector3;
+        offset: Vector3;
+    } | PlotsVector3;
+    face?: Vector2 | Vector3 | {
+        location: Vector3;
+        offset: Vector3;
+    } | PlotsVector3;
+    dimension?: Dimension;
+    key?: string;
 }
-interface PlotRules<key extends string> {
-	size?: BlockAreaSize;
-	start: { x: number, y: number, z: number; };
-	ruleSets?: PlotRuleSet[];
-	property: boolean;
-	plotNumberIdentifier?: key;
-	defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break';
-	defaultGamemode?: 0 | 1 | 2;
-	/**
-	 * default?= false
-	 */
-	loop?: boolean;
-	loopDirection?: 'x' | '-x' | 'z' | '-z';
-	teleport?: Teleport;
-	structure?: StructureLoadOptions;
+interface PlotRules {
+    size: BlockAreaSize;
+    start: {
+        x: number;
+        y: number;
+        z: number;
+    };
+    ruleSets?: PlotRuleSet[];
+    property?: boolean;
+    plotNumberIdentifier?: string;
+    defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break';
+    defaultGamemode?: 0 | 1 | 2;
+    /**
+     * default?= false
+     */
+    loop?: boolean;
+    loopDirection?: 'x' | '-x' | 'z' | '-z';
+    teleport?: Teleport;
+    structure?: StructureLoadOptions;
+    exclusive?: boolean;
+    maxX?: number;
+    maxZ?: number;
 }
-export class PlotBuilder {
-	constructor();
-	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride' | 'blockPlaceMarginOverideX' | 'blockPlaceMarginOverideY' | 'blockPlaceMarginOverideZ', value: string | number): void;
-	setCurrent(player: Player, key: string): void;
-	query(player: Player, key: string): number;
-	create<key extends string>(key: string, rules: PlotRules<key>): void;
-	add(player: Player, key: string, plotNumber: number | undefined): { wasAdded: boolean, plotNumber: number | undefined, full: boolean; };
-	remove(player: Player, key: string): void;
-	list(key: string): { currentIndex: number, availablePlots: number[]; };
-	reset(key: string): void;
+export declare class PlotBuilder {
+    subscribedQueue: boolean;
+    registeredProperties: boolean;
+    creates: Record<string, PlotRules>;
+    plots: Record<string, {
+        players: any;
+        rules: PlotRules;
+    }>;
+    subscribed: boolean;
+    constructor();
+    runCreateQueue(): void;
+    registerOverides(): void;
+    create(key: string, rules: PlotRules): void;
+    query(player: Player, key: string): string | number | boolean | undefined;
+    list(key: string): {
+        availablePlots: number[];
+        currentIndex: number;
+    } | undefined;
+    /**
+     * @param {Player} player
+     * @param {string} key
+     */
+    setCurrent(player: Player, key?: string): void;
+    setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride', value: number | string): void;
+    getRuleSet(key: string, number: number): PlotRuleSet | undefined;
+    subscribe(): void;
+    /**
+     * @param {import('../player/class').Player} player
+     * @param {string} key
+     * @param {number | undefined} plotNumber
+     * @returns {{ wasAdded: boolean, plotNumber: Number | undefined, full: boolean}}
+     */
+    add(player: import('../player/class').Player, key: string, plotNumber: number | undefined): {
+        wasAdded: boolean;
+        plotNumber?: number | undefined;
+        full: boolean;
+    };
+    reset(key: string): void;
+    remove(player: Player, key: string): boolean;
 }
+export {};

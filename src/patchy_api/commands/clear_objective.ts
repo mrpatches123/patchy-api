@@ -1,7 +1,7 @@
 
 import { commandBuilder, players } from '../modules.js';
 import config from '../config.js';
-import { world } from '@minecraft/server';
+import { DisplaySlotId, world } from '@minecraft/server';
 const { commandPrefix: prefix } = config;
 commandBuilder.register('cleardisplay', {
 	description: "clear-display",
@@ -17,6 +17,7 @@ commandBuilder.register('cleardisplay', {
 	},
 	callback: (sender, args) => {
 		const [slot] = args;
-		world.scoreboard.clearObjectiveAtDisplaySlot(slot);
+		if (!slot) return sender.sendMessage('forgot slot');
+		world.scoreboard.clearObjectiveAtDisplaySlot(slot as DisplaySlotId);
 	}
 });

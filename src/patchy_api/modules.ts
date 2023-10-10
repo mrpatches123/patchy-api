@@ -22,7 +22,7 @@ import wait from './libraries/classes/wait.js';
 import tagDatabases from './libraries/classes/tag_database.js';
 import requestBuilder from './libraries/classes/request.js';
 import { texturePaths } from './libraries/texture_path.js';
-import { ModalForm, ActionForm, MessageForm } from './libraries/classes/forms_func.js';
+// import { ModalForm, ActionForm, MessageForm } from './libraries/classes/forms_func.js';
 import preformance from './libraries/classes/preformace.js';
 import propertyBuilder from './libraries/classes/property/export_instance.js';
 import fill from './libraries/classes/fill.js';
@@ -30,7 +30,7 @@ import structureBuilder from './libraries/classes/structure/export_instance.js';
 import leaderboardBuilder from './libraries/classes/leaderboard/export_instance.js';
 import friendSystemBuilder from './libraries/classes/friend/export_instance.js';
 import scoreboardDatabases from './libraries/classes/scoreboard_database.js';
-export { scoreboardDatabases, friendSystemBuilder, leaderboardBuilder, structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, ModalForm, ActionForm, MessageForm, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
+export { scoreboardDatabases, friendSystemBuilder, leaderboardBuilder, structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyBuilder, fill, preformance, players, tagDatabases, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder/*, inventoryBuilder*/, positionBuilder, promptBuilder, teleportBuilder, time, wait }
 
 
 

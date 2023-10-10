@@ -27,7 +27,7 @@ commandBuilder.register('tags', {
             });
             tagDatabases.initalizeAll();
         } else {
-            const player = Object.values(players.get({ name: args[0] }))[0];
+            const player = Object.values(players.get({ name: args[0] }).object())[0];
             if (!player) return sender.sendMessage(`Player, ${args[0]}, does not exist`);
             player.getTags().forEach(tag => {
                 player.removeTag(tag);

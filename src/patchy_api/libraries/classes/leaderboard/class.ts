@@ -1,16 +1,38 @@
-import { Dimension, world } from "@minecraft/server";
+import { Dimension, Vector3, world } from "@minecraft/server";
 import { chunkStringBytes, content, isDefined, isVector3, metricNumbers, overworld, typeOf } from "../../utilities.js";
 import eventBuilder from "../events/export_instance.js";
 import players from "../players/export_instance.js";
 
-const type = ['online', 'offline'];
-
+const types = ['online', 'offline'] as const;
+interface LeaderboardData {
+	type?: typeof types[number],
+	reversed?: boolean,
+	modification?: (current: number) => number,
+	location: Vector3,
+	objective: string,
+	maxLength?: number,
+	title?: string,
+	formating?: string | string[];
+	dimension: Dimension;
+}
+interface LeaderboardDataAfter {
+	type: typeof types[number],
+	reversed: boolean,
+	modification?: (current: number) => number,
+	location: Vector3,
+	objective: string,
+	maxLength: number,
+	title: string,
+	formating: string | string[];
+	dimension: Dimension;
+}
 export class LeaderboardBuilder {
+	createQueue: LeaderboardDataAfter[];
+	entities: Record<string, { savedScores: Record<string, { value: number, name: string; }>, type: 'offline' | 'online', reversed: boolean, modification?: (value: number) => number, dimension: Dimension, location: Vector3, objective: string, maxLength: number, title: string, formating: string | string[]; }>;
+	loadCreated: boolean;
+	subscribed: boolean;
 	constructor() {
 		this.createQueue = [];
-		/**
-		 * @type {{[entityId: string]: {savedScores: {[playerId: string]: {value: number, name:string}} type: 'offline' | 'online', reversed: boolean, modification: (value: number) => number, dimension: Dimension, location: Vector3, objective: string, maxLength: number, title: string, formating: string | string[] }}}
-		 */
 		this.entities = {};
 		this.subscribed = false;
 		this.loadCreated = false;
@@ -18,24 +40,24 @@ export class LeaderboardBuilder {
 	initialize() {
 		// content.warn('leaderboardBuilder2384975u3io9we8rhugybedinwoj');
 		// content.warn({ createQueueLB: this.createQueue });
-		this.createQueue.forEach(({ reversed, modification, type, location, objective, maxLength, title, formating }) => {
+		this.createQueue.forEach(({ reversed, modification, type, location, objective, maxLength, title, formating, dimension }) => {
 			let entity = [...overworld.getEntities({ type: 'patches:leaderboard', location, maxDistance: 2, closest: 1, tags: [objective] })][0];
 			// content.warn({ objective, entityTags: entity.getTags() });
 			if (!entity) entity = overworld.spawnEntity('patches:leaderboard', location);
 			if (!entity.hasTag(objective)) entity.addTag(objective);
 			const { id } = entity;
-			this.entities[id] = { reversed, modification, location, objective, maxLength, title, formating, type };
-			this.entities[id].savedScores = {};
-			if (this.entities[id].type === 'offline') {
+			this.entities[id] = { savedScores: {}, reversed, modification, location, objective, maxLength, title, formating, type, dimension };
+			this.entities[id]!.savedScores = {};
+			if (this.entities[id]!.type === 'offline') {
 				const tags = entity.getTags();
 				const scoresStrings = tags.filter(tag => tag.startsWith('scores:')) ?? [];
 				if (!scoresStrings.length) return;
 				const rawDatas = scoresStrings.map(string => {
 					const number = Number(string.match(/\d+/) ?? '0');
 					return [number, string.replace(/scores:\d+:/, '').replace('scores:', '')];
-				}).sort(([a], [b]) => a - b).map(([i, rawData]) => rawData);
+				}).sort(([a], [b]) => Number(a) - Number(b)).map(([i, rawData]) => rawData);
 				// content.warn({ objective, data: rawDatas.join('') });
-				this.entities[id].savedScores = JSON.parse(rawDatas.join(''));
+				this.entities[id]!.savedScores = JSON.parse(rawDatas.join(''));
 			}
 		});
 		this.createQueue = [];
@@ -65,49 +87,50 @@ export class LeaderboardBuilder {
 	/**
 	 * @param {string | undefined} objectiveToUpdate 
 	 */
-	update(objectiveToUpdate) {
+	update(objectiveToUpdate?: string) {
 		const playersOnline = players.get();
 		const entities = [...((objectiveToUpdate) ? overworld.getEntities({ type: 'patches:leaderboard', tags: [objectiveToUpdate] }) : overworld.getEntities({ type: 'patches:leaderboard' }))];
 		if (!entities.length) return;
+		const thisLB = this;
 		// content.warn({ len: entities.length, mpa: entities.map(({ typeId }) => typeId) });
 		entities.forEach((entity) => {
 			const { id } = entity;
 			if (!this.entities.hasOwnProperty(id)) {
-				this.entities[id] = {};
+				this.entities[id] = {} as typeof this.entities[typeof id];
 				const tags = entity.getTags();
 				if (!tags) return entity.triggerEvent('kill_lb');
-				this.entities[id].savedScores = {};
-				if (this.entities[id].type === 'offline') {
+				this.entities[id]!.savedScores = {};
+				if (this.entities[id]!.type === 'offline') {
 					const scoresStrings = tags.filter(tag => tag.startsWith('scores:')) ?? [];
 					if (!scoresStrings.length) return;
 					const rawDatas = scoresStrings.map(string => {
 						const number = Number(string.match(/\d+/) ?? '0');
 						return [number, string.replace(/scores:\d+:/, '').replace('scores:', '')];
-					}).sort(([a], [b]) => a - b).map(([i, rawData]) => rawData);;
-					this.entities[id].savedScores = JSON.parse(rawDatas.join(''));
+					}).sort(([a], [b]) => Number(a) - Number(b)).map(([i, rawData]) => rawData);;
+					this.entities[id]!.savedScores = JSON.parse(rawDatas.join(''));
 				}
 				// content.warn({ data: this.entities[id] });
 			}
 
 
 			const entityStorage = this.entities[id];
-			let { modification, reversed, savedScores = {}, type, objective, maxLength, formating, title } = entityStorage;
+			let { modification, reversed, savedScores = {}, type, objective, maxLength, formating, title } = entityStorage ?? {};
 			if (!objective) return;
-			let leaderboardPlayers = {};
+			let leaderboardPlayers: Record<string, { value: number, name: string; }> = {};
 			let save = false;
-			if (!this.entities[id].hasOwnProperty('savedScores')) this.entities[id].savedScores = {};
+			this.entities[id]!.savedScores ??= {};
 			playersOnline.iterate(player => {
 				const { id: playerId, name, scores } = player;
 
-				const score = scores[objective];
+				const score = scores[objective!];
 
 				if (!isDefined(score)) return;
 
-				leaderboardPlayers[playerId] = { name, value: score };
+				leaderboardPlayers[playerId] = { name, value: score! };
 				if (type === 'online') return;
 				if (savedScores?.[playerId]?.value === score) return;
-				if (!this.entities[id].savedScores.hasOwnProperty(playerId)) this.entities[id].savedScores[playerId] = {};
-				this.entities[id].savedScores[playerId].value = score;
+				thisLB.entities[id]!.savedScores[playerId] ??= {} as typeof thisLB.entities[typeof id]['savedScores'][typeof playerId];
+				this.entities[id]!.savedScores[playerId]!.value! = score!;
 				save = true;
 			});
 
@@ -118,11 +141,11 @@ export class LeaderboardBuilder {
 			// content.warn({ leaderboardPlayers, scores });
 			let leaderboard = Object.entries(leaderboardPlayers).map(([playerId, { value, name }]) => ({ id: playerId, value, name })).sort(({ value: aValue }, { value: bValue }) => bValue - aValue);
 			leaderboard = (reversed) ? leaderboard.reverse().slice(0, maxLength) : leaderboard.slice(0, maxLength);
-			entity.nameTag = [title, ...leaderboard.map(({ value, name }, i) => ((formating instanceof Array) ? formating[i] ?? formating[formating.length - 1] : formating).replace('${#}', i + 1).replace('${name}', name).replace('${score}', (modification instanceof Function) ? modification(value) : value).replace('${score*f}', metricNumbers(value, 1)))].join('\n');
+			entity.nameTag = [title, ...leaderboard.map(({ value, name }, i) => ((formating instanceof Array) ? formating[i] ?? formating[formating.length - 1] : formating)!.replace('${#}', (i + 1).toString()).replace('${name}', name).replace('${score}', (modification instanceof Function) ? modification(value).toString() : value.toString()).replace('${score*f}', metricNumbers(value, 1) as string))].join('\n');
 			// content.warn({ tag: entity.nameTag });
 			if (!save) return;
 			const tags = entity.getTags();
-			const leaderboardObject = {};
+			const leaderboardObject: Record<string, { value: number, name: string; }> = {};
 			leaderboard.forEach(({ id, value, name }) => {
 				leaderboardObject[id] = { value, name };
 			});
@@ -137,8 +160,8 @@ export class LeaderboardBuilder {
 			});
 		});
 	}
-	create({ type = 'online', reversed = false, modification, location, objective, maxLength, title = objective, formating = '${#} ${name} ${score*f}' }) {
-
+	create(data: LeaderboardData): void {
+		const { type = 'online', reversed = false, modification, location, objective, maxLength = 5, title = objective, formating = '${#} ${name} ${score*f}', dimension } = data;
 
 
 		// if (!(dimension instanceof Dimension)) throw new Error('dimension at params[0] is not of type: Dimension!');
@@ -153,7 +176,9 @@ export class LeaderboardBuilder {
 		if (typeof title !== 'string') throw new Error('title in params[0] is defined and not of type: String!');
 		if (typeof formating !== 'string' && !(formating instanceof Array)) throw new Error('formating in params[0] is defined and not of type: String or Array!');
 		if (typeof reversed !== 'boolean') throw new Error('reversed in params[0] is defined and not of type: Boolean!');
-		this.createQueue.push({ modification, reversed, type, location, objective, maxLength, title, formating });
+		if (!(dimension instanceof Dimension)) throw new Error('dimension in params[0] is defined and not of type: Dimension!');
+
+		this.createQueue.push({ modification, reversed, type, location, objective, maxLength, title, formating, dimension });
 		this.subscribe();
 		// content.warn(this.loadCreated);
 		if (this.loadCreated) this.initialize();
@@ -163,7 +188,7 @@ export class LeaderboardBuilder {
 	 * @param {string} objective 
 	 * @returns {number}
 	 */
-	delete(location, objective) {
+	delete(location: Vector3, objective: string) {
 		const entities = [...overworld.getEntities({ type: 'patches:leaderboard', location, maxDistance: 2, tags: [objective] })];
 		let removed = 0;
 		entities.forEach(entity => {

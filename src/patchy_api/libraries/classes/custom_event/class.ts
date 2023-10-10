@@ -4,12 +4,12 @@ import errorLogger from "../error.js";
 import { content } from "../../utilities.js";
 export class CustomEvent {
 	eventKey: string;
-	subscriptions: { [eventKey: string]: { time: number, keys: { [key: string]: { time: number; suppessed: boolean, callback: Function; }; }; }; };
+	public subscriptions: typeof eventBuilder.subscriptions[string];
 	constructor(eventKey: string) {
 		this.eventKey = eventKey;
-		eventBuilder.subscriptions[eventKey] ??= {};
-		eventBuilder.subscriptions[eventKey].keys ??= {};
-		this.subscriptions = eventBuilder.subscriptions[eventKey];
+		eventBuilder.subscriptions[eventKey] ??= {} as typeof eventBuilder.subscriptions[typeof eventKey];
+		eventBuilder.subscriptions[eventKey]!.keys ??= {} as typeof eventBuilder.subscriptions[typeof eventKey]['keys'];
+		this.subscriptions = eventBuilder.subscriptions[eventKey]!;
 	};
 	// [Symbol.iterator]() {
 	// 	let index = 0;
@@ -19,10 +19,10 @@ export class CustomEvent {
 	// 	return {
 	// 		next: () => {
 	// 			const key = subscriptionKeys[index];
-	// 			const { suppessed, callback: callbackForKey } = this.subscriptions[key];
+	// 			const { suppressed, callback: callbackForKey } = this.subscriptions[key];
 
 	// 			try {
-	// 				if (suppessed) return;
+	// 				if (suppressed) return;
 	// 				time.start(`Events*API*${this.eventKey}*${key}`);
 	// 				if (callbackForKey instanceof Function) 
 	// 				(...params) => {
@@ -37,12 +37,12 @@ export class CustomEvent {
 	// 		}
 	// 	};
 	// };
-	iterate(eventResponse: Object, callback: Function) {
+	iterate(eventResponse: Object, callback?: Function) {
 		time.start(`Events*API*${this.eventKey}`);
 		// if (this.eventKey === 'tickAfterLoad') content.chatFormat(this.subscriptions);
-		Object.entries(this.subscriptions.keys).forEach(([key, { suppessed, callback: callbackForKey }], i) => {
+		Object.entries(this.subscriptions.keys).forEach(([key, { suppressed, callback: callbackForKey }], i) => {
 			try {
-				if (suppessed) return;
+				if (suppressed) return;
 				time.start(`Events*API*${this.eventKey}*${key}`);
 				// if (this.eventKey === 'tickAfterLoad' && key === 'position*API') content.warn({ key, bool2: callback instanceof Function, bool: callbackForKey instanceof Function });
 				if (callback instanceof Function) callback(key, eventResponse, callbackForKey, i);
@@ -50,9 +50,9 @@ export class CustomEvent {
 				// content.warn(this.eventKey, eventBuilder.subscriptions[this.eventKey].keys);
 				const endTime = time.end(`Events*API*${this.eventKey}*${key}`);
 				if (!eventBuilder.subscriptions.hasOwnProperty(this.eventKey)) return;
-				if (!eventBuilder.subscriptions[this.eventKey].keys.hasOwnProperty(key)) return;
-				eventBuilder.subscriptions[this.eventKey].keys[key].time = endTime;
-			} catch (error) {
+				if (!eventBuilder.subscriptions[this.eventKey]!.keys.hasOwnProperty(key)) return;
+				eventBuilder.subscriptions[this.eventKey]!.keys[key]!.time = endTime;
+			} catch (error: any) {
 				errorLogger.log(error, error.stack, { event: this.eventKey, key });
 			}
 		});

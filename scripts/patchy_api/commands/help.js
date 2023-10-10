@@ -1,5 +1,4 @@
 import config from '../config.js';
-
 import { commandBuilder } from '../modules.js';
 const { commandPrefix: prefix } = config;
 commandBuilder.register('help', {
@@ -20,6 +19,7 @@ commandBuilder.register('help', {
                 break;
             case 1:
             case 2:
+                /*@ts-ignore*/
                 commandBuilder.getInfo(sender, prefix, ...args);
                 break;
             default:
@@ -27,3 +27,4 @@ commandBuilder.register('help', {
         }
     }
 });
+//# sourceMappingURL=help.js.map

@@ -1,5 +1,4 @@
-
-import { requestBuilder, content, commandBuilder, native } from '../modules.js';
+import { requestBuilder, commandBuilder } from '../modules.js';
 import config from '../config.js';
 const { commandPrefix: prefix } = config;
 commandBuilder.register('requests', {
@@ -18,3 +17,4 @@ commandBuilder.register('requests', {
         sender.sendMessage(JSON.stringify({ requestBuilder }));
     }
 });
+//# sourceMappingURL=request.js.map

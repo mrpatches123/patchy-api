@@ -4,9 +4,7 @@ import { content } from "../libraries/utilities.js";
 
 
 class TickEvent {
-	constructor() {
-		this.lastDate = Date.now();
-	}
+	lastDate = Date.now();
 	get deltaTime() {
 		const deltaTime = (Date.now() - this.lastDate) / 1000;
 		this.lastDate = Date.now();
@@ -17,7 +15,7 @@ class TickEvent {
 	};
 };
 const tickEvent = new TickEvent();
-let runId;
+let runId: number | undefined;
 eventBuilder.register({
 	tick: {
 		subscription: {
@@ -30,7 +28,7 @@ eventBuilder.register({
 			}
 		},
 		unsubscription: () => {
-			system.clearRun(runId);
+			system.clearRun(runId!);
 		}
 	},
 	beforeChat: {
@@ -47,6 +45,15 @@ eventBuilder.register({
 			chatSend: {
 				function: (event) => {
 					eventBuilder.getEvent('chat').iterate(event);
+				}
+			}
+		}
+	},
+	blockBreak: {
+		subscription: {
+			playerBreakBlock: {
+				function: (event) => {
+					eventBuilder.getEvent('blockBreak').iterate(event);
 				}
 			}
 		}

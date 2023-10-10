@@ -3,20 +3,16 @@ import databases from "./database.js";
 import global from "./global.js";
 import players from "./players/export_instance.js";
 import { Player } from "./player/class.js";
+import { Vector } from "@minecraft/server";
 // import { getChatNameTag } from '../../../factions/plugins/player/name_tag.js';
 const ranks = ['§7Low§f', '§6High§f', '§3Master§f'];
 class PromptBuilder {
+    data: Record<string, { message?: string, anwsers?: Record<string, ((sender: Player, message: string) => any)>; }> = {};
     constructor() {
 
     }
-    /**
-     * @method add Add command.
-     * @param {Player} sender
-     * @param {String} message
-     * @param {{<anwser>String:<callback>(sender: <sender>)}} anwsers 
-     * @returns {void}
-     */
-    add(sender, message, anwsers) {
+
+    add(sender: Player, message: string, anwsers: Record<string, ((sender: Player, message: string) => any)>): void {
         // console.warn('add', JSON.stringify(arguments));
         if (!sender) {
             throw new Error(`sender, args 0, is required`);
@@ -31,32 +27,23 @@ class PromptBuilder {
         } else if (typeof anwsers !== 'object') {
             throw new Error(`anwsers, args 2, must be a object`);
         } else {
-            anwsers.forEach((key, value) => { if (typeof value !== 'function') throw new Error(`the callback for ${key} must be a function`); });
-            this[id] = { message, anwsers };
+            const { id } = sender;
+            Object.entries(anwsers).forEach(([key, value]) => { if (typeof value !== 'function') throw new Error(`the callback for ${key} must be a function`); });
+            this.data[id] = { message, anwsers };
             console.warn(message);
             // console.warn('add', message, JSON.stringify({ message, anwsers }));
         }
-    } /**
-    * @method remove Add command.
-    * @param {Player} sender
-    * @returns {void}
-    */
-    remove(sender) {
-        delete this[id];
     }
-    /**
-    * @method check Add command.
-    * @param {Player} sender
-    * @param {String} message
-    * @returns {void}
-    */
-    check(sender, message) {
+    remove(sender: Player) {
+        delete this.data[sender.id];
+    }
+    check(sender: Player, message: string): boolean | void {
         const { name, id } = sender;
-        if (this[id]) {
-            const { anwsers } = this[id];
+        if (this.data[id]) {
+            const { anwsers } = this.data[id] ?? {};
             if (anwsers) {
                 let bool = false;
-                anwsers.forEach((key, value) => {
+                Object.entries(anwsers).forEach(([key, value]) => {
                     if (key.toLowerCase() === message.toLowerCase() || key.toLowerCase() === '%any%') {
                         // const nameTag = getChatNameTag(sender);
                         sender.sendMessage(`${name}: ${message}`);
@@ -76,8 +63,10 @@ class PromptBuilder {
     * @param {Player} sender
     * @returns {void}
     */
-    ask(sender) {
-        const { message } = this[id];
+    ask(sender: Player): void {
+        const { id } = sender;
+        const { message } = this.data[id] ?? {};
+        if (!message) return;
         sender.sendMessage(message);
     }
     /**
@@ -85,7 +74,7 @@ class PromptBuilder {
     * @param {Player} sender
     * @returns {void}
     */
-    askAll() {
+    askAll(): void {
         players.get().iterate(sender => this.ask(sender));
     }
 }

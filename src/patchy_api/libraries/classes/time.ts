@@ -1,12 +1,6 @@
 class Time {
-  constructor() {
-
-  }
-  /**
-   * @method start begin counting on the stored key
-   * @param {String} key 
-   */
-  start(key) {
+  [key: string]: number | Function;
+  start(key: string) {
     this[key] = this.now();
   }
   /**
@@ -14,7 +8,7 @@ class Time {
    * @param {String} key 
    * @returns {Number}
    */
-  end(key) {
+  end(key: string): number {
     const time = this.get(key);
     delete this[key];
     return time;
@@ -24,15 +18,15 @@ class Time {
    * @param {String} key 
    * @returns {Number}
    */
-  get(key) {
-    return Number(this.now() - this[key]);
+  get(key: string): number {
+    return Number(this.now() - (this[key] as number));
   }
   /**
    * @method now Data.now() fix worthless
    * @param {String} key 
    * @returns {Number}
    */
-  now() {
+  now(): number {
     return (new Date()).getTime();
   }
 }

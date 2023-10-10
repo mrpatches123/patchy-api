@@ -1,18 +1,11 @@
-
-
-
 import './libraries/prototypes/permission_fix.js';
 import './libraries/prototypes/native_imports.js';
-
 import './events/events_zero.js';
 import './events/events_first.js';
-
 import './libraries/classes/load.js';
-
 import './events/events_second.js';
 //import custom events above here
 import './libraries/prototypes/minecraft_imports.js';
-
 import './main.js';
 //events
 //forms
@@ -62,3 +55,4 @@ import './commands/clear_objective.js';
 import './commands/key.js';
 import './commands/properties.js';
 import './commands/test_form.js';
+//# sourceMappingURL=api_imports.js.map

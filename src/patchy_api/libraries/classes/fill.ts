@@ -1,10 +1,11 @@
-import { BlockType, BlockPermutation, system, BlockAreaSize, Vector } from "@minecraft/server";
+import { BlockType, BlockPermutation, system, BlockAreaSize, Vector, Vector3, Block } from "@minecraft/server";
 import { content, isDefined, overworld, sort3DRange, sort3DVectors } from "../utilities.js";
 /**
  * @typedef {Object} BlockOptions
  * @property {BlockType} type
  * @property {BlockPermutation} permutation
  */
+
 /**
  * @typedef {Object} FillOptions
  * @property {{x: number, y: number, z: number}} location1
@@ -14,14 +15,32 @@ import { content, isDefined, overworld, sort3DRange, sort3DVectors } from "../ut
  * @property {Number} maxPlacementsPerTick default?=8192 and 0 is infinity
  * @property {BlockType} replace 
  */
-function isVector3(target) {
+
+interface BlockOptions {
+	type: BlockType;
+	permutation: BlockPermutation;
+}
+
+interface FillOptions {
+	location1: Vector3;
+	location2: Vector3;
+	blocks: BlockType | BlockOptions | (BlockType | BlockOptions)[];
+	hollow: number;
+	maxPlacementsPerTick: number;
+	replace: BlockType;
+}
+function isVector3(target: any) {
 	// content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
 	return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
 }
 class Fill {
+	subscribed: boolean;
+	queue: { nullId: number, fillOptions: FillOptions, lastValueIfNullBlock?: IteratorResult<{ blockLocation: Vector3, isFirstBlockOfChunk: boolean; }, { blockLocation: Vector3, isFirstBlockOfChunk: boolean; }>; iterator: Iterator<{ blockLocation: Vector3, isFirstBlockOfChunk: boolean; }, { blockLocation: Vector3, isFirstBlockOfChunk: boolean; }, undefined>; }[];
+	nullId: number;
 	constructor() {
 		this.queue = [];
 		this.subscribed = false;
+		this.nullId = 0;
 	}
 	subscribe() {
 		if (this.subscribed) return new Error('how did you subscribe this again');
@@ -32,13 +51,12 @@ class Fill {
 				try {
 					if (!fillThis.queue.length) return;
 					run();
-					const { fillOptions, iterator, lastValueIfNullBlock = false } = fillThis.queue[0];
-					const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048, replace } = fillOptions;
+					const { fillOptions, iterator, lastValueIfNullBlock = false } = fillThis.queue[0] ?? {};
+					const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048, replace } = fillOptions ?? {};
 					const blocksIsArray = blocks instanceof Array;
-
 					for (let i = 0; i < maxPlacementsPerTick; i++) {
 
-						const current = (lastValueIfNullBlock) ? lastValueIfNullBlock : iterator.next();
+						const current = (lastValueIfNullBlock) ? lastValueIfNullBlock : iterator!.next();
 						// content.warn({ t: 'wdwwdwd', i, done: current.done, t2: 'why not work' });
 						if (current.done) { fillThis.queue.shift(), await overworld.runCommandAsync(`tickingarea remove fillTickAPI`).catch(error => { }); break; }
 
@@ -63,10 +81,10 @@ class Fill {
 							if (fillThis.queue[0]) fillThis.queue[0].lastValueIfNullBlock = current;
 							break;
 						} else {
-							if (fillThis.queue[0]) fillThis.queue[0].lastValueIfNullBlock = false;
+							if (fillThis.queue[0]) fillThis.queue[0].lastValueIfNullBlock = undefined;
 						}
 
-						const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions.type;
+						const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions!.type;
 						// content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
 						if (replace && block.typeId !== replace.id) continue;
 						block.setType(blockType);
@@ -75,7 +93,7 @@ class Fill {
 						block.setPermutation(blockOptions.permutation);
 						if (isFirstBlockOfChunk) break;
 					}
-				} catch (error) {
+				} catch (error: any) {
 					console.warn(error, error.stack);
 				}
 			});
@@ -83,18 +101,7 @@ class Fill {
 		}
 		run();
 	}
-	queuefill(fillOptions, type) {
-		const generator = this.getGenerator(fillOptions, type);
-		const iterator = generator();
-		this.queue.push({ iterator, fillOptions, nullId: this.nullId++ });
-		this.subscribe();
-	}
-	/**
-	 * @method check
-	 * @param {FillOptions} fillOptions
-	 * @private
-	 */
-	check(fillOptions) {
+	check(fillOptions: FillOptions) {
 		const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 2048 } = fillOptions;
 		if (!(fillOptions instanceof Object)) throw new Error('fillOptions at params[0] is not of type: Object!');
 
@@ -119,23 +126,21 @@ class Fill {
 		if (typeof hollow !== 'number') throw new Error('hollow in fillOptions at params[0] is not of type: Number!');
 		if (typeof maxPlacementsPerTick !== 'number') throw new Error('maxPlacementsPerTick in fillOptions at params[0] is not of type: Number!');
 	}
-
-	/**
-	 * @method getGenerator
-	 * @param {FillOptions} fillOptions 
-	 * @param {String} type 
-	 * @returns {Generator<import('@minecraft/server').Vector3,undefined,import('@minecraft/server').Vector3>}
-	 * @private
-	 */
-	getGenerator(fillOptions) {
+	private queuefill(fillOptions: FillOptions) {
+		const generator = this.getGenerator(fillOptions);
+		const iterator = generator();
+		this.queue.push({ iterator, fillOptions, nullId: this.nullId++ });
+		this.subscribe();
+	}
+	private getGenerator(fillOptions: FillOptions): () => Iterator<{ blockLocation: Vector3, isFirstBlockOfChunk: boolean; }, { blockLocation: Vector3, isFirstBlockOfChunk: boolean; }> {
 		const [location1, location2] = sort3DVectors(fillOptions.location1, fillOptions.location2);
-		const { x: x1, y: y1, z: z1 } = location1, { x: x2, y: y2, z: z2 } = location2;
+		const { x: x1 = 0, y: y1 = 0, z: z1 = 0 } = location1 ?? {}, { x: x2 = 0, y: y2 = 0, z: z2 = 0 } = location2 ?? {};
 		const startChunkX = Math.floor(x1 / 16);
 		const endChunkX = Math.floor(x2 / 16);
 		const startChunkZ = Math.floor(z1 / 16);
 		const endChunkZ = Math.floor(z2 / 16);
 		let x, y, z;
-		return function* () {
+		return (function* () {
 			for (let cx = startChunkX; cx <= endChunkX; cx++) {
 				for (let cz = startChunkZ; cz <= endChunkZ; cz++) {
 					const startX = Math.max(cx * 16, x1);
@@ -152,8 +157,9 @@ class Fill {
 					}
 				}
 			}
-		};
+		}) as () => Iterator<{ blockLocation: Vector3, isFirstBlockOfChunk: boolean; }, { blockLocation: Vector3, isFirstBlockOfChunk: boolean; }>;
 	}
+
 
 	// getGenerator(fillOptions, type) {
 	// 	const { location1, location2, blocks, hollow = 0, maxPlacementsPerTick = 1 } = fillOptions;
@@ -219,38 +225,11 @@ class Fill {
 	// 			};
 	// 	}
 	// }
-	/**
-	 * @method fill
-	 * @param {FillOptions} fillOptions
-	 * @param {String} type
-	 * @private
-	 */
-	fill(fillOptions, type) {
-
-
-
-	};
-	/**
-	 * @method box
-	 * @param {FillOptions} fillOptions 
-	 */
-	box(fillOptions) {
+	box(fillOptions: FillOptions) {
 		// content.warn('ehhjwhjwd');
 		this.check(fillOptions);
 		// content.warn('wklkwdklwd');
-		this.queuefill(fillOptions, 'box');
-	}
-	circle(fillOptions) {
-		this.check(fillOptions);
-		this.fill(fillOptions, 'circle');
-	};
-	sphere(fillOptions) {
-		this.check(fillOptions);
-		this.fill(fillOptions, 'sphere');
-	};
-	cylinder() {
-		this.check(fillOptions);
-		this.fill(fillOptions, 'cylinder');
+		this.queuefill(fillOptions);
 	}
 }
 const fill = new Fill();

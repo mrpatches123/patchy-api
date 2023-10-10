@@ -1,4 +1,4 @@
-
+"use strict";
 // import commandBuilder from "../libraries/classes/commands.js";
 // import errorLogger from "../libraries/classes/error.js";
 // import propertyBuilder from "../libraries/classes/property.js";
@@ -22,6 +22,6 @@
 //         global.loaded = false;
 //         global.joiningPlayers = global.players;
 //         content.warn(sender.runCommandAsync('reload'));
-
 //     }
 // });
+//# sourceMappingURL=reload.js.map

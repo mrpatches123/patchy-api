@@ -19,8 +19,8 @@ commandBuilder.register('global', {
         if (!args.length) {
             sender.sendMessage(JSON.stringify(global));
         } else {
-            if (global[args[0]]) {
-                sender.sendMessage(JSON.stringify(global[args[0]], null, 4));
+            if (global[args[0]!]) {
+                sender.sendMessage(JSON.stringify(global[args[0]!], null, 4));
             } else {
                 sender.sendMessage(`key: ${args[0]}, doesn't exist`);
             }
