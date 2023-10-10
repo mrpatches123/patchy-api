@@ -1,4 +1,4 @@
-import { Entity, Player, Vector3, World } from "@minecraft/server";
+import { Entity, Player, Vector3, World, world } from "@minecraft/server";
 
 interface PropertiesCache {
 	json: Record<string, any>;
@@ -10,9 +10,12 @@ interface PropertiesCache {
 class DynamicProperties {
 	storage: Record<string, PropertiesCache> = {};
 	get(instance: Player | Entity | World) {
-		return;
+		return new DynamicPropertiesForInstance(instance)
 	}
 }
 class DynamicPropertiesForInstance {
-
+	instance: Player | Entity | World = world;
+	constructor(instance: Player | Entity | World) {
+		this.instance ??= instance;
+	}
 }
