@@ -1,6 +1,5 @@
 import { content, isDefined, native, orArray } from '../../utilities.js';
 import databases from '../database.js';
-import tagDatabases from '../tag_database.js';
 import requestBuilder from '../request.js';
 import { Player } from '../player/class.js';
 import eventBuilder from '../events/export_instance.js';
@@ -40,7 +39,7 @@ export class FriendSystem {
 	 */
 	getFriendData(receiver: Player): { saves?: { [property: string]: any; }, requests: { incoming: { [id: string]: {}; }, outgoing: { [id: string]: {}; }; }, mutal: { [id: string]: {}; }; } {
 		const { type } = this.data;
-		const playerStorage = (type === 'remote') ? tagDatabases.get(receiver, 'playerStorage') : databases.get(this.systemKey) ?? databases.add(this.systemKey);
+		const playerStorage = (type === 'remote') ? databases.get('playerStorage', receiver) : databases.get(this.systemKey) ?? databases.add(this.systemKey);
 		const friends = playerStorage!.get((type === 'remote') ? this.systemKey : receiver.id) ?? {};
 		return friends;
 	}
@@ -73,9 +72,9 @@ export class FriendSystem {
 	setFriendData(receiver: Player, data: { requests: { incoming: { [id: string]: {}; }, outgoing: { [id: string]: {}; }; }, mutal: { [id: string]: {}; }; }) {
 		const { type } = this.data;
 		if (type === 'remote') {
-			const playerStorage = tagDatabases.get(receiver, 'playerStorage')!;
+			const playerStorage = databases.get('playerStorage', receiver)!;
 			playerStorage.set(this.systemKey, data);
-			tagDatabases.queueSave(receiver, 'playerStorage');
+			databases.queueSave('playerStorage', receiver);
 		} else {
 			const playerStorage = databases.get(this.systemKey) ?? databases.add(this.systemKey);
 			playerStorage.set(receiver.id, data);

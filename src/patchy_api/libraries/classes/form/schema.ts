@@ -3,13 +3,25 @@ import { ActionFormData, MessageFormData, ModalFormData, ModalFormResponse, Acti
 import { content } from "../../utilities.js";
 import { FormBuilder } from "./class.js";
 import { Player } from "../player/class.js";
-
-
+import { ItemStack } from "@minecraft/server";
+import { MinecraftEnchantmentTypes } from "@minecraft/vanilla-data/lib/mojang-enchantment.js";
+import { ChestFormData, sizesUnion } from "../chest_ui/class.js";
+/**
+ * enchantId: level
+ */
+export type EnchantmentData = Record<MinecraftEnchantmentTypes, number>;
+export type ItemData = {
+	nameTag?: string,
+	lore?: string[],
+	enchantments: EnchantmentData;
+	typeId: string;
+};
 
 export type Form = {
 	action?: ActionData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ActionData[]);
 	modal?: ModalData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ModalData[]);
 	message?: MessageData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => MessageData[]);
+	chest?: ChestData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ChestData[]);
 };
 export type ActionData = {
 	title?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
@@ -96,11 +108,45 @@ export type MessageData = {
 	closeCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 } | ((receiver: Player, ...extraArguments: any[]) => (MessageData[] | MessageData));
-
-
-export class ArrayType {
-	type: Object;
-	constructor(type: Object) {
+type ChestToggleOptions = {
+	itemStack: ItemStack | ItemData | ((receiver: Player, i: number, ...extraArguments: any[]) => ItemStack | ItemData);
+	callback: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
+};
+type ChestButton = {
+	itemStack: ItemStack | ItemData | ((receiver: Player, i: number, ...extraArguments: any[]) => ItemStack | ItemData);
+	reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
+};
+type ChestBack = {
+	itemStack: ItemStack | ItemData | ((receiver: Player, i: number, ...extraArguments: any[]) => ItemStack | ItemData);
+};
+type ChestToggle = {
+	options: ChestToggleOptions[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ChestToggleOptions[]);
+	cycleCallback: (receiver: Player, i: number, ...extraArguments: any[]) => number;
+	initialisationFunction: (receiver: Player, i: number, ...extraArguments: any[]) => number;
+};
+export type ChestData = {
+	title?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
+	button?: ChestButton | ((receiver: Player, i: number, ...extraArguments: any[]) => ChestButton);
+	back?: ChestBack | ((receiver: Player, i: number, ...extraArguments: any[]) => ChestBack);
+	refresh?: ChestBack | ((receiver: Player, i: number, ...extraArguments: any[]) => ChestBack);
+	toggle?: ChestToggle | ((receiver: Player, i: number, ...extraArguments: any[]) => ChestToggle);
+	returnOnPress?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
+	returnOnClose?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
+	closeCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	size: sizesUnion;
+};
+export class ArrayType<T> {
+	type: T;
+	constructor(type: T) {
+		this.type = type;
+	}
+}
+export class RecordType<V> {
+	type: V;
+	constructor(type: V) {
 		this.type = type;
 	}
 }
@@ -208,8 +254,123 @@ const formSchemaObject = {
 		},
 		type: ActionFormData
 	},
+	chest: {
+		schema: {
+			global: {
+				title: {
+					schema: [String, undefined],
+					formMethod: true,
+				},
+				body: {
+					schema: [String, undefined],
+					formMethod: true,
+				},
+				pressCallback: {
+					schema: [Function, undefined],
+				},
+				closeCallback: {
+					schema: [Function, undefined],
+				},
+				callback: {
+					schema: [Function, undefined],
+				},
+				returnOnPress: {
+					schema: [Boolean, undefined]
+				},
+				returnOnClose: {
+					schema: [Boolean, undefined]
+				},
 
+				slot: {
+					schema: [Number, undefined],
+				}
+			},
+			button: {
+				schema: {
+					itemStack: [ItemStack, {
+						typeId: String,
+						lore: [new ArrayType(String), undefined],
+						enchantments: [new RecordType(Number), undefined],
+						nameTag: [String, undefined]
+					}],
+					reopen: [Boolean, undefined]
+				},
+				customProperties: ['reopen', 'itemStack'],
+				hasCallback: true
+			},
+			back: {
+				root: 'button',
+				schema: {
+					itemStack: [ItemStack, {
+						typeId: String,
+						lore: [new ArrayType(String), undefined],
+						enchantments: [new RecordType(Number), undefined],
+						nameTag: [String, undefined]
+					}],
+				},
+				setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: any, elementIndex: number, callbackArray: any[], objectClone: Object, ...extraArgs: any[]) => {
+					return (() => {
+						const { id } = receiver;
+						formClass.playerData[id] ??= {};
+						const memory = formClass.playerData[id];
+						const backKey = memory!.formTree!.beforeLast();
+						const backExtraArgs = memory!.lastFormsShown![backKey] ?? [];
+						formClass.show(receiver, backKey, ...backExtraArgs);
+					});
+				},
+				hasCallback: true
+			},
+			refresh: {
+				root: 'button',
+				schema: {
+					itemStack: [ItemStack, {
+						typeId: String,
+						lore: [new ArrayType(String), undefined],
+						enchantments: [new RecordType(Number), undefined],
+						nameTag: [String, undefined]
+					}],
+				},
+				setupFunction: (receiver: Player, formClass: FormBuilder, form: ActionFormData, key: string, elementValue: any, elementIndex: number, callbackArray: any[], objectClone: Object, ...extraArgs: any[]) => {
+					return (() => formClass.show(receiver, key, ...extraArgs));
+				},
+				hasCallback: true
+			},
+			toggle: {
+				custom: true,
+				schema: {
+					options: new ArrayType({
+						itemStack: [ItemStack, {
+							typeId: String,
+							lore: [new ArrayType(String), undefined],
+							enchantments: [new RecordType(Number), undefined],
+							nameTag: [String, undefined]
+						}],
+						slot: [Number, undefined],
+						callback: [Function, undefined],
+					}),
+					cycleCallback: Function,
+					initialisationFunction: Function,
+					reopen: [Boolean, undefined]
+				},
+				setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: { initialisationFunction: Function, cycleCallback: Function, options: { text: string, iconPath?: string, callback: Function; }[]; }, elementIndex: number, callbackArray: any[], objectClone: Object, ...extraArgs: any[]) => {
+					const { initialisationFunction, cycleCallback, options } = elementValue;
+					const index = initialisationFunction(receiver, elementIndex, ...extraArgs);
 
+					if (!isDefined(index) || index > options.length - 1 || index < 0) throw new Error(`index: ${index ?? 'undefined'} returned from initialisationFunction is not defined, less than 0, or greater than ${options.length - 1}`);
+					const { text = ' ', iconPath } = elementValue?.options?.[index] ?? {};
+					(iconPath) ? form.button(text, iconPath) : form.button(text);
+					return (() => {
+						const newIndex = cycleCallback(receiver, elementIndex, ...extraArgs);
+						if (!isDefined(newIndex) || index > options.length - 1 || index < 0) throw new Error(`index: ${newIndex ?? 'undefined'} returned from initialisationFunction is not defined, less than 0, or greater than ${options.length - 1}`);
+						const { callback } = options[newIndex] ?? {};
+						if (callback instanceof Function) callback(receiver, elementIndex, ...extraArgs);
+					});
+				},
+				hasCallback: true
+			}
+		},
+		type: ChestFormData
+	},
 	modal: {
 		schema: {
 			global: {

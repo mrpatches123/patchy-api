@@ -97,7 +97,7 @@ export interface CustomEventKeyTypes {
 	beforeItemDefinitionEvent: ItemDefinitionTriggeredBeforeEvent;
 	beforeItemUse: ItemUseBeforeEvent;
 	beforeItemUseOn: ItemUseOnBeforeEvent;
-	beforeItemUseOnStart: ItemUseBeforeEvent;
+	beforeItemUseOnStart: ItemUseOnBeforeEvent;
 	beforePistonActivate: PistonActivateAfterEvent;
 	chat: ChatSendAfterEvent;
 	dataDrivenPlayerTriggerEvent: DataDrivenPlayerTriggerEvent;

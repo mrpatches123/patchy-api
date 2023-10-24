@@ -12,6 +12,9 @@ export const content = {
         chunkString(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value, 4)).join(' '), 500).forEach(message => world.sendMessage(message));
     }
 };
+export function vector3Equals(vector1: Vector3, vector2: Vector3) {
+    return vector1.x === vector2.x && vector1.y === vector2.y && vector1.z === vector2.z;
+}
 export function isVector3(target: any) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;

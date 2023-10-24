@@ -1,33 +1,16 @@
 import { BlockType, BlockPermutation, system, BlockAreaSize, Vector, Vector3, Block } from "@minecraft/server";
 import { content, isDefined, overworld, sort3DRange, sort3DVectors } from "../utilities.js";
-/**
- * @typedef {Object} BlockOptions
- * @property {BlockType} type
- * @property {BlockPermutation} permutation
- */
 
-/**
- * @typedef {Object} FillOptions
- * @property {{x: number, y: number, z: number}} location1
- * @property {{x: number, y: number, z: number}} location2
- * @property {BlockType | BlockOptions | (BlockType | BlockOptions)[]} blocks
- * @property {Number} hollow default?=0 which is solid and the number = thickness 
- * @property {Number} maxPlacementsPerTick default?=8192 and 0 is infinity
- * @property {BlockType} replace 
- */
 
-interface BlockOptions {
-	type: BlockType;
-	permutation: BlockPermutation;
-}
+
 
 interface FillOptions {
 	location1: Vector3;
 	location2: Vector3;
-	blocks: BlockType | BlockOptions | (BlockType | BlockOptions)[];
-	hollow: number;
-	maxPlacementsPerTick: number;
-	replace: BlockType;
+	blocks: BlockPermutation | BlockType | string | (BlockPermutation | BlockType | string)[];
+	hollow?: number;
+	maxPlacementsPerTick?: number;
+	replace?: BlockType;
 }
 function isVector3(target: any) {
 	// content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
@@ -84,13 +67,10 @@ class Fill {
 							if (fillThis.queue[0]) fillThis.queue[0].lastValueIfNullBlock = undefined;
 						}
 
-						const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions!.type;
 						// content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
 						if (replace && block.typeId !== replace.id) continue;
-						block.setType(blockType);
-						if (blockOptions instanceof BlockType) continue;
-						if (!(blockOptions?.permutation instanceof BlockPermutation)) continue;
-						block.setPermutation(blockOptions.permutation);
+						if (blockOptions instanceof BlockType || typeof blockOptions === 'string') block.setType(blockOptions);
+						if (blockOptions instanceof BlockPermutation) block.setPermutation(blockOptions);
 						if (isFirstBlockOfChunk) break;
 					}
 				} catch (error: any) {
@@ -115,13 +95,9 @@ class Fill {
 		if (!(blocks instanceof BlockType) && !(blocks instanceof Array) && !(blocks instanceof Object)) throw new Error('blocks at params[0] is not of type: Object, Array, or BlockType!');
 
 		if (blocks instanceof Array) blocks.forEach((block, i) => {
-			if (!(block instanceof BlockType) && !(block instanceof Object)) throw new Error(`blocks[${i}] in params[0] is not of type: Object or BlockType!`);
-
-			if (block instanceof BlockType) return;
-			const { type, permutation } = block;
-			if (!(type instanceof BlockType)) throw new Error(`type in blocks[${i}] in fillOptions at params[0] is not of type: Object or BlockType!`);
-			if (!(permutation instanceof BlockPermutation)) throw new Error(`permutation in blocks[${i}] in fillOptions at params[0] is not of type: Object or BlockType!`);
+			if (!(block instanceof BlockType) && !(block instanceof BlockPermutation) && typeof block !== 'string') throw new Error(`type in blocks[${i}] in fillOptions at params[0] is not of type: string, BlockPermutation or BlockType!`);
 		});
+		else if (!(blocks instanceof BlockType) && !(blocks instanceof BlockPermutation) && typeof blocks !== 'string') throw new Error(`type in blocks in fillOptions at params[0] is not of type: string, BlockPermutation or BlockType!`);
 
 		if (typeof hollow !== 'number') throw new Error('hollow in fillOptions at params[0] is not of type: Number!');
 		if (typeof maxPlacementsPerTick !== 'number') throw new Error('maxPlacementsPerTick in fillOptions at params[0] is not of type: Number!');

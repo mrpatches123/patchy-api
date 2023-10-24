@@ -255,7 +255,7 @@ export class EventBuilder {
 			this.subscriptions[eventKey]!.keys![key]!.suppressed = false;
 		});
 	}
-	public unsubscribe(key: string, eventKeys: string[] | string) {
+	public unsubscribe(key: string, eventKeys?: string[] | string) {
 		let string = false;
 		const all = !eventKeys;
 
