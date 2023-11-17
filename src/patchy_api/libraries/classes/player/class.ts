@@ -25,6 +25,9 @@ export class Player implements PlayerType {
 		 */
 		this.root = player;
 	}
+	kick(message?: string) {
+		this.root.runCommand((message) ? `kick "${this.root.name}" ${message}` : `kick "${this.root.name}"`);
+	}
 	matches(...args: Parameters<PlayerType['matches']>) {
 		return this.root.matches(...args);
 	}
@@ -93,7 +96,7 @@ export class Player implements PlayerType {
 		return container.getSlot(selectedSlot);
 	}
 
-	set mainHand(value: ItemStack | ContainerSlot) {
+	set mainHand(value: ItemStack | ContainerSlot | undefined) {
 		const { selectedSlot } = this.root;
 
 		const container = this.getComponent('inventory')!.container;

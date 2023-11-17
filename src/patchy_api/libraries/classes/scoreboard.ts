@@ -69,7 +69,6 @@ class ScoreboardBuilder {
 		if (!(player instanceof Player)) throw new Error(`Player, at params[0] is not of type: Player(not world player)!`);
 		if (!world.scoreboard.getObjective(objective)) throw new Error(`objective, ${objective} at params[1] does not Exist!`);
 		if (isDefined(value) && typeof value !== 'number') throw new Error(`value, ${value} at params[2] is not of type: Number!`);
-
 		const { id } = player;
 		if (!this.players.hasOwnProperty(id)) this.players[id] = {};
 		this.players[id]![objective] ??= {};

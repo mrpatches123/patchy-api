@@ -1,6 +1,5 @@
 import { content, isDefined, orArray } from '../../utilities.js';
 import databases from '../database.js';
-import tagDatabases from '../tag_database.js';
 import requestBuilder from '../request.js';
 import eventBuilder from '../events/export_instance.js';
 import time from '../time.js';
@@ -15,7 +14,7 @@ export class FriendSystem {
          */
         this.systemKey = systemKey;
         /**
-         * @type {{ type: 'central' | 'remote', properties: {[key: string]: {	get: (player: Player) => any, set: (player: Player) => any, init: (player: Player) => any}}}}
+         * @type {{ type: 'central' | 'remote', properties: {[key: string]: {	get?: (player: Player) => any, set?: (player: Player) => any, init?: (player: Player) => any}}}}
          */
         this.data = data;
         this.watchSubscribed = false;
@@ -38,7 +37,7 @@ export class FriendSystem {
      */
     getFriendData(receiver) {
         const { type } = this.data;
-        const playerStorage = (type === 'remote') ? tagDatabases.get(receiver, 'playerStorage') : databases.get(this.systemKey) ?? databases.add(this.systemKey);
+        const playerStorage = (type === 'remote') ? databases.get('playerStorage', receiver) ?? databases.add('playerStorage', receiver) : databases.get(this.systemKey) ?? databases.add(this.systemKey);
         const friends = playerStorage.get((type === 'remote') ? this.systemKey : receiver.id) ?? {};
         return friends;
     }
@@ -48,7 +47,7 @@ export class FriendSystem {
         let set = false;
         const currentProperties = {};
         Object.entries(properties).forEach(([property, { get }]) => {
-            const currentValue = get(receiver);
+            const currentValue = get?.(receiver);
             if (!isDefined(currentValue)) {
                 if (isDefined(friends.saves?.[property])) {
                     delete friends.saves[property];
@@ -74,9 +73,9 @@ export class FriendSystem {
     setFriendData(receiver, data) {
         const { type } = this.data;
         if (type === 'remote') {
-            const playerStorage = tagDatabases.get(receiver, 'playerStorage');
+            const playerStorage = databases.get('playerStorage', receiver) ?? databases.add('playerStorage', receiver);
             playerStorage.set(this.systemKey, data);
-            tagDatabases.queueSave(receiver, 'playerStorage');
+            databases.queueSave('playerStorage', receiver);
         }
         else {
             const playerStorage = databases.get(this.systemKey) ?? databases.add(this.systemKey);
@@ -227,7 +226,7 @@ export class FriendSystem {
                     friends.saves = {};
                 let changed = false;
                 Object.entries(properties).forEach(([key, { get }]) => {
-                    const currentValue = get(player);
+                    const currentValue = get?.(player);
                     content.warn({ currentValue, key, saves: friends.saves });
                     if (!isDefined(currentValue)) {
                         if (isDefined(friends.saves?.[key])) {
@@ -258,7 +257,7 @@ export class FriendSystem {
                     const isRequest = (type === 'incoming' || type === 'outgoing');
                     const data = object[targetId];
                     Object.entries(properties).forEach(([key, { get }]) => {
-                        const currentValue = get(target);
+                        const currentValue = get?.(target);
                         // content.warn({ key, currentValue, saves: friends.saves });
                         if (!isDefined(currentValue)) {
                             if (isDefined(data[key])) {
@@ -284,7 +283,7 @@ export class FriendSystem {
                     friendThis.setFriendData(player, friends);
                 const receiverId = player.id;
                 Object.entries(properties).forEach(([key, { get }]) => {
-                    const currentValue = get(player);
+                    const currentValue = get?.(player);
                     players.get().iterate(target => {
                         const targetId = target.id;
                         if (targetId === receiverId)
@@ -421,10 +420,6 @@ export class FriendSystemBuilder {
          */
         this.friends = {};
     }
-    /**
-     * @param {string} systemKey
-     * @param {} data
-     */
     create(systemKey, data) {
         if (typeof systemKey !== 'string')
             throw new Error(`systemKey: ${systemKey}, at params[0] is not of type: String!`);

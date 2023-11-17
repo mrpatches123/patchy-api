@@ -1,10 +1,10 @@
-import { Container, Dimension, ContainerSlot, EntityQueryOptions } from "@minecraft/server";
+import { ItemStack, Container, Dimension, ContainerSlot, EntityQueryOptions } from "@minecraft/server";
 import { Player } from "../player/class.js";
 export declare class Inventory {
     array: (ContainerSlot | undefined)[];
     container: Container;
     constructor(array: (ContainerSlot | undefined)[], inventory: Container);
-    iterate(callback: (item: ContainerSlot | undefined, i: number) => (ContainerSlot | undefined)): void;
+    iterate(callback: (item: ContainerSlot, i: number) => (ItemStack | void)): void;
 }
 declare class PlayerIterator {
     players: {
@@ -53,12 +53,5 @@ export declare class Players {
     getRandomPlayer(entityQueryOptions: EntityQueryOptions): {
         id: Player | undefined;
     } | undefined;
-    getProperty(player: Player, identifier: string): string | number | boolean | undefined;
-    setProperty(player: Player, identifier: string, value: string | number | boolean): void;
-    resetProperty(player: Player, identifier: string): void;
-    registerProperty(identifier: string, options: {
-        type: 'string' | 'number' | 'boolean';
-        maxLength?: number;
-    }): void;
 }
 export {};

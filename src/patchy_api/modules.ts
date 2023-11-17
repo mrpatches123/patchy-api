@@ -6,6 +6,8 @@ import commandBuilder from './libraries/classes/commands.js';
 import databases from './libraries/classes/database.js';
 import errorLogger from './libraries/classes/error.js';
 import formBuilder from './libraries/classes/form/export_instance.js';
+import { Form, ActionData, ModalData, MessageData, ChestData } from './libraries/classes/form/schema.js';
+export { Form, ActionData, ModalData, MessageData, ChestData };
 import global from './libraries/classes/global.js';
 import scoreboardBuilder from './libraries/classes/scoreboard.js';
 import plotBuilder, { PlotsVector3, BlockVector3 } from './libraries/classes/plot/export_instance.js';
@@ -26,13 +28,13 @@ import structureBuilder from './libraries/classes/structure/export_instance.js';
 import leaderboardBuilder from './libraries/classes/leaderboard/export_instance.js';
 import friendSystemBuilder from './libraries/classes/friend/export_instance.js';
 export { friendSystemBuilder, leaderboardBuilder, structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyManager, fill, preformance, players, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder, positionBuilder, promptBuilder, teleportBuilder, time, wait };
-export * from './libraries/node_modules/@minecraft/vanilla-data/lib/mojang-block';
-export * from './libraries/node_modules/@minecraft/vanilla-data/lib/mojang-cameraPresets';
-export * from './libraries/node_modules/@minecraft/vanilla-data/lib/mojang-dimension';
-export * from './libraries/node_modules/@minecraft/vanilla-data/lib/mojang-effect';
-export * from './libraries/node_modules/@minecraft/vanilla-data/lib/mojang-enchantment';
-export * from './libraries/node_modules/@minecraft/vanilla-data/lib/mojang-entity';
-export * from './libraries/node_modules/@minecraft/vanilla-data/lib/mojang-item';
+export * from './libraries/vanilla_data/lib/mojang-block.js';
+export * from './libraries/vanilla_data/lib/mojang-cameraPresets.js';
+export * from './libraries/vanilla_data/lib/mojang-dimension.js';
+export * from './libraries/vanilla_data/lib/mojang-effect.js';
+export * from './libraries/vanilla_data/lib/mojang-enchantment.js';
+export * from './libraries/vanilla_data/lib/mojang-entity.js';
+export * from './libraries/vanilla_data/lib/mojang-item.js';
 
 
 

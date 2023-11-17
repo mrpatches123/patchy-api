@@ -9,7 +9,7 @@ import { Scoreboard, world } from '@minecraft/server';
 import errorLogger from '../error.js';
 const types = ['central', 'remote'];
 const maxTime = 1.728e8;
-type FriendSystemData = { type: 'central' | 'remote', properties: { [key: string]: { get: (player: Player) => any, set: (player: Player, requesteeId: string, value: any) => any, init: (player: Player) => any; }; }; };
+type FriendSystemData = { type: 'central' | 'remote', properties: Record<string, { get?: (player: Player) => any, set?: (player: Player, requesteeId: string, value: any) => any, init?: (player: Player) => any; }>; };
 export class FriendSystem {
 	systemKey: string;
 	data: FriendSystemData;
@@ -20,7 +20,7 @@ export class FriendSystem {
 		 */
 		this.systemKey = systemKey;
 		/**
-		 * @type {{ type: 'central' | 'remote', properties: {[key: string]: {	get: (player: Player) => any, set: (player: Player) => any, init: (player: Player) => any}}}}
+		 * @type {{ type: 'central' | 'remote', properties: {[key: string]: {	get?: (player: Player) => any, set?: (player: Player) => any, init?: (player: Player) => any}}}}
 		 */
 		this.data = data;
 		this.watchSubscribed = false;
@@ -32,15 +32,10 @@ export class FriendSystem {
 		if (!player) { requestBuilder.add(`friends*${this.systemKey}`, reqesteeId, targetId, type, payload); return true; };
 		return player;
 	}
-	/**
-	 * @param {Player} receiver 
-	 * @param {Player} target 
-	 * @returns { }
-	 */
-	getFriendData(receiver: Player): { saves?: { [property: string]: any; }, requests: { incoming: { [id: string]: {}; }, outgoing: { [id: string]: {}; }; }, mutal: { [id: string]: {}; }; } {
+	getFriendData<T>(receiver: Player): { saves?: { [property: string]: any; }, requests: { incoming: { [id: string]: T; }, outgoing: { [id: string]: T; }; }, mutal: { [id: string]: T; }; } {
 		const { type } = this.data;
-		const playerStorage = (type === 'remote') ? databases.get('playerStorage', receiver) : databases.get(this.systemKey) ?? databases.add(this.systemKey);
-		const friends = playerStorage!.get((type === 'remote') ? this.systemKey : receiver.id) ?? {};
+		const playerStorage = (type === 'remote') ? databases.get('playerStorage', receiver) ?? databases.add('playerStorage', receiver) : databases.get(this.systemKey) ?? databases.add(this.systemKey);
+		const friends = playerStorage.get((type === 'remote') ? this.systemKey : receiver.id) ?? {};
 		return friends;
 	}
 	getProperties(receiver: Player): { [key: string]: any; } {
@@ -49,7 +44,7 @@ export class FriendSystem {
 		let set = false;
 		const currentProperties = {} as { [key: string]: any; };
 		Object.entries(properties).forEach(([property, { get }]) => {
-			const currentValue = get(receiver);
+			const currentValue = get?.(receiver);
 			if (!isDefined(currentValue)) {
 				if (isDefined(friends.saves?.[property])) {
 					delete (friends.saves as any)[property];
@@ -69,10 +64,10 @@ export class FriendSystem {
 		if (set) this.setFriendData(receiver, friends);
 		return currentProperties;
 	}
-	setFriendData(receiver: Player, data: { requests: { incoming: { [id: string]: {}; }, outgoing: { [id: string]: {}; }; }, mutal: { [id: string]: {}; }; }) {
+	setFriendData(receiver: Player, data: { requests: { incoming: { [id: string]: any; }, outgoing: { [id: string]: any; }; }, mutal: { [id: string]: any; }; }) {
 		const { type } = this.data;
 		if (type === 'remote') {
-			const playerStorage = databases.get('playerStorage', receiver)!;
+			const playerStorage = databases.get('playerStorage', receiver) ?? databases.add('playerStorage', receiver);
 			playerStorage.set(this.systemKey, data);
 			databases.queueSave('playerStorage', receiver);
 		} else {
@@ -173,7 +168,7 @@ export class FriendSystem {
 	 * @param {{[id: string]: {}}} object 
 	 * @param {String} property 
 	 */
-	updateFromFriendObject(receiver: Player, object: { [id: string]: {}; }, property: string) {
+	updateFromFriendObject(receiver: Player, object: { [id: string]: any; }, property: string) {
 		const { data: { properties } } = this;
 		// content.warn({ properties });
 		if (!properties.hasOwnProperty(property)) throw new Error(`property: ${property}, is not one of the following: ${orArray(Object.keys(properties))}`);
@@ -196,7 +191,7 @@ export class FriendSystem {
 				if (!friends.hasOwnProperty('saves')) friends.saves = {};
 				let changed = false;
 				Object.entries(properties).forEach(([key, { get }]) => {
-					const currentValue = get(player);
+					const currentValue = get?.(player);
 					content.warn({ currentValue, key, saves: friends.saves });
 					if (!isDefined(currentValue)) {
 						if (isDefined(friends.saves?.[key])) {
@@ -224,7 +219,7 @@ export class FriendSystem {
 
 					const data = object[targetId];
 					Object.entries(properties).forEach(([key, { get }]) => {
-						const currentValue = get(target);
+						const currentValue = get?.(target);
 						// content.warn({ key, currentValue, saves: friends.saves });
 						if (!isDefined(currentValue)) {
 							if (isDefined((data as any)[key])) {
@@ -244,7 +239,7 @@ export class FriendSystem {
 				if (changed) friendThis.setFriendData(player, friends);
 				const receiverId = player.id;
 				Object.entries(properties).forEach(([key, { get }]) => {
-					const currentValue = get(player);
+					const currentValue = get?.(player);
 					players.get().iterate(target => {
 						const targetId = target.id;
 						if (targetId === receiverId) return;
@@ -360,18 +355,14 @@ export class FriendSystem {
 	}
 }
 export class FriendSystemBuilder {
-	friends: { [systemKey: string]: { system: FriendSystem, data: { type: 'central' | 'remote', properties: { [key: string]: { get: (player: Player) => any, set: (player: Player) => any, init: (player: Player) => any; }; }; }; }; };
+	friends: { [systemKey: string]: { system: FriendSystem, data: FriendSystemData; }; };
 	constructor() {
 		/**
 		 * @type {}
 		 */
 		this.friends = {};
 	}
-	/**
-	 * @param {string} systemKey 
-	 * @param {} data 
-	 */
-	create(systemKey: string, data: { type: 'central' | 'remote', properties: { [key: string]: { get: (player: Player) => any, set: (player: Player) => any, init: (player: Player) => any; }; }; }) {
+	create(systemKey: string, data: FriendSystemData) {
 		if (typeof systemKey !== 'string') throw new Error(`systemKey: ${systemKey}, at params[0] is not of type: String!`);
 		if (!(data instanceof Object)) throw new Error(`data, at params[1] is not of type: Object!`);
 		const { type = 'central', properties } = data;

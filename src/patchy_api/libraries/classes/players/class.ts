@@ -22,11 +22,11 @@ export class Inventory {
 		 */
 		this.container = inventory;
 	}
-	iterate(callback: (item: ContainerSlot | undefined, i: number) => (ItemStack | void)) {
+	iterate(callback: (item: ContainerSlot, i: number) => (ItemStack | void)) {
 		if (!(callback instanceof Function)) throw new Error('Not a function at args[0]');
 		const thisInv = this;
 		this.array.forEach((item, i) => {
-			const newItem = callback((item) ? this.container.getSlot(i) : item, i);
+			const newItem = callback(this.container.getSlot(i), i);
 			this.array[i] = item;
 			if (newItem === undefined) return;
 			this.container.setItem(i, newItem);
@@ -166,7 +166,7 @@ export class Players {
 		if (this.inventorys.hasOwnProperty(id)) return this.inventorys[id]!.container;
 		this.inventorys[id] = {} as typeof this.inventorys[string];
 		const inventory = player.getComponent('inventory')!.container;
-		const container = [];
+		const container: ContainerSlot[] = [];
 		const { size } = inventory;
 		for (let i = 0; i < size; i++) {
 			const item = inventory.getSlot(i);

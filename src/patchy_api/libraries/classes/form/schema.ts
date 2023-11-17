@@ -1,27 +1,41 @@
 
 import { ActionFormData, MessageFormData, ModalFormData, ModalFormResponse, ActionFormResponse, MessageFormResponse } from "@minecraft/server-ui";
-import { content } from "../../utilities.js";
+import { content, romanize, toProperCase } from "../../utilities.js";
 import { FormBuilder } from "./class.js";
 import { Player } from "../player/class.js";
 import { ItemStack } from "@minecraft/server";
-import { MinecraftEnchantmentTypes } from "@minecraft/vanilla-data/lib/mojang-enchantment.js";
+import { MinecraftEnchantmentTypes } from "patchy_api/vanilla-data.js";
 import { ChestFormData, sizesUnion } from "../chest_ui/class.js";
-/**
- * enchantId: level
- */
+function itemStackToItemData(itemStack: ItemStack) {
+	const { typeId, nameTag, amount } = itemStack;
+	let itemData: ItemData = { typeId };
+	const lore = itemStack.getLore();
+	let enchantmentList = itemStack.getComponent('enchantments')?.enchantments;
+	let enchantments: Record<MinecraftEnchantmentTypes, number> = {} as Record<MinecraftEnchantmentTypes, number>;
+	[...(enchantmentList ?? [])].forEach(({ level, type: { id } }) => {
+		enchantments[id as MinecraftEnchantmentTypes] = level;
+	});
+
+	if (lore) itemData.lore = lore;
+	if (amount) itemData.amount = amount;
+	if (enchantmentList) itemData.enchantments = enchantments;
+	if (nameTag) itemData.nameTag = nameTag;
+	return itemData;
+}
 export type EnchantmentData = Record<MinecraftEnchantmentTypes, number>;
 export type ItemData = {
 	nameTag?: string,
 	lore?: string[],
-	enchantments: EnchantmentData;
+	enchantments?: EnchantmentData;
 	typeId: string;
+	amount?: number;
 };
 
 export type Form = {
-	action?: ActionData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ActionData[]);
-	modal?: ModalData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ModalData[]);
-	message?: MessageData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => MessageData[]);
-	chest?: ChestData[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ChestData[]);
+	action?: ActionData[] | ((receiver: Player, ...extraArguments: any[]) => ActionData[]);
+	modal?: ModalData[] | ((receiver: Player, ...extraArguments: any[]) => ModalData[]);
+	message?: MessageData[] | ((receiver: Player, ...extraArguments: any[]) => MessageData[]);
+	chest?: ChestData[] | ((receiver: Player, ...extraArguments: any[]) => ChestData[]);
 };
 export type ActionData = {
 	title?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
@@ -35,7 +49,7 @@ export type ActionData = {
 	closeCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
-} | ((receiver: Player, ...extraArguments: any[]) => (ActionData[] | ActionData)) | ActionData[];
+} | ((receiver: Player, ...extraArguments: any[]) => (ActionData[] | ActionData)) | ActionData[] | undefined;
 type ActionButton = string | {
 	text: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
 	iconPath?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
@@ -70,7 +84,7 @@ export type ModalData = {
 	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	returnOnSubmit?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 	returnOnClose?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
-} | ((receiver: Player, ...extraArguments: any[]) => (ModalData[] | ModalData));
+} | ((receiver: Player, ...extraArguments: any[]) => (ModalData[] | ModalData)) | undefined;
 type ModalDropDown = {
 	defaultValueIndex?: number | ((receiver: Player, i: number, ...extraArguments: any[]) => number);
 	label?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
@@ -107,7 +121,7 @@ export type MessageData = {
 	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	closeCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
-} | ((receiver: Player, ...extraArguments: any[]) => (MessageData[] | MessageData));
+} | ((receiver: Player, ...extraArguments: any[]) => (MessageData[] | MessageData)) | undefined;
 type ChestToggleOptions = {
 	itemStack: ItemStack | ItemData | ((receiver: Player, i: number, ...extraArguments: any[]) => ItemStack | ItemData);
 	callback: (receiver: Player, i: number, ...extraArguments: any[]) => any;
@@ -116,14 +130,17 @@ type ChestToggleOptions = {
 type ChestButton = {
 	itemStack: ItemStack | ItemData | ((receiver: Player, i: number, ...extraArguments: any[]) => ItemStack | ItemData);
 	reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
+	slot?: number;
 };
 type ChestBack = {
 	itemStack: ItemStack | ItemData | ((receiver: Player, i: number, ...extraArguments: any[]) => ItemStack | ItemData);
+	slot?: number;
 };
 type ChestToggle = {
 	options: ChestToggleOptions[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ChestToggleOptions[]);
 	cycleCallback: (receiver: Player, i: number, ...extraArguments: any[]) => number;
 	initialisationFunction: (receiver: Player, i: number, ...extraArguments: any[]) => number;
+	slot?: number;
 };
 export type ChestData = {
 	title?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
@@ -137,6 +154,7 @@ export type ChestData = {
 	pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	size: sizesUnion;
+	slot?: number;
 };
 export class ArrayType<T> {
 	type: T;
@@ -261,10 +279,6 @@ const formSchemaObject = {
 					schema: [String, undefined],
 					formMethod: true,
 				},
-				body: {
-					schema: [String, undefined],
-					formMethod: true,
-				},
 				pressCallback: {
 					schema: [Function, undefined],
 				},
@@ -280,9 +294,8 @@ const formSchemaObject = {
 				returnOnClose: {
 					schema: [Boolean, undefined]
 				},
-
-				slot: {
-					schema: [Number, undefined],
+				size: {
+					schema: ['single', 'double', 'small', 'large', undefined],
 				}
 			},
 			button: {
@@ -293,10 +306,23 @@ const formSchemaObject = {
 						enchantments: [new RecordType(Number), undefined],
 						nameTag: [String, undefined]
 					}],
-					reopen: [Boolean, undefined]
+					reopen: [Boolean, undefined],
+					slot: [Number, undefined]
 				},
 				customProperties: ['reopen', 'itemStack'],
-				hasCallback: true
+				hasCallback: true,
+				setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: ChestButton, elementIndex: number, callbackArray: any[], objectClone: Object, ...extraArgs: any[]) => {
+					let { slot, itemStack } = elementValue;
+					if (itemStack instanceof Function) return;
+					if (itemStack instanceof ItemStack) {
+						itemStack = itemStackToItemData(itemStack);
+					}
+					const { typeId, nameTag, lore, enchantments, amount } = itemStack;
+					const description: string[] = [];
+					if (enchantments) description.push(...Object.entries(enchantments).map(([id, level]) => `${toProperCase(id.replace(/\w+:/, ''))} ${romanize(level)}`));
+					if (lore) description.push(...lore);
+					form.button(slot, nameTag, (lore || enchantments) ? description : undefined, typeId, amount, Boolean(enchantments));
+				},
 			},
 			back: {
 				root: 'button',
@@ -352,15 +378,31 @@ const formSchemaObject = {
 					initialisationFunction: Function,
 					reopen: [Boolean, undefined]
 				},
-				setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: { initialisationFunction: Function, cycleCallback: Function, options: { text: string, iconPath?: string, callback: Function; }[]; }, elementIndex: number, callbackArray: any[], objectClone: Object, ...extraArgs: any[]) => {
-					const { initialisationFunction, cycleCallback, options } = elementValue;
+				setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: ChestToggle, elementIndex: number, callbackArray: any[], objectClone: ChestData, formArray: Form['chest'], ...extraArgs: any[]) => {
+					if (elementValue instanceof Function) return;
+					let { initialisationFunction, cycleCallback, options, slot } = elementValue;
 					const index = initialisationFunction(receiver, elementIndex, ...extraArgs);
+					if (options instanceof Function) options = options(receiver, index, ...extraArgs);
+
 
 					if (!isDefined(index) || index > options.length - 1 || index < 0) throw new Error(`index: ${index ?? 'undefined'} returned from initialisationFunction is not defined, less than 0, or greater than ${options.length - 1}`);
-					const { text = ' ', iconPath } = elementValue?.options?.[index] ?? {};
-					(iconPath) ? form.button(text, iconPath) : form.button(text);
+					let option = options?.[index];
+					if (option instanceof Function) option = option(receiver, index, ...extraArgs);
+					if (!option) throw new Error(`Function at ${elementIndex} in options at ${index} returned undefined`);
+					let { itemStack, callback } = option;
+					if (itemStack instanceof Function) return;
+					if (itemStack instanceof ItemStack) {
+						itemStack = itemStackToItemData(itemStack);
+					}
+					const { typeId, nameTag, lore, enchantments, amount } = itemStack;
+					const description: string[] = [];
+					if (enchantments) description.push(...Object.entries(enchantments).map(([id, level]) => `${toProperCase(id.replace(/\w+:/, ''))} ${romanize(level)}`));
+					if (lore) description.push(...lore);
+					form.button(slot, nameTag, (lore || enchantments) ? description : undefined, typeId, amount, Boolean(enchantments));
+
 					return (() => {
 						const newIndex = cycleCallback(receiver, elementIndex, ...extraArgs);
+						if (options instanceof Function) throw new Error('!!!!!!!!!options instanceof Function fix this!!!!!!!!');
 						if (!isDefined(newIndex) || index > options.length - 1 || index < 0) throw new Error(`index: ${newIndex ?? 'undefined'} returned from initialisationFunction is not defined, less than 0, or greater than ${options.length - 1}`);
 						const { callback } = options[newIndex] ?? {};
 						if (callback instanceof Function) callback(receiver, elementIndex, ...extraArgs);

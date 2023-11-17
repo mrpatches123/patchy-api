@@ -42,11 +42,20 @@ eventBuilder.register({
             }
         }
     },
-    chatSend: {
+    chat: {
         subscription: {
             chatSend: {
                 function: (event) => {
                     eventBuilder.getEvent('chat').iterate(event);
+                }
+            }
+        }
+    },
+    blockBreak: {
+        subscription: {
+            playerBreakBlock: {
+                function: (event) => {
+                    eventBuilder.getEvent('blockBreak').iterate(event);
                 }
             }
         }

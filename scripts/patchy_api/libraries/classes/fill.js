@@ -54,16 +54,13 @@ class Fill {
                             if (fillThis.queue[0])
                                 fillThis.queue[0].lastValueIfNullBlock = undefined;
                         }
-                        const blockType = (blockOptions instanceof BlockType) ? blockOptions : blockOptions.type;
                         // content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
-                        if (replace && block.typeId !== replace.id)
+                        if (replace && block.typeId !== (replace instanceof BlockType ? replace.id : replace))
                             continue;
-                        block.setType(blockType);
-                        if (blockOptions instanceof BlockType)
-                            continue;
-                        if (!(blockOptions?.permutation instanceof BlockPermutation))
-                            continue;
-                        block.setPermutation(blockOptions.permutation);
+                        if (blockOptions instanceof BlockType || typeof blockOptions === 'string')
+                            block.setType(blockOptions);
+                        if (blockOptions instanceof BlockPermutation)
+                            block.setPermutation(blockOptions);
                         if (isFirstBlockOfChunk)
                             break;
                     }
@@ -93,16 +90,11 @@ class Fill {
             throw new Error('blocks at params[0] is not of type: Object, Array, or BlockType!');
         if (blocks instanceof Array)
             blocks.forEach((block, i) => {
-                if (!(block instanceof BlockType) && !(block instanceof Object))
-                    throw new Error(`blocks[${i}] in params[0] is not of type: Object or BlockType!`);
-                if (block instanceof BlockType)
-                    return;
-                const { type, permutation } = block;
-                if (!(type instanceof BlockType))
-                    throw new Error(`type in blocks[${i}] in fillOptions at params[0] is not of type: Object or BlockType!`);
-                if (!(permutation instanceof BlockPermutation))
-                    throw new Error(`permutation in blocks[${i}] in fillOptions at params[0] is not of type: Object or BlockType!`);
+                if (!(block instanceof BlockType) && !(block instanceof BlockPermutation) && typeof block !== 'string')
+                    throw new Error(`type in blocks[${i}] in fillOptions at params[0] is not of type: string, BlockPermutation or BlockType!`);
             });
+        else if (!(blocks instanceof BlockType) && !(blocks instanceof BlockPermutation) && typeof blocks !== 'string')
+            throw new Error(`type in blocks in fillOptions at params[0] is not of type: string, BlockPermutation or BlockType!`);
         if (typeof hollow !== 'number')
             throw new Error('hollow in fillOptions at params[0] is not of type: Number!');
         if (typeof maxPlacementsPerTick !== 'number')

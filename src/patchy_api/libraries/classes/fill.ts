@@ -10,7 +10,7 @@ interface FillOptions {
 	blocks: BlockPermutation | BlockType | string | (BlockPermutation | BlockType | string)[];
 	hollow?: number;
 	maxPlacementsPerTick?: number;
-	replace?: BlockType;
+	replace?: BlockType | string;
 }
 function isVector3(target: any) {
 	// content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
@@ -68,7 +68,7 @@ class Fill {
 						}
 
 						// content.warn({ replace: replace?.id, blockType: blockType.id, bool: blockOptions?.permutation instanceof BlockPermutation });
-						if (replace && block.typeId !== replace.id) continue;
+						if (replace && block.typeId !== (replace instanceof BlockType ? replace.id : replace)) continue;
 						if (blockOptions instanceof BlockType || typeof blockOptions === 'string') block.setType(blockOptions);
 						if (blockOptions instanceof BlockPermutation) block.setPermutation(blockOptions);
 						if (isFirstBlockOfChunk) break;

@@ -1,5 +1,60 @@
+import { world, system } from '@minecraft/server';
+import { content } from '../../utilities.js';
 ;
-export const eventKeys = ['beforeChat', 'beforeChatSend', 'beforeDataDrivenEntityTriggerEvent', 'beforeDataDrivenPlayerTriggerEvent', 'beforeExplosion', 'beforeItemDefinitionEvent', 'beforeItemUse', 'beforeItemUseOn', 'beforeItemUseOnStart', 'beforePistonActivate', 'blockBreak', 'blockExplode', 'blockPlace', 'buttonPush', 'chat', 'chatSend', 'dataDrivenEntityTriggerEvent', 'dataDrivenPlayerTriggerEvent', 'effectAdd', 'entityDie', 'entitySpawn', 'entityHealthChanged', 'entityHitBlock', 'entityHitEntity', 'entityHurt', 'explosion', 'itemStopUse', 'itemDefinitionEvent', 'itemReleaseCharge', 'itemStartCharge', 'itemStartUseOn', 'itemStopUseOn', 'itemUse', 'itemUseOn', 'itemPickup', 'leverAction', 'pistonActivate', 'pressurePlatePush', 'targetBlockHit', 'tripWireTrip', 'playerJoin', 'playerLeave', 'projectileHit', 'tick', 'weatherChange', 'worldInitialize', 'tickAfterLoad', 'playerJoined', 'playerHit', 'playerHurt', 'playerDeath', 'requestAdded', 'stepOnBlock', 'playerSpawn', 'playerSpawned', 'playerJoinAwaitMove', 'scriptEventReceive', 'worldLoad', 'scoreboardChange', 'beforePlayerScaffoldPlace', 'custom',];
+const customKeys = [
+    'beforeChat',
+    'beforeChatSend',
+    'beforeDataDrivenEntityTriggerEvent',
+    'beforeDataDrivenPlayerTriggerEvent',
+    'beforeExplosion',
+    'beforeItemDefinitionEvent',
+    'beforeItemUse',
+    'beforeItemUseOn',
+    'beforeItemUseOnStart',
+    'beforePistonActivate',
+    'beforePlayerInteractWithBlock',
+    'beforePlayerInteractWithEntity',
+    'beforePlayerBreakBlock',
+    'beforePlayerPlaceBlock',
+    'beforeWatchdogTerminate',
+    'beforePlayerLeave',
+    'beforeEntityRemove',
+    'beforeEffectAdd',
+    'chat',
+    'dataDrivenPlayerTriggerEvent',
+    'tick',
+    'tickAfterLoad',
+    'playerJoined',
+    'playerHit',
+    'playerHurt',
+    'playerDeath',
+    'requestAdded',
+    'stepOnBlock',
+    'playerSpawned',
+    'playerJoinAwaitMove',
+    'worldLoad',
+    'scoreboardChange',
+    'beforePlayerScaffoldPlace',
+    'blockBreak',
+    'custom',
+];
+const eventKeys = customKeys;
+for (const key in world.afterEvents) {
+    const prototype = Object.getPrototypeOf({});
+    if (key in prototype)
+        continue;
+    eventKeys.push(key);
+}
+for (const key in system.afterEvents) {
+    const prototype = Object.getPrototypeOf({});
+    if (key in prototype)
+        continue;
+    eventKeys.push(key);
+}
+// Object.keys(world.afterEvents).forEach((key) => eventKeys.push(key));
+// Object.keys(system.afterEvents).forEach((key) => eventKeys.push(key));
+content.warn(eventKeys);
+export { eventKeys };
 // export class EventBuilder {
 // 	constructor();
 // 	/**

@@ -13,7 +13,7 @@ import scoreboardBuilder from "../scoreboard.js";
 import global from "../global.js";
 import propertyBuilder from "../property";
 import { LoadOptions as StructureLoadOptions } from '../structure/class';
-import { MinecraftBlockTypes } from "@minecraft/vanilla-data/lib/mojang-block.js";
+import { MinecraftBlockTypes } from "patchy_api/vanilla-data.js";
 
 const gamemodes = [0, 1, 2];
 const opens: string[] = [
@@ -73,7 +73,7 @@ interface PlotRules {
 	ruleSets?: PlotRuleSet[];
 	property?: boolean;
 	plotNumberIdentifier?: string;
-	defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break';
+	defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break' | 'press';
 	defaultGamemode?: 0 | 1 | 2;
 	/**
 	 * default?= false
@@ -298,7 +298,7 @@ export class PlotBuilder {
 		if (!teleportKey) return;
 		teleportBuilder.teleport(player, teleportKey);
 	}
-	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride', value: number | string) {
+	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride' | 'blockPlaceMarginOverideX' | 'blockPlaceMarginOverideY' | 'blockPlaceMarginOverideZ', value?: number | string) {
 		content.warn({ player: player.name, type, value });
 		const { properties } = player;
 		properties.setAny(type, value);
@@ -530,7 +530,7 @@ export class PlotBuilder {
 	 * @param {number | undefined} plotNumber 
 	 * @returns {{ wasAdded: boolean, plotNumber: Number | undefined, full: boolean}}
 	 */
-	add(player: import('../player/class').Player, key: string, plotNumber: number | undefined): { wasAdded: boolean; plotNumber?: number | undefined; full: boolean; } {
+	add(player: import('../player/class').Player, key: string, plotNumber?: number): { wasAdded: boolean; plotNumber?: number | undefined; full: boolean; } {
 		// content.warn({ bool: !isDefined(plotNumber), plotNumber: plotNumber ?? 'undefined' });
 		const { scores, properties } = player;
 		const { subscribed } = this;

@@ -10,12 +10,14 @@ const sizes = new Map([
 ]);
 class ChestFormData {
 	#titleText; #buttonArray: [string, string | number | undefined][];
+	availableButtons: number[];
 	constructor(size = 'small') {
 		const sizing = (sizes.get(size) ?? [`§c§h§e§s§t§s§m§a§l§l§r`, 27]) as [string, number];
 		/** @internal */
 		this.#titleText = sizing[0];
 		/** @internal */
 		this.#buttonArray = [];
+		this.availableButtons = Array.from(Array(sizing[1]), (a, i) => i);
 		for (let i = 0; i < sizing[1]; i++)
 			this.#buttonArray.push(['', undefined]);
 	}
@@ -23,9 +25,11 @@ class ChestFormData {
 		this.#titleText += text;
 		return this;
 	}
-	button(slot: number, itemName?: string, itemDesc?: string[], iconPath: string = "", stackSize = 1, enchanted = false) {
+	button(slot?: number, itemName?: string, itemDesc?: string[], iconPath: string = "", stackSize = 1, enchanted = false) {
+		slot ??= this.availableButtons[0];
+		if (!slot) throw new Error('Chest Form Data Full');
+		this.availableButtons = this.availableButtons.filter((s) => s !== slot);
 		const ID = typeIdToID.get(iconPath.includes(':') ? iconPath : 'minecraft:' + iconPath) ?? -1;
-
 		this.#buttonArray.splice(slot, 1, [`stack#${Math.min(Math.max(stackSize, 1) || 1, 99).toString().padStart(2, '0')}§r${itemName ?? ''}§r${itemDesc?.length ? `\n§r${itemDesc.join('\n§r')}` : ''}`, (((ID + (ID < 256 ? 0 : number_of_1_16_100_items)) * 65536) + (((!!enchanted) ? 1 : 0) * 32768)) || iconPath]);
 		return this;
 	}

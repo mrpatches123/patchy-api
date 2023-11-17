@@ -1,4 +1,4 @@
-import { Player, Entity, BlockPermutation, Direction, Vector2, Vector3, DisplaySlotId } from '@minecraft/server';
+import { Player, Entity, BlockPermutation, Direction, Vector2, Vector3, DisplaySlotId, Dimension, ItemType, Block } from '@minecraft/server';
 export declare function getXZVectorRY(ry: number): {
     x: number;
     y: number;
@@ -8,8 +8,10 @@ export declare const content: {
     warn(...messages: any[]): void;
     chatFormat(...messages: any[]): void;
 };
+export declare function vector3Equals(vector1: Vector3, vector2: Vector3): boolean;
 export declare function isVector3(target: any): boolean;
 export declare function isVector2(target: any): boolean;
+export declare function getBlockAsync(dimension: Dimension, blockLocation: Vector3): Promise<Block>;
 export declare function rotationToDirection(rotation: Vector2): "Down" | "East" | "North" | "South" | "Up" | "West" | undefined;
 export declare const reverseDirection: {
     Down: string;
@@ -158,7 +160,28 @@ export declare function vector3ToRotation(vector: Vector3): {
  * @returns {Array<String>} Returns the following array for each object in the array.
  */
 export declare function combine(target: any, source: any): any;
-export declare function ItemsGet(id: string, log?: boolean): import("@minecraft/server").ItemType;
+/**
+ * imnotverysure
+ */
+type FlattenObject<T> = {
+    [K in keyof T]: T[K];
+}[keyof T];
+/**
+ * imnotverysure
+ */
+type CombinedObject<O, T extends FlattenObject<O> = FlattenObject<O>> = ((T extends any ? (x: T) => void : never) extends (x: infer V) => void ? V : never) extends infer V ? {
+    [K in keyof V]: V[K];
+} : never;
+/**
+ * imnotverysure
+ */
+export type ShallowUnestObject<T> = CombinedObject<T>;
+export declare function shallowUnestObject<T extends Record<string | number, Record<string | number, any>>>(object: T): CombinedObject<T, FlattenObject<T>>;
+export type Entries<T> = {
+    [K in keyof T]: [K, T[K]];
+}[keyof T] extends infer U ? (U extends [keyof T, infer V] ? [keyof T, V][] : never) : never;
+export declare function ObjectEntries<T>(obj: T): Entries<T>;
+export declare function ItemsGet(id: string, log?: boolean): ItemType;
 export declare const colors: string[];
 /**
  *
@@ -172,9 +195,9 @@ export declare function getNames(): void;
 export declare function createArrayBetween(min: number, max: number): any[];
 export declare function obfuscate255(string: string): string;
 export declare function deobfuscate255(string: string): string;
-export declare const overworld: import("@minecraft/server").Dimension, nether: import("@minecraft/server").Dimension, end: import("@minecraft/server").Dimension;
+export declare const overworld: Dimension, nether: Dimension, end: Dimension;
 export declare function chunkStringRegex(str: string, length: number): RegExpMatchArray | null;
-export declare function chunkString(str: string, length: number): any[];
+export declare function chunkString(str: string, length: number): string[];
 /**
  * @param {String} str
  * @param {Number} length
@@ -199,4 +222,5 @@ export declare function fixSciNumberString(string: string | number): string | un
 export declare function formatNumber(number: number | string): string;
 export declare function formatDecimal(number: number): string;
 export declare function randomValue(array: any[]): any;
+export declare function romanize(num: number): string | number;
 export declare function formatMS(ms: number, formal?: boolean): string;

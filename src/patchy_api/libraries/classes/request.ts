@@ -34,7 +34,7 @@ class RequestBuilder {
 	 * @param {Array<string>} keys 
 	 * @param {boolean} isArray 
 	 */
-	getMemoryTarget(id: string, target: string, keys: string[], type: string, isArray: boolean = false) {
+	getMemoryTarget<T>(id: string, target: string, keys: string[], type: string, isArray: boolean = false): Record<string, Record<string, Record<string, T>>> | undefined {
 		// content.warn({ RequestBuilder: this });
 		const returnType = (isArray) ? [] : {};
 
@@ -225,10 +225,10 @@ class RequestBuilder {
 const requestBuilder = new RequestBuilder();
 export default requestBuilder;
 
-		// if (keys) {
-		// 	if (!(keys instanceof Object)) return new Error(`keys for options for id: ${id}, is defined and not an Array`);
-		// 	keys.forEach(key => {
-		// 		if (this.hasOwnProperty(key)) return new Error(`keys: ${key}, for options for id: ${id}, is defined and does not exist on requestBuilder`);
-		// 	});
-		// }
-		// content.warn({ removeKey, Notbool: true instanceof Boolean, Notnull: removeKey !== null, Notundefined: removeKey !== undefined });
+// if (keys) {
+// 	if (!(keys instanceof Object)) return new Error(`keys for options for id: ${id}, is defined and not an Array`);
+// 	keys.forEach(key => {
+// 		if (this.hasOwnProperty(key)) return new Error(`keys: ${key}, for options for id: ${id}, is defined and does not exist on requestBuilder`);
+// 	});
+// }
+// content.warn({ removeKey, Notbool: true instanceof Boolean, Notnull: removeKey !== null, Notundefined: removeKey !== undefined });

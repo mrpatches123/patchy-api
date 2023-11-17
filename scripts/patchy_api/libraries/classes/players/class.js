@@ -2,7 +2,6 @@ import { world, system } from "@minecraft/server";
 import { content } from "../../utilities.js";
 import global from "../global.js";
 import loads from "../load.js";
-import propertyBuilder from "../property/export_instance.js";
 function isDefined(input) {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }
@@ -22,12 +21,11 @@ export class Inventory {
             throw new Error('Not a function at args[0]');
         const thisInv = this;
         this.array.forEach((item, i) => {
-            const newItem = callback((item) ? this.container.getSlot(i) : item, i);
+            const newItem = callback(this.container.getSlot(i), i);
             this.array[i] = item;
             if (newItem === undefined)
                 return;
-            this.array[i] = newItem;
-            this.container.setItem(i, newItem.getItem());
+            this.container.setItem(i, newItem);
         });
     }
     ;
@@ -178,26 +176,5 @@ export class Players {
         const id = ids[Math.floor(Math.random() * ids.length)];
         return ({ id: foundPlayers[id] });
     }
-    getProperty(player, identifier) {
-        return propertyBuilder.get(player)[identifier];
-    }
-    ;
-    setProperty(player, identifier, value) {
-        const properties = propertyBuilder.get(player);
-        properties[identifier] = value;
-    }
-    ;
-    resetProperty(player, identifier) {
-        const properties = propertyBuilder.get(player);
-        properties[identifier] = undefined;
-    }
-    registerProperty(identifier, options) {
-        propertyBuilder.register({
-            player: {
-                [identifier]: options
-            }
-        });
-    }
-    ;
 }
 //# sourceMappingURL=class.js.map

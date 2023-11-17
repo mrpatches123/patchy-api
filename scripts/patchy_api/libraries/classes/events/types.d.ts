@@ -1,5 +1,5 @@
 import { Player } from "../player/class.js";
-import { Entity, Entity as EntityType, Player as PlayerType, DefinitionModifier, ItemStack, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent } from '@minecraft/server';
+import { Entity, Entity as EntityType, Player as PlayerType, DefinitionModifier, ItemStack, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent, PistonActivateBeforeEvent, PlayerInteractWithBlockBeforeEvent, PlayerInteractWithEntityBeforeEvent, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, PlayerLeaveBeforeEvent, EntityRemoveBeforeEvent, EffectAddBeforeEvent, SystemAfterEvents, WatchdogTerminateBeforeEvent } from '@minecraft/server';
 export interface EntityDamageSource {
     cause: EntityDamageCause;
     damagingEntity?: Entity | Player;
@@ -81,6 +81,8 @@ type Mutable<T> = {
 };
 type AfterEventTypes = Mutable<{
     [K in keyof WorldAfterEvents]: Parameters<Parameters<WorldAfterEvents[K]["subscribe"]>[0]>[0];
+}> & Mutable<{
+    [K in keyof SystemAfterEvents]: Parameters<Parameters<SystemAfterEvents[K]["subscribe"]>[0]>[0];
 }>;
 export interface CustomEventKeyTypes {
     beforeChat: ChatSendBeforeEvent;
@@ -91,8 +93,16 @@ export interface CustomEventKeyTypes {
     beforeItemDefinitionEvent: ItemDefinitionTriggeredBeforeEvent;
     beforeItemUse: ItemUseBeforeEvent;
     beforeItemUseOn: ItemUseOnBeforeEvent;
-    beforeItemUseOnStart: ItemUseBeforeEvent;
-    beforePistonActivate: PistonActivateAfterEvent;
+    beforeItemUseOnStart: ItemUseOnBeforeEvent;
+    beforePistonActivate: PistonActivateBeforeEvent;
+    beforePlayerInteractWithBlock: PlayerInteractWithBlockBeforeEvent;
+    beforePlayerInteractWithEntity: PlayerInteractWithEntityBeforeEvent;
+    beforePlayerBreakBlock: PlayerBreakBlockBeforeEvent;
+    beforePlayerPlaceBlock: PlayerPlaceBlockBeforeEvent;
+    beforePlayerLeave: PlayerLeaveBeforeEvent;
+    beforeEntityRemove: EntityRemoveBeforeEvent;
+    beforeEffectAdd: EffectAddBeforeEvent;
+    beforeWatchdogTerminate: WatchdogTerminateBeforeEvent;
     chat: ChatSendAfterEvent;
     dataDrivenPlayerTriggerEvent: DataDrivenPlayerTriggerEvent;
     tick: TickEvent;
@@ -108,6 +118,7 @@ export interface CustomEventKeyTypes {
     worldLoad: undefined;
     scoreboardChange: ScoreboardChangeEvent;
     beforePlayerScaffoldPlace: BeforePlayerScaffoldPlaceEvent;
+    blockBreak: PlayerBreakBlockAfterEvent;
     custom: undefined;
 }
 type EventKeyTypes = AfterEventTypes & CustomEventKeyTypes;
@@ -133,5 +144,5 @@ export type EventRegisterObject = {
         unsubscription?: Function;
     };
 };
-export declare const eventKeys: (keyof EventRegisterObject)[];
-export {};
+declare const eventKeys: (keyof EventRegisterObject)[];
+export { eventKeys };

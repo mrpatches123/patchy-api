@@ -1,15 +1,17 @@
-import { BlockAreaSize } from "@minecraft/server";
-import { overworld, content, isDefined } from '../utilities.js';
-import time from "./time.js";
-// const overworld = world.getDimension('overworld');
-const chunkSize = 32763;
-// import { compress, decompress } from '../zip_255cs.js';
-/**
- * @param {Entity} entity
- */
-function removeAllTags(entity) {
-    entity.getTags().forEach(tag => entity.removeTag(tag));
+import { system } from "@minecraft/server";
+import propertyManager from "./property";
+export function isDefined(input) {
+    return (input !== null && input !== undefined && !Number.isNaN(input));
 }
+export function chunkString(str, length) {
+    let size = (str.length / length) | 0;
+    const array = Array(++size);
+    for (let i = 0, offset = 0; i < size; i++, offset += length) {
+        array[i] = str.substr(offset, length);
+    }
+    return array;
+}
+const chunkLength = 32760;
 export class Database {
     constructor(json = {}) {
         Object.assign(this, json);
@@ -59,231 +61,86 @@ export class Database {
         return key in this;
     }
 }
-const existingCoords = [];
-/*function getNewRange() { //Returns random range between z0,x0 and z15, x15.
-    let cords = [];
-    for (let i=0;i=<15; ++i) {
-        for (let j=0;i=<15; ++j) {
-            cords.push({x:i,z:j});
-        }
-    }
-    return cords.filter(object=>existingCoords.includes(object))[Math.floor(Math.random()*cords.length-1)];
-};*/
-// getNewRange(0, 0, 15, 15);
-// function getRandCoord() {
-//     return Array(256).fill('')
-//         .map((item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 }))
-//         .filter(item => !existingCoords.some(coord => coord.x === item.x && coord.z === item.z)).random();
-// }
-//
-const coords256 = Array.from(Array(256), (item, i) => ({ x: i % 16, z: Math.floor(i / 16) % 16 }));
-function getSign(number) {
-    const sign = Number(number) / Math.abs(Number(number));
-    return (!sign) ? 0 : sign;
-}
-const databasesArea = new BlockAreaSize(16, 1, 16);
-export class Databases {
+export class ProperyDatabases {
     constructor() {
-        this.__queuedSaves = [];
-        this.data = {};
+        this.databases = {};
+        this.queueSaves = [];
+        this.forgetScheduled = {};
+        this.subscribedQueueSave = false;
     }
-    /**
-     * @method initialize starts the database
-     * @returns {void}
-     */
-    initialize() {
-        const entityArray = [];
-        const entities = [...overworld.getEntities({ type: 'patches:database' })];
-        // content.warn({ entities: entities.length });
-        entities.forEach(entity => {
-            let { location } = entity;
-            const { x, z } = location;
-            const index = entityArray.findIndex(([fx, fz]) => fx === x && fz === z);
-            if (index !== -1) {
-                entityArray[index] ??= [x, z, entity];
-                entityArray[index].push(entity);
-            }
-            else {
-                entityArray.push([x, z, entity]);
-            }
-        });
-        entityArray.forEach(entitiesBS => {
-            time.start('databaseInitTest');
-            const entities = entitiesBS.splice(2).filter(entity => entity);
-            const json = [];
-            if (entities) {
-                const name = entities[0].getTags().find(tag => tag.includes('dbName:')).replace('dbName:', '');
-                // content.warn({ dbNmae: name });
-                entities.forEach(entity => {
-                    const order = entities[0].getTags().find(tag => tag.includes('dbOrder:')).replace('dbName:', '');
-                    json.push([Number(order), entity.nameTag]);
-                });
-                if (name) {
-                    this.data[name] = new Database(JSON.parse(json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join('')));
-                    // content.warn({ [name]: this[name] });
-                }
-                // content.warn({ name, gettime: time.end('databaseInitTest'), length: JSON.stringify(this[name]).length });
-            }
-        });
-        // content.warn({ this: this });
-        // content.warn(this.get('requestsAPI'));
-    }
-    _getRandCoords() {
-        // @ts-ignore comment
-        return coords256.filter(({ x, z }) => !(this ?? {})).some((key, { __db_properties: { coords: { x: ex, z: ez } = {} } = {} }) => x === ex && z === ez).random();
-    }
-    getPropertiesObject() {
-        return { coords: this._getRandCoords() /*, saveTicks: (Object.keys(this).length + 1) * 2 */ };
-    }
-    add(name) {
-        if (!name)
-            throw new Error('must input Database name');
-        if (this.data[name])
-            throw new Error(`Database: ${name}, exists`);
-        const propertiesObject = this.getPropertiesObject();
-        // content.chatFormat('prop', propertiesObject);
-        this.data[name] = new Database({ __db_properties: propertiesObject });
-        // overworld.runCommandAsync(`say db ${JSON.stringify(this[name])}`);
-        return this.data[name];
-    }
-    /**
-         * @method getFromMemory gets a database on Databases from memory
-         * @param {String} name Database name
-         * @returns {Database} this[name]
-         */
-    getFromMemory(name) {
-        if (!name)
-            throw new Error('must input Database name');
-        if (this.data[name])
-            return this.data[name];
-    }
-    get(name) {
-        return this.getFromMemory(name);
-    }
-    getFromEntity(name) {
-        if (!name)
-            throw new Error('must input Database name');
-        const { __db_properties: propertiesObject = {} } = this.data[name] ?? {};
-        const { coords } = propertiesObject;
-        // content.warn({ propertiesObject });
-        if (!coords) {
+    subsribeQueueSave() {
+        if (this.subscribedQueueSave)
             return;
-        }
-        let entities = overworld.getEntitiesAtBlockLocation({ x: coords.x, y: -64, z: coords.z });
-        // content.warn({ entities: entities.map(({ nameTag }) => nameTag) });
-        if (entities.length) {
-            entities = entities.filter(({ typeId }) => typeId === 'patches:database');
-            const name = entities[0].getTags().find(tag => tag.includes('dbName:')).replace('dbName:', '');
-            const json = [];
-            entities.forEach(entity => {
-                const order = entities[0].getTags().find(tag => tag.includes('dbOrder:')).replace('dbName:', '');
-                json.push([Number(order), entity.nameTag]);
-            });
-            const string = (json.sort((a, b) => a[0] - b[0]).map(([a, b]) => b).join(''));
-            // content.warn({ string });
-            return string;
-        }
-    }
-    delete(name, removeEntity = false) {
-        if (removeEntity) {
-            const { __db_properties: propertiesObject = {} } = this.data[name] ?? {};
-            const { coords } = propertiesObject;
-            // content.warn({ propertiesObject });
-            if (!coords) {
-                return;
-            }
-            const entities = overworld.getEntitiesAtBlockLocation({ x: coords.x, y: -64, z: coords.z });
-            entities.forEach(entity => (entity.triggerEvent('patches:kill')));
-        }
-        delete this.data[name];
-    }
-    deleteAll() {
-        Object.keys(this.data).forEach((name) => {
-            delete this.data[name];
+        this.subscribedQueueSave = true;
+        const runId = system.runInterval(() => {
+            if (!this.queueSaves.length)
+                return (system.clearRun(runId), this.subscribedQueueSave = true);
+            const [key, entity] = this.queueSaves.shift();
+            this.save(key, entity);
         });
     }
-    /**
-     * @method save saves the database to a structure file
-     * @param {String} name Database name
-     */
-    save(name) {
-        //console.warn(name);
-        const { x, z } = this.data[name].__db_properties['coords'];
-        if (x && z && this.data[name]) {
-            console.warn(x, z);
-            time.start('test37763');
-            const stringifiedDatabase = (JSON.stringify(this.data[name]));
-            const stringify = time.end('test37763');
-            content.warn({ name, length: stringifiedDatabase.length, stringifiedDatabase });
-            let size = (stringifiedDatabase.length / chunkSize) | 0;
-            const database = Array(++size);
-            time.start('test37763');
-            for (let i = 0, offset = 0; i < size; i++, offset += chunkSize) {
-                database[i] = stringifiedDatabase.substr(offset, chunkSize);
-            }
-            const chunk = time.end('test37763');
-            time.start('test37763');
-            const databaseLength = database.length;
-            let entities = overworld.getEntitiesAtBlockLocation({ x, y: -64, z });
-            const entitiesLength = (entities ?? []).length;
-            const difference = databaseLength - entitiesLength;
-            // content.warn({ difference });
-            for (let i = 0; i < Math.abs(difference); i++) {
-                if (getSign(difference) === 1) {
-                    overworld.spawnEntity('patches:database', { x, y: -64, z });
-                }
-                else {
-                    entities[0].triggerEvent('patches:kill');
-                }
-            }
-            const entityCorrect = time.end('test37763');
-            let entitySet;
-            time.start('test37763');
-            entities = overworld.getEntitiesAtBlockLocation({ x, y: -64, z });
-            if (entities.length) {
-                entities.forEach((entity, i) => {
-                    entity.nameTag = database[i];
-                    removeAllTags(entity);
-                    entity.addTag(`dbOrder:${i}`);
-                    entity.addTag(`dbName:${name}`);
-                });
-                entitySet = time.end('test37763');
-            }
-            else {
-                throw new Error(`Database: ${name}, does not exist`);
-            }
-            // content.warn({ t: 'databaseSAavebej', stringify, chunk, entityCorrect, entitySet });
-        }
+    getFor(key, entity, duration = 1000) {
+        const cacheKey = key + (entity ? `:${entity.id}` : '');
+        const runId = system.runTimeout(() => {
+            this.forget(key, entity);
+            delete this.forgetScheduled[cacheKey];
+        }, duration);
+        if (cacheKey in this.forgetScheduled)
+            system.clearRun(this.forgetScheduled[cacheKey][0]);
+        this.forgetScheduled[cacheKey] = [runId, true];
+        return this.get(key, entity);
+    }
+    forget(key, entity) {
+        const cacheKey = key + (entity ? `:${entity.id}` : '');
+        delete this.databases[cacheKey];
     }
     /**
-     * @method saveAll savees all databases to respective structures
+     * @method getUnCached get a Database without caching it you cannot create a new Database with this method
      */
-    saveAll() {
-        Object.keys(this.data).forEach((name) => {
-            this.save(name);
-        });
+    getUnCached(key, entity) {
+        const usedProperties = propertyManager.get(entity).getJSON(`PDB:${key}`);
+        if (!usedProperties)
+            return;
+        return new Database(usedProperties);
     }
-    /**
-     * @method queueSave saves the database in a queue for better performace in ticked saves
-     * @param {String} name Database name
-     */
-    queueSave(name) {
-        if (this.data[name]) {
-            if (!this.__queuedSaves.some(item => item === name)) {
-                this.__queuedSaves.push(name);
-            }
-        }
-        else {
-            throw new Error(`Database: ${name}, does not exist`);
-        }
+    get(key, entity) {
+        if (typeof key !== 'number' && typeof key !== 'string')
+            throw new Error('argument zero must be a key');
+        const cacheKey = key + (entity ? `:${entity.id}` : '');
+        if (this.databases[cacheKey])
+            return this.databases[cacheKey];
+        const usedProperties = propertyManager.get(entity).getJSON(`PDB:${key}`);
+        if (!usedProperties)
+            return;
+        this.databases[cacheKey] = new Database(usedProperties);
+        return this.databases[cacheKey];
     }
-    /**
-     * @method queueSave saves all databases in a queue for better performace in ticked saves
-     */
-    queueSaveAll() {
-        this.__queuedSaves.push(...Object.keys(this.data).filter(databaseName => !this.__queuedSaves.some(saveName => saveName === databaseName)));
+    add(key, entity) {
+        if (typeof key !== 'number' && typeof key !== 'string')
+            throw new Error('argument zero must be a key');
+        const cacheKey = key + (entity ? `:${entity.id}` : '');
+        this.databases[cacheKey] = new Database();
+        return this.databases[cacheKey];
+    }
+    save(key, entity) {
+        if (typeof key !== 'number' && typeof key !== 'string')
+            throw new Error('argument zero must be a key');
+        const cacheKey = key + (entity ? `:${entity.id}` : '');
+        const database = this.databases[cacheKey];
+        propertyManager.get(entity).setJSON(`PDB:${key}`, database);
+    }
+    delete(key, entity) {
+        propertyManager.get(entity).setJSON(`PDB:${key}`);
+    }
+    queueSave(key, entity) {
+        if (typeof key !== 'number' && typeof key !== 'string')
+            throw new Error('argument zero must be a key');
+        if (this.queueSaves.findIndex(([k, e]) => k === key && (entity && e?.id === entity.id)) !== -1)
+            return;
+        this.subsribeQueueSave();
+        this.queueSaves.push([key, entity]);
     }
 }
-const databases = new Databases();
+const databases = new ProperyDatabases();
 export default databases;
 //# sourceMappingURL=database.js.map

@@ -1,4 +1,4 @@
-import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction, Vector2, Vector3, DisplaySlotId } from '@minecraft/server';
+import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction, Vector2, Vector3, DisplaySlotId, Dimension, system, ItemType, Block } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function getXZVectorRY(ry: number) {
     const rads = (ry + 180) * Math.PI / 180;
@@ -22,6 +22,23 @@ export function isVector3(target: any) {
 export function isVector2(target: any) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
+}
+export async function getBlockAsync(dimension: Dimension, blockLocation: Vector3): Promise<Block> {
+    let block = dimension.getBlock(blockLocation);
+    block = ((block && block.isValid()) ? block : await new Promise((resolve) => {
+        const runId = system.runInterval(() => {
+            try {
+                block = dimension.getBlock(blockLocation);
+                if (!block) return;
+                if (!block.isValid()) return;
+                system.clearRun(runId);
+                resolve(block);
+            } catch (error: any) {
+                console.warn('ingore', error, error.stack);
+            }
+        });
+    }))!;
+    return block;
 }
 export function rotationToDirection(rotation: Vector2) {
     let { x, y } = rotation;
@@ -570,7 +587,12 @@ export const server = {
         const scoreboardObjective = world.scoreboard.getObjective(objective);
         if (!scoreboardObjective) throw new Error(`scoreboardObjective: ${objective} must exist`);
 
-        return scoreboardObjective.getScore(target);
+        try {
+            return scoreboardObjective.getScore(target);
+        } catch (error) {
+
+        }
+
     },
     objectiveAdd(objective: string, displayName = objective) {
         try {
@@ -599,7 +621,7 @@ export const server = {
     scoreResetPlayer(objective: string, target: Player | Entity | string) {
         try {
             world.scoreboard.getObjective(objective)
-                ?.removeParticipant(target);
+                ?.removeParticipant((target as any)?.root ?? target);
             return true;
         } catch (error: any) {
             console.warn(error, error.stack);
@@ -608,7 +630,7 @@ export const server = {
     },
     scoreSetPlayer(objective: string, target: Player | Entity | string, value = 0, updateId?: DisplaySlotId) {
         // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
-        world.scoreboard.getObjective(objective)?.setScore(target, value);
+        world.scoreboard.getObjective(objective)?.setScore(((target as any)?.root ?? target), value);
         if (!updateId) return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
         if (scoreboardObjectiveDisplayOptions?.objective.id !== objective) return;
@@ -680,9 +702,55 @@ export function combine(target: any, source: any) {
     });
     return { ...target, ...source };
 }
+const object = {
+    mining: {
+        coal: 5,
+        iron: 10,
+        diamond: 15,
+    },
+    lumber: {
+        oak: 5,
+        birch: 10,
+        spruce: 15,
+    },
+    farming: {
+        wheat: 5,
+        carrots: 10,
+        potatoes: 15,
+    },
+};
+/**
+ * imnotverysure
+ */
+type FlattenObject<T> = {
+    [K in keyof T]: T[K]
+}[keyof T];
+/**
+ * imnotverysure
+ */
+type CombinedObject<O, T extends FlattenObject<O> = FlattenObject<O>> = ((T extends any ? (x: T) => void : never) extends (x: infer V) => void ? V : never) extends infer V ? {
+    [K in keyof V]: V[K]
+} : never;
+/**
+ * imnotverysure
+ */
+export type ShallowUnestObject<T> = CombinedObject<T>;
 
+export function shallowUnestObject<T extends Record<string | number, Record<string | number, any>>>(object: T) {
+    const shallowUnestedObject = {} as ShallowUnestObject<T>;
+    Object.entries(object).forEach(([key, value]) => {
+        Object.assign(shallowUnestedObject, value);
+    });
+    return shallowUnestedObject;
+}
 
-export function ItemsGet(id: string, log = false) {
+export type Entries<T> = {
+    [K in keyof T]: [K, T[K]];
+}[keyof T] extends infer U ? (U extends [keyof T, infer V] ? [keyof T, V][] : never) : never;
+export function ObjectEntries<T>(obj: T): Entries<T> {
+    return Object.entries(obj as any) as Entries<T>;
+}
+export function ItemsGet(id: string, log = false): ItemType {
     const item = ItemTypes.get(id);
     if (!item) {
         let stack;
@@ -694,7 +762,7 @@ export function ItemsGet(id: string, log = false) {
         if (log) {
             errorLogger.log({ message: `Item: ${id}, does not exist!` }, stack, { key: 'chests', event: 'tick' });
         }
-        return ItemTypes.get('air');
+        return ItemTypes.get('air')!;
     } else {
         return item;
     }
@@ -765,7 +833,7 @@ export function chunkStringRegex(str: string, length: number) {
 }
 export function chunkString(str: string, length: number) {
     let size = (str.length / length) | 0;
-    const array = Array(++size);
+    const array: string[] = Array(++size);
     for (let i = 0, offset = 0; i < size; i++, offset += length) {
         array[i] = str.substr(offset, length);
     }
@@ -777,7 +845,7 @@ export function chunkString(str: string, length: number) {
  * @returns {Array}
  */
 export function chunkStringBytes(str: string, length: number) {
-    const chunks = [];
+    const chunks: string[] = [];
     let chunk = '';
     let byteCount = 0;
 
@@ -828,7 +896,7 @@ export function parseCommand(message: string, prefix: string) {
     let braceCount = [0, 0], bracketCount = [0, 0], quoteCount = 0, spaceCount = 0;
     let started = false;
     let o = 0;
-    const output = [];
+    const output: string[] = [];
     for (let i = prefix.length; i < messageLength; i++) {
         const char = message[i];
         switch (char) {
@@ -1014,6 +1082,19 @@ export function formatDecimal(number: number) {
 export function randomValue(array: any[]) {
     return array[Math.floor(Math.random() * array.length)];
 }
+export function romanize(num: number) {
+    if (isNaN(num))
+        return NaN;
+    let digits = String(+num).split(""),
+        key = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM",
+            "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC",
+            "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"],
+        roman = "",
+        i = 3;
+    while (i--)
+        roman = (key[+digits.pop()! + (i * 10)] || "") + roman;
+    return Array(+digits.join("") + 1).join("M") + roman;
+}
 const second = 1000;
 const minute = 60000;
 const hour = 3600000;
@@ -1058,3 +1139,5 @@ export function formatMS(ms: number, formal = false) {
     const millenniums = ms / millennium;
     return `${(!formal) ? Math.floor(millenniums) : `${formatNumber(millenniums)}${(formatDecimal(millenniums))}`} millennium${(Math.floor(millenniums) === 1) ? '' : 's'}`;
 }
+
+

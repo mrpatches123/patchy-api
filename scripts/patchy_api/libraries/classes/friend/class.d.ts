@@ -1,13 +1,11 @@
 import { Player } from '../player/class.js';
 type FriendSystemData = {
     type: 'central' | 'remote';
-    properties: {
-        [key: string]: {
-            get: (player: Player) => any;
-            set: (player: Player, requesteeId: string, value: any) => any;
-            init: (player: Player) => any;
-        };
-    };
+    properties: Record<string, {
+        get?: (player: Player) => any;
+        set?: (player: Player, requesteeId: string, value: any) => any;
+        init?: (player: Player) => any;
+    }>;
 };
 export declare class FriendSystem {
     systemKey: string;
@@ -20,20 +18,20 @@ export declare class FriendSystem {
      * @param {Player} target
      * @returns { }
      */
-    getFriendData(receiver: Player): {
+    getFriendData<T>(receiver: Player): {
         saves?: {
             [property: string]: any;
         };
         requests: {
             incoming: {
-                [id: string]: {};
+                [id: string]: T;
             };
             outgoing: {
-                [id: string]: {};
+                [id: string]: T;
             };
         };
         mutal: {
-            [id: string]: {};
+            [id: string]: T;
         };
     };
     getProperties(receiver: Player): {
@@ -42,14 +40,14 @@ export declare class FriendSystem {
     setFriendData(receiver: Player, data: {
         requests: {
             incoming: {
-                [id: string]: {};
+                [id: string]: any;
             };
             outgoing: {
-                [id: string]: {};
+                [id: string]: any;
             };
         };
         mutal: {
-            [id: string]: {};
+            [id: string]: any;
         };
     }): void;
     add(receiver: Player, targetId: string, payload: any): void;
@@ -70,7 +68,7 @@ export declare class FriendSystem {
      * @param {String} property
      */
     updateFromFriendObject(receiver: Player, object: {
-        [id: string]: {};
+        [id: string]: any;
     }, property: string): void;
     subscribeWatch(): void;
 }
@@ -78,33 +76,11 @@ export declare class FriendSystemBuilder {
     friends: {
         [systemKey: string]: {
             system: FriendSystem;
-            data: {
-                type: 'central' | 'remote';
-                properties: {
-                    [key: string]: {
-                        get: (player: Player) => any;
-                        set: (player: Player) => any;
-                        init: (player: Player) => any;
-                    };
-                };
-            };
+            data: FriendSystemData;
         };
     };
     constructor();
-    /**
-     * @param {string} systemKey
-     * @param {} data
-     */
-    create(systemKey: string, data: {
-        type: 'central' | 'remote';
-        properties: {
-            [key: string]: {
-                get: (player: Player) => any;
-                set: (player: Player) => any;
-                init: (player: Player) => any;
-            };
-        };
-    }): void;
+    create(systemKey: string, data: FriendSystemData): void;
     get(systemKey: string): FriendSystem;
 }
 export {};

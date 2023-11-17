@@ -1,5 +1,5 @@
-import { CustomEvent } from '../custom_event/class.ts';
-import { EventObject, EventRegisterObject, EventTypes as EventKeyTypes } from './types.ts';
+import { CustomEvent } from '../custom_event/class';
+import { EventObject, EventRegisterObject, EventTypes as EventKeyTypes } from './types';
 export declare class EventBuilder {
     subscriptions: {
         [eventKey: string]: {
@@ -36,7 +36,7 @@ export declare class EventBuilder {
     subscribe(key: string, subscribeObject: EventObject): void;
     suppress(key: string, eventKeys: (keyof EventKeyTypes)[] | (keyof EventKeyTypes)): void;
     unsuppress(key: string, eventKeys: string[] | string): void;
-    unsubscribe(key: string, eventKeys: string[] | string): void;
+    unsubscribe(key: string, eventKeys?: string[] | string): void;
     private initSubscribe;
     private getEventProperties;
     private worldSubscribe;

@@ -1,7 +1,7 @@
 import { Player } from "../player/class.js";
-import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent } from '@minecraft/server';
+import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent, world, PistonActivateBeforeEvent, PlayerInteractWithBlockBeforeEvent, PlayerInteractWithEntityBeforeEvent, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, PlayerLeaveBeforeEvent, EntityRemoveBeforeEvent, EffectAddBeforeEvent, SystemAfterEvents, system, WatchdogTerminateBeforeEvent } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
-
+import { content } from '../../utilities.js';
 
 export interface EntityDamageSource {
 	cause: EntityDamageCause;
@@ -87,6 +87,8 @@ type Mutable<T> = {
 };
 type AfterEventTypes = Mutable<{
 	[K in keyof WorldAfterEvents]: Parameters<Parameters<WorldAfterEvents[K]["subscribe"]>[0]>[0]
+}> & Mutable<{
+	[K in keyof SystemAfterEvents]: Parameters<Parameters<SystemAfterEvents[K]["subscribe"]>[0]>[0]
 }>;
 export interface CustomEventKeyTypes {
 	beforeChat: ChatSendBeforeEvent;
@@ -98,7 +100,15 @@ export interface CustomEventKeyTypes {
 	beforeItemUse: ItemUseBeforeEvent;
 	beforeItemUseOn: ItemUseOnBeforeEvent;
 	beforeItemUseOnStart: ItemUseOnBeforeEvent;
-	beforePistonActivate: PistonActivateAfterEvent;
+	beforePistonActivate: PistonActivateBeforeEvent;
+	beforePlayerInteractWithBlock: PlayerInteractWithBlockBeforeEvent;
+	beforePlayerInteractWithEntity: PlayerInteractWithEntityBeforeEvent;
+	beforePlayerBreakBlock: PlayerBreakBlockBeforeEvent;
+	beforePlayerPlaceBlock: PlayerPlaceBlockBeforeEvent;
+	beforePlayerLeave: PlayerLeaveBeforeEvent;
+	beforeEntityRemove: EntityRemoveBeforeEvent;
+	beforeEffectAdd: EffectAddBeforeEvent;
+	beforeWatchdogTerminate: WatchdogTerminateBeforeEvent;
 	chat: ChatSendAfterEvent;
 	dataDrivenPlayerTriggerEvent: DataDrivenPlayerTriggerEvent;
 	tick: TickEvent;
@@ -146,8 +156,58 @@ export type EventRegisterObject = {
 		unsubscription?: Function;
 	};
 };
-export const eventKeys: (keyof EventRegisterObject)[] = ['beforeChat', 'beforeChatSend', 'beforeDataDrivenEntityTriggerEvent', 'beforeDataDrivenPlayerTriggerEvent', 'beforeExplosion', 'beforeItemDefinitionEvent', 'beforeItemUse', 'beforeItemUseOn', 'beforeItemUseOnStart', 'beforePistonActivate', 'blockBreak', 'blockExplode', 'blockPlace', 'buttonPush', 'chat', 'chatSend', 'dataDrivenEntityTriggerEvent', 'dataDrivenPlayerTriggerEvent', 'effectAdd', 'entityDie', 'entitySpawn', 'entityHealthChanged', 'entityHitBlock', 'entityHitEntity', 'entityHurt', 'explosion', 'itemStopUse', 'itemDefinitionEvent', 'itemReleaseCharge', 'itemStartCharge', 'itemStartUseOn', 'itemStopUseOn', 'itemUse', 'itemUseOn', 'itemPickup', 'leverAction', 'pistonActivate', 'pressurePlatePush', 'targetBlockHit', 'tripWireTrip', 'playerJoin', 'playerLeave', 'projectileHit', 'tick', 'weatherChange', 'worldInitialize', 'tickAfterLoad', 'playerJoined', 'playerHit', 'playerHurt', 'playerDeath', 'requestAdded', 'stepOnBlock', 'playerSpawn', 'playerSpawned', 'playerJoinAwaitMove', 'scriptEventReceive', 'worldLoad', 'scoreboardChange', 'beforePlayerScaffoldPlace', 'custom',];
-
+const customKeys = [
+	'beforeChat',
+	'beforeChatSend',
+	'beforeDataDrivenEntityTriggerEvent',
+	'beforeDataDrivenPlayerTriggerEvent',
+	'beforeExplosion',
+	'beforeItemDefinitionEvent',
+	'beforeItemUse',
+	'beforeItemUseOn',
+	'beforeItemUseOnStart',
+	'beforePistonActivate',
+	'beforePlayerInteractWithBlock',
+	'beforePlayerInteractWithEntity',
+	'beforePlayerBreakBlock',
+	'beforePlayerPlaceBlock',
+	'beforeWatchdogTerminate',
+	'beforePlayerLeave',
+	'beforeEntityRemove',
+	'beforeEffectAdd',
+	'chat',
+	'dataDrivenPlayerTriggerEvent',
+	'tick',
+	'tickAfterLoad',
+	'playerJoined',
+	'playerHit',
+	'playerHurt',
+	'playerDeath',
+	'requestAdded',
+	'stepOnBlock',
+	'playerSpawned',
+	'playerJoinAwaitMove',
+	'worldLoad',
+	'scoreboardChange',
+	'beforePlayerScaffoldPlace',
+	'blockBreak',
+	'custom',
+];
+const eventKeys: (keyof EventRegisterObject)[] = customKeys;
+for (const key in world.afterEvents) {
+	const prototype = Object.getPrototypeOf({});
+	if (key in prototype) continue;
+	eventKeys.push(key);
+}
+for (const key in system.afterEvents) {
+	const prototype = Object.getPrototypeOf({});
+	if (key in prototype) continue;
+	eventKeys.push(key);
+}
+// Object.keys(world.afterEvents).forEach((key) => eventKeys.push(key));
+// Object.keys(system.afterEvents).forEach((key) => eventKeys.push(key));
+content.warn(eventKeys);
+export { eventKeys };
 // export class EventBuilder {
 
 // 	constructor();

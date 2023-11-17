@@ -1,10 +1,11 @@
 import { Entity, Player, Vector3, World, world } from "@minecraft/server";
+import { content } from "../utilities";
 
 export function isDefined(input: any) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
 }
 function chunkStringBytes(str: string, length: number) {
-	const chunks = [];
+	const chunks: string[] = [];
 	let chunk = '';
 	let byteCount = 0;
 
@@ -32,6 +33,7 @@ export function isVector3<T>(target: T) {
 	// content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
 	return target instanceof Object && 'x' in target && 'y' in target && 'z' in target;
 }
+
 class PropertyManager {
 	public storage: Record<string, DynamicPropertiesForInstance> = {};
 	private subscribedEvents: boolean = false;
@@ -59,8 +61,15 @@ class PropertyManager {
 	public get(instance?: Player | Entity | World): DynamicPropertiesForInstance {
 		this.subscribeEvents();
 		const id = (!instance || instance instanceof World) ? 'world' : instance.id;
+
+		// if (instance instanceof Player) {
+		// 	content.warn({ id: instance?.id, instance: instance?.typeId });
+		// 	content.warn({ "this.storage[id]": this.storage[id] });
+		// }
+
 		this.storage[id] ??= new DynamicPropertiesForInstance(instance);
-		this.storage[id]!.cache ??= {};
+
+		// if (instance instanceof Player) content.warn({ "this.storage[id]": this.storage[id] });
 		return this.storage[id]!;
 	}
 }
@@ -76,13 +85,13 @@ export interface PropertiesCache {
 export class DynamicPropertiesForInstance {
 	instance: Player | Entity | World;
 	id: string;
-	cache?: PropertiesCache;
+	cache?: PropertiesCache = {};
 	constructor(instance: Player | Entity | World = world) {
 		this.instance = instance;
 		this.id = (instance instanceof World) ? 'world' : instance.id;
 	}
 	/**
-	 * cannot SetJSON is for old things
+	 * cannot set JSON. It is for old things
 	 */
 	setAny<T>(identifer: string, value: T) {
 		if (typeof value === 'string') return this.setString(identifer, value);
@@ -90,9 +99,36 @@ export class DynamicPropertiesForInstance {
 		if (typeof value === 'boolean') return this.setBoolean(identifer, value);
 		if (isVector3(value)) return this.setVector3(identifer, value as Vector3);
 	}
+	/**
+	 * cannot get JSON. It is for old things
+	 */
+	getAny<T extends string | number | Vector3 | boolean>(identifer: string): T | undefined {
+		if (identifer in (this.cache?.boolean ?? {})) return this.cache?.boolean![identifer] as T;
+		if (identifer in (this.cache?.number ?? {})) return this.cache?.number![identifer] as T;
+		if (identifer in (this.cache?.string ?? {})) return this.cache?.string![identifer] as T;
+		if (identifer in (this.cache?.vector3 ?? {})) return this.cache?.vector3![identifer] as T;
+		const value = this.instance.getDynamicProperty(identifer);
+		if (value !== false && !value) return;
+		this.cache ??= {};
+		if (typeof value === 'boolean') {
+			this.cache.boolean ??= {};
+			this.cache.boolean[identifer] = value;
+		} else if (typeof value === 'number') {
+			this.cache.number ??= {};
+			this.cache.number[identifer] = value;
+		} else if (typeof value === 'string') {
+			this.cache.string ??= {};
+			this.cache.string[identifer] = value;
+		} else if (isVector3(value)) {
+			this.cache.vector3 ??= {};
+			this.cache.vector3[identifer] = value as Vector3;
+		}
+		return value as T;
+
+	}
 	getJSON<T>(identifer: string): T | undefined {
 		if (this.cache?.json?.[identifer]) return this.cache?.json[identifer];
-		const joins = [];
+		const joins: string[] = [];
 		for (let i = 0, property = this.getString(`${identifer}_0`), valid = true; ; i++, property = this.getString(`${identifer}_${i}`)) {
 			if (property) joins.push(property);
 			break;
@@ -237,3 +273,6 @@ export class DynamicPropertiesForInstance {
 	}
 
 }
+world.afterEvents.chatSend.subscribe((event) => {
+	if (event.message === 'prop') content.chatFormat(propertyManager);
+});
