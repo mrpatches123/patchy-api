@@ -13,7 +13,7 @@ interface LeaderboardData {
 	maxLength?: number,
 	title?: string,
 	formating?: string | string[];
-	dimension: Dimension;
+	dimension?: Dimension;
 }
 interface LeaderboardDataAfter {
 	type: typeof types[number],

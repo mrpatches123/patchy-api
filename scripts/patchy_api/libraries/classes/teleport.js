@@ -1,23 +1,24 @@
-import { MinecraftBlockTypes, Vector } from '@minecraft/server';
+import { Vector } from '@minecraft/server';
 import { content, isVector2, isVector3, offsetVector3, randomCoordsOutsideCircle } from '../utilities.js';
 import { Player } from './player/class.js';
 import time from './time.js';
+import { MinecraftBlockTypes } from '../../vanilla-data.js';
 const unsafeBlocks = [
-    MinecraftBlockTypes.lava.id,
-    MinecraftBlockTypes.flowingLava.id,
-    MinecraftBlockTypes.magma.id,
-    MinecraftBlockTypes.witherRose.id,
-    MinecraftBlockTypes.sweetBerryBush.id,
-    MinecraftBlockTypes.fire.id,
-    MinecraftBlockTypes.campfire.id,
-    MinecraftBlockTypes.cactus.id,
-    MinecraftBlockTypes.soulCampfire.id,
-    MinecraftBlockTypes.soulFire.id,
-    MinecraftBlockTypes.water.id,
-    MinecraftBlockTypes.flowingWater.id,
-    MinecraftBlockTypes.soulSand.id,
-    MinecraftBlockTypes.soulSoil.id,
-    MinecraftBlockTypes.cactus.id
+    MinecraftBlockTypes.Lava,
+    MinecraftBlockTypes.FlowingLava,
+    MinecraftBlockTypes.Magma,
+    MinecraftBlockTypes.WitherRose,
+    MinecraftBlockTypes.SweetBerryBush,
+    MinecraftBlockTypes.Fire,
+    MinecraftBlockTypes.Cactus,
+    MinecraftBlockTypes.Cactus,
+    MinecraftBlockTypes.SoulCampfire,
+    MinecraftBlockTypes.SoulFire,
+    MinecraftBlockTypes.Water,
+    MinecraftBlockTypes.FlowingWater,
+    MinecraftBlockTypes.SoulSand,
+    MinecraftBlockTypes.SoulSoil,
+    MinecraftBlockTypes.Cactus
 ];
 function objectVector3(vector3) {
     const { x, y, z } = vector3;
@@ -123,7 +124,7 @@ class TeleportBuilder {
     getRandomSafeCoords(dimension, location, yMax, yMin, minRadius, maxRadius) {
         while (true) {
             const { location: newLocation, blockFloor, blockAbove } = this.getRandomCoords(dimension, location, yMax, yMin, minRadius, maxRadius) || {};
-            if (!unsafeBlocks.includes(blockFloor?.typeId) && blockAbove?.typeId === MinecraftBlockTypes.air.id)
+            if (!unsafeBlocks.includes(blockFloor?.typeId) && blockAbove?.typeId === MinecraftBlockTypes.Air)
                 return newLocation;
         }
     }

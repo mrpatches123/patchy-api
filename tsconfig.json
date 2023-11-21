@@ -18,7 +18,7 @@
       "noImplicitUseStrict": false,
       "outDir": "scripts/",
       "rootDir": "src/",
-      "baseUrl": "patchy-api/",
+      "baseUrl": "src/",
       "listFiles": false,
       "noEmitHelpers": true,
       "allowJs": true,

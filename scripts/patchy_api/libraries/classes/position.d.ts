@@ -19,7 +19,7 @@ interface PostionObject {
         x: number;
         y: number;
         z: number;
-    }) => {};
+    }) => void;
     noLoop?: boolean;
     testOnly?: boolean;
 }

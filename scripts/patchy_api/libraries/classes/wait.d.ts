@@ -1,14 +1,14 @@
 declare class Wait {
     subscriptions: Record<string, {
-        checkCallback: () => boolean;
-        thenCallback: () => void;
+        checkCallback: () => boolean | void;
+        thenCallback: () => boolean | void;
         once: boolean;
         afterLoad: boolean;
         remove: boolean;
         active?: boolean;
     }>;
     constructor();
-    add(key: string, checkCallback: () => boolean, thenCallback: () => boolean, { start, once, afterLoad, remove }: {
+    add(key: string, checkCallback: () => boolean | void, thenCallback: () => boolean | void, { start, once, afterLoad, remove }: {
         start?: boolean | undefined;
         once?: boolean | undefined;
         afterLoad?: boolean | undefined;

@@ -1,10 +1,10 @@
 import { world, system, Player as PlayerType } from '@minecraft/server';
-import { content } from '../../utilities.ts';
-import time from '../time.ts';
-import { setProptotype } from '../player/class.ts';
-import { CustomEvent } from '../custom_event/class.ts';
-import errorLogger from '../error.ts';
-import { eventKeys } from './types.ts';
+import { content } from '../../utilities';
+import time from '../time';
+import { setProptotype } from '../player/class';
+import { CustomEvent } from '../custom_event/class';
+import errorLogger from '../error';
+import { eventKeys } from './types';
 let keystest = [];
 let clearedKeyTest = false;
 /**
@@ -127,8 +127,6 @@ export class EventBuilder {
                 throw new Error(`key: ${newEventKey}, does have a the key: subscription!`);
             if (!(subscription instanceof Object))
                 throw new Error(`subscription in ${newEventKey} does have a value with the type: Object!`);
-            if (!Object.keys(subscription).length)
-                throw new Error(`subscription: in ${newEventKey}, does not have a key!`);
             Object.entries(subscription).forEach(([eventKey, eventProperties]) => {
                 if (!this.registry.hasOwnProperty(newEventKey))
                     this.registry[newEventKey] = {};
@@ -144,7 +142,7 @@ export class EventBuilder {
                     throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and eventkey: ${newEventKey}, is not in world.afterEvents, world.beforeEvents, system.afterEvents, or system.beforeEvents or is "custom"!`);
                 if (forceNative !== undefined && typeof forceNative !== 'boolean')
                     throw new Error(`key: forceNative, in ${eventKey} in subscription in ${newEventKey} is defined and does have a value of type: Boolean!`);
-                if (entityOptions !== undefined && !eventKey.includes('entity'))
+                if (entityOptions !== undefined && !eventKey.toLowerCase().includes('entity'))
                     throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} should not be defined since that event is not an entity event!`);
                 if (entityOptions !== undefined && !(entityOptions instanceof Object))
                     throw new Error(`key: entityOptions, in ${eventKey} in subscription in ${newEventKey} is defined and value is not of type: interface(EntityEventOptions)!`);
@@ -207,6 +205,7 @@ export class EventBuilder {
                     const subscriptionEntries = Object.entries(subscription);
                     subscriptionEntries.forEach(([oldEventKey, eventProperties]) => {
                         const { function: subscriptionFunction, options, forceNative, entityOptionsKey } = eventProperties;
+                        content.warn({ key, oldEventKey, eventKey, fixedEventKey });
                         if (oldEventKey === 'custom')
                             subscriptionFunction(undefined);
                         else {
@@ -434,6 +433,8 @@ export class EventBuilder {
         };
         this.subscriptions[entityOptionsKey ?? oldEventKey].function = subscribedEventFunction;
         // content.warn({ key, oldEventKey, fix: this.removeBeforeInKey(oldEventKey), worldSystemHas: Boolean(world?.[worldSystem]?.[this.removeBeforeInKey(oldEventKey)]), isFunc: subscribedEventFunction instanceof Function });
+        if (!(this.removeBeforeInKey(oldEventKey) in worldSystemEvents[worldSystem]))
+            throw new Error(`${oldEventKey} is broke`);
         if (entityOptions)
             worldSystemEvents[worldSystem][this.removeBeforeInKey(oldEventKey)].subscribe(subscribedEventFunction, entityOptions);
         else

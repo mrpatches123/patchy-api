@@ -9,7 +9,7 @@ const { floor } = Math;
 interface PostionObject {
 	location1: { x: number; y: number; z: number; };
 	location2?: { x: number; y: number; z: number; };
-	callback?: (player: Player, location1: { x: number; y: number; z: number; }, location2?: { x: number; y: number; z: number; }) => {};
+	callback?: (player: Player, location1: { x: number; y: number; z: number; }, location2?: { x: number; y: number; z: number; }) => void;
 	noLoop?: boolean;
 	testOnly?: boolean;
 }

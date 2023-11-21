@@ -1,11 +1,12 @@
 import loads from "../load.js";
-import { Player as PlayerType, Container, system, Vector, EquipmentSlot, world, ItemStack, ContainerSlot, EntityType, Camera, EntityEquippableComponent } from "@minecraft/server";
+
+import { EntityComponentTypeMap, Player as PlayerType, Container, system, Vector, EquipmentSlot, world, ItemStack, ContainerSlot, EntityType, Camera, EntityEquippableComponent, MusicOptions, EntityQueryOptions, DimensionLocation, EntityComponent } from "@minecraft/server";
 import players from "../players/export_instance.js";
 import errorLogger from "../error.js";
 import { content, native } from "../../utilities.js";
 import scoreboardBuilder from "../scoreboard.js";
 import gamemode, { gamemodeIndexMap, gamemodeMap } from "../gamemode.js";
-import propertyBuilder from "../property/export_instance.js";
+import propertyBuilder from "../property.js";
 const player = world.getAllPlayers()[0];
 const armorSlots = [
 	EquipmentSlot.Feet,
@@ -13,130 +14,8 @@ const armorSlots = [
 	EquipmentSlot.Chest,
 	EquipmentSlot.Head
 ];
-import { EntityOnFireComponent, EntityAddRiderComponent, EntityAgeableComponent, EntityBreathableComponent, EntityCanClimbComponent, EntityCanFlyComponent, EntityCanPowerJumpComponent, EntityColorComponent, EntityFireImmuneComponent, EntityFloatsInLiquidComponent, EntityFlyingSpeedComponent, EntityFrictionModifierComponent, EntityGroundOffsetComponent, EntityHealableComponent, EntityHealthComponent, EntityInventoryComponent, EntityIsBabyComponent, EntityIsChargedComponent, EntityIsChestedComponent, EntityIsDyeableComponent, EntityIsHiddenWhenInvisibleComponent, EntityIsIgnitedComponent, EntityIsIllagerCaptainComponent, EntityIsSaddledComponent, EntityIsShakingComponent, EntityIsShearedComponent, EntityIsStackableComponent, EntityIsStunnedComponent, EntityIsTamedComponent, EntityItemComponent, EntityLavaMovementComponent, EntityLeashableComponent, EntityMarkVariantComponent, EntityMountTamingComponent, EntityMovementAmphibiousComponent, EntityMovementBasicComponent, EntityMovementComponent, EntityMovementFlyComponent, EntityMovementGenericComponent, EntityMovementGlideComponent, EntityMovementHoverComponent, EntityMovementJumpComponent, EntityMovementSkipComponent, EntityMovementSwayComponent, EntityNavigationClimbComponent, EntityNavigationFloatComponent, EntityNavigationFlyComponent, EntityNavigationGenericComponent, EntityNavigationHoverComponent, EntityNavigationWalkComponent, EntityPushThroughComponent, EntityRideableComponent, EntityScaleComponent, EntitySkinIdComponent, EntityStrengthComponent, EntityTameableComponent, EntityUnderwaterMovementComponent, EntityVariantComponent, EntityWantsJockeyComponent } from '@minecraft/server';
 
-interface EntityComponents {
-	'minecraft:onfire': EntityOnFireComponent;
-	'onfire': EntityOnFireComponent;
-	'minecraft:addrider': EntityAddRiderComponent;
-	'addrider': EntityAddRiderComponent;
-	'minecraft:ageable': EntityAgeableComponent;
-	'ageable': EntityAgeableComponent;
-	'minecraft:breathable': EntityBreathableComponent;
-	'breathable': EntityBreathableComponent;
-	'minecraft:can_climb': EntityCanClimbComponent;
-	'can_climb': EntityCanClimbComponent;
-	'minecraft:can_fly': EntityCanFlyComponent;
-	'can_fly': EntityCanFlyComponent;
-	'minecraft:can_power_jump': EntityCanPowerJumpComponent;
-	'can_power_jump': EntityCanPowerJumpComponent;
-	'minecraft:color': EntityColorComponent;
-	'color': EntityColorComponent;
-	'minecraft:equippable': EntityEquippableComponent;
-	'equippable': EntityEquippableComponent;
-	'minecraft:fire_immune': EntityFireImmuneComponent;
-	'fire_immune': EntityFireImmuneComponent;
-	'minecraft:floats_in_liquid': EntityFloatsInLiquidComponent;
-	'floats_in_liquid': EntityFloatsInLiquidComponent;
-	'minecraft:flying_speed': EntityFlyingSpeedComponent;
-	'flying_speed': EntityFlyingSpeedComponent;
-	'minecraft:friction_modifier': EntityFrictionModifierComponent;
-	'friction_modifier': EntityFrictionModifierComponent;
-	'minecraft:ground_offset': EntityGroundOffsetComponent;
-	'ground_offset': EntityGroundOffsetComponent;
-	'minecraft:healable': EntityHealableComponent;
-	'healable': EntityHealableComponent;
-	'minecraft:health': EntityHealthComponent;
-	'health': EntityHealthComponent;
-	'minecraft:inventory': EntityInventoryComponent;
-	'inventory': EntityInventoryComponent;
-	'minecraft:is_baby': EntityIsBabyComponent;
-	'is_baby': EntityIsBabyComponent;
-	'minecraft:is_charged': EntityIsChargedComponent;
-	'is_charged': EntityIsChargedComponent;
-	'minecraft:is_chested': EntityIsChestedComponent;
-	'is_chested': EntityIsChestedComponent;
-	'minecraft:is_dyeable': EntityIsDyeableComponent;
-	'is_dyeable': EntityIsDyeableComponent;
-	'minecraft:is_hidden_when_invisible': EntityIsHiddenWhenInvisibleComponent;
-	'is_hidden_when_invisible': EntityIsHiddenWhenInvisibleComponent;
-	'minecraft:is_ignited': EntityIsIgnitedComponent;
-	'is_ignited': EntityIsIgnitedComponent;
-	'minecraft:is_illager_captain': EntityIsIllagerCaptainComponent;
-	'is_illager_captain': EntityIsIllagerCaptainComponent;
-	'minecraft:is_saddled': EntityIsSaddledComponent;
-	'is_saddled': EntityIsSaddledComponent;
-	'minecraft:is_shaking': EntityIsShakingComponent;
-	'is_shaking': EntityIsShakingComponent;
-	'minecraft:is_sheared': EntityIsShearedComponent;
-	'is_sheared': EntityIsShearedComponent;
-	'minecraft:is_stackable': EntityIsStackableComponent;
-	'is_stackable': EntityIsStackableComponent;
-	'minecraft:is_stunned': EntityIsStunnedComponent;
-	'is_stunned': EntityIsStunnedComponent;
-	'minecraft:is_tamed': EntityIsTamedComponent;
-	'is_tamed': EntityIsTamedComponent;
-	'minecraft:item': EntityItemComponent;
-	'item': EntityItemComponent;
-	'minecraft:lava_movement': EntityLavaMovementComponent;
-	'lava_movement': EntityLavaMovementComponent;
-	'minecraft:leashable': EntityLeashableComponent;
-	'leashable': EntityLeashableComponent;
-	'minecraft:mark_variant': EntityMarkVariantComponent;
-	'mark_variant': EntityMarkVariantComponent;
-	'minecraft:tamemount': EntityMountTamingComponent;
-	'tamemount': EntityMountTamingComponent;
-	'minecraft:movement.amphibious': EntityMovementAmphibiousComponent;
-	'movement.amphibious': EntityMovementAmphibiousComponent;
-	'minecraft:movement.basic': EntityMovementBasicComponent;
-	'movement.basic': EntityMovementBasicComponent;
-	'minecraft:movement': EntityMovementComponent;
-	'movement': EntityMovementComponent;
-	'minecraft:movement.fly': EntityMovementFlyComponent;
-	'movement.fly': EntityMovementFlyComponent;
-	'minecraft:movement.generic': EntityMovementGenericComponent;
-	'movement.generic': EntityMovementGenericComponent;
-	'minecraft:movement.glide': EntityMovementGlideComponent;
-	'movement.glide': EntityMovementGlideComponent;
-	'minecraft:movement.hover': EntityMovementHoverComponent;
-	'movement.hover': EntityMovementHoverComponent;
-	'minecraft:movement.jump': EntityMovementJumpComponent;
-	'movement.jump': EntityMovementJumpComponent;
-	'minecraft:movement.skip': EntityMovementSkipComponent;
-	'movement.skip': EntityMovementSkipComponent;
-	'minecraft:movement.sway': EntityMovementSwayComponent;
-	'movement.sway': EntityMovementSwayComponent;
-	'minecraft:navigation.climb': EntityNavigationClimbComponent;
-	'navigation.climb': EntityNavigationClimbComponent;
-	'minecraft:navigation.float': EntityNavigationFloatComponent;
-	'navigation.float': EntityNavigationFloatComponent;
-	'minecraft:navigation.fly': EntityNavigationFlyComponent;
-	'navigation.fly': EntityNavigationFlyComponent;
-	'minecraft:navigation.generic': EntityNavigationGenericComponent;
-	'navigation.generic': EntityNavigationGenericComponent;
-	'minecraft:navigation.hover': EntityNavigationHoverComponent;
-	'navigation.hover': EntityNavigationHoverComponent;
-	'minecraft:navigation.walk': EntityNavigationWalkComponent;
-	'navigation.walk': EntityNavigationWalkComponent;
-	'minecraft:push_through': EntityPushThroughComponent;
-	'push_through': EntityPushThroughComponent;
-	'minecraft:rideable': EntityRideableComponent;
-	'rideable': EntityRideableComponent;
-	'minecraft:scale': EntityScaleComponent;
-	'scale': EntityScaleComponent;
-	'minecraft:skin_id': EntitySkinIdComponent;
-	'skin_id': EntitySkinIdComponent;
-	'minecraft:strength': EntityStrengthComponent;
-	'strength': EntityStrengthComponent;
-	'minecraft:tameable': EntityTameableComponent;
-	'tameable': EntityTameableComponent;
-	'minecraft:underwater_movement': EntityUnderwaterMovementComponent;
-	'underwater_movement': EntityUnderwaterMovementComponent;
-	'minecraft:variant': EntityVariantComponent;
-	'variant': EntityVariantComponent;
-	'minecraft:wants_jockey': EntityWantsJockeyComponent;
-	'wants_jockey': EntityWantsJockeyComponent;
-}
+
 
 export class Player implements PlayerType {
 	public root: PlayerType;
@@ -145,6 +24,30 @@ export class Player implements PlayerType {
 		 * @type {PlayerType}
 		 */
 		this.root = player;
+	}
+	kick(message?: string) {
+		this.root.runCommand((message) ? `kick "${this.root.name}" ${message}` : `kick "${this.root.name}"`);
+	}
+	matches(...args: Parameters<PlayerType['matches']>) {
+		return this.root.matches(...args);
+	}
+	getDynamicPropertyTotalByteCount() {
+		return this.root.getDynamicPropertyTotalByteCount();
+	}
+	getDynamicPropertyIds() {
+		return this.root.getDynamicPropertyIds();
+	}
+	clearDynamicProperties() {
+		this.root.clearDynamicProperties();
+	}
+	stopMusic() {
+		this.root.stopMusic();
+	}
+	queueMusic(...args: Parameters<PlayerType['queueMusic']>): void {
+		this.root.queueMusic(...args);
+	}
+	playMusic(...args: Parameters<PlayerType['playMusic']>): void {
+		this.root.playMusic(...args);
 	}
 	resetProperty(...args: Parameters<PlayerType['resetProperty']>) {
 		return this.root.resetProperty(...args);
@@ -183,24 +86,24 @@ export class Player implements PlayerType {
 	get offhand() {
 
 		const { selectedSlot } = this.root;
-		const equipmentInventory = this.getComponent('equippable');
+		const equipmentInventory = this.getComponent('equippable')!;
 
 		return equipmentInventory.getEquipmentSlot(EquipmentSlot.Offhand);
 	}
 	get mainHand(): ContainerSlot {
 		const { selectedSlot } = this.root;
-		const container = this.getComponent('minecraft:inventory').container;
+		const container = this.getComponent('minecraft:inventory')!.container;
 		return container.getSlot(selectedSlot);
 	}
 
-	set mainHand(value: ItemStack | ContainerSlot) {
+	set mainHand(value: ItemStack | ContainerSlot | undefined) {
 		const { selectedSlot } = this.root;
 
-		const container = this.getComponent('inventory').container;
+		const container = this.getComponent('inventory')!.container;
 		container.setItem(selectedSlot, (value instanceof ContainerSlot) ? value.getItem() : value);
 	}
 	get container() {
-		return this.getComponent('inventory').container;
+		return this.getComponent('inventory')!.container;
 	}
 	get inventory() {
 		return players.getInventory(this);
@@ -379,8 +282,8 @@ export class Player implements PlayerType {
 	getBlockFromViewDirection(...args: Parameters<PlayerType['getBlockFromViewDirection']>) {
 		return this.root.getBlockFromViewDirection(...args);
 	}
-	getComponent<componentKey extends keyof EntityComponents>(componentId: componentKey): EntityComponents[componentKey] {
-		return this.root.getComponent(componentId) as EntityComponents[componentKey];
+	getComponent<T extends keyof EntityComponentTypeMap>(componentId: T): EntityComponentTypeMap[T] {
+		return this.root.getComponent(componentId)!;
 	}
 	getComponents(...args: Parameters<PlayerType['getComponents']>) {
 		return this.root.getComponents(...args);
@@ -409,7 +312,7 @@ export class Player implements PlayerType {
 	getRotation() {
 		return this.root.getRotation();
 	}
-	getSpawnPoint() {
+	getSpawnPoint(): DimensionLocation | undefined {
 		return this.root.getSpawnPoint();
 	}
 	getSpawnPosition() {
@@ -455,8 +358,8 @@ export class Player implements PlayerType {
 	removeAllEffects() {
 		return this.root.getEffects().forEach(({ typeId }) => this.root.removeEffect(typeId));
 	}
-	removeDynamicProperty(...args: Parameters<PlayerType['removeDynamicProperty']>) {
-		return this.root.removeDynamicProperty(...args);
+	removeDynamicProperty(identifer: string) {
+		return this.root.setDynamicProperty(identifer);
 	}
 	removeTag(...args: Parameters<PlayerType['removeTag']>) {
 		return this.root.removeTag(...args);

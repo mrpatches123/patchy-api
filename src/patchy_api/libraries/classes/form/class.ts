@@ -1,8 +1,9 @@
-import { world } from '@minecraft/server';
+import { world, Player as PlayerType } from '@minecraft/server';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message, FormResponse, FormCancelationReason, MessageFormResponse, ActionFormResponse, ModalFormResponse } from '@minecraft/server-ui';
-import schema, { ActionData, ArrayType, Form, MessageData, ModalData } from './schema.js';
+import schema, { ActionData, ArrayType, Form, MessageData, ModalData, ChestData } from './schema.js';
 import errorLogger from '../error.js';
 import { Player } from '../player/class.js';
+import { ChestFormData as chest } from '../chest_ui/class.js';
 /**
  * @type {{[typeKey: String]: {[elementKey: String]: Boolean}}}
  */
@@ -47,7 +48,8 @@ const content = {
 const responses = {
 	action: 'selection',
 	modal: 'formValues',
-	message: 'selection'
+	message: 'selection',
+	chest: 'selection'
 };
 function isDefined(input: any) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
@@ -121,6 +123,7 @@ interface FormPerTypes {
 	modal: modal;
 	action: action;
 	message: message;
+	chest: chest;
 };
 
 interface GeneratedForm {
@@ -147,10 +150,10 @@ export class FormBuilder {
 	create(key: string, data: Form) {
 		this.forms[key] = data;
 	}
-	async showConformation(receiver: Player, body: string, callbackIfYes: (receiver: Player) => {}, callbackIfNo: (receiver: Player) => {}) {
+	async showConformation(receiver: Player, body?: string, callbackIfYes?: (receiver: Player) => void, callbackIfNo?: (receiver: Player) => void) {
 		try {
 			const form = new message();
-			form.body(body);
+			if (body) form.body(body);
 			form.button2('Yes');
 			form.button1('No');
 			const { selection, canceled, cancelationReason } = await form.show((receiver as any).player);
@@ -171,11 +174,11 @@ export class FormBuilder {
 	 * @param {(receiver: Player) => {}} callbackIfYes 
 	 * @param {(receiver: Player) => {}} callbackIfNo 
 	 */
-	async showConformationAwait(receiver: Player, body: string, callbackIfYes: (receiver: Player) => {}, callbackIfNo: (receiver: Player) => {}) {
+	async showConformationAwait(receiver: Player, body?: string, callbackIfYes?: (receiver: Player) => void, callbackIfNo?: (receiver: Player) => void) {
 		try {
 
 			const form = new message();
-			form.body(body);
+			if (body) form.body(body);
 			form.button2('Yes');
 			form.button1('No');
 			let response;
@@ -242,7 +245,7 @@ export class FormBuilder {
 		let globalSettings = {};
 		const formSchema = schema[type].schema;
 		let formData = this.forms[key]![type];
-		let formArray: ModalData[] | ActionData[] | MessageData[];
+		let formArray: ModalData[] | ActionData[] | MessageData[] | ChestData[];
 		if (formData instanceof Function) {
 			formArray = formData(receiver, ...(extraArguments as [1]));
 			if (!(formArray instanceof Array)) throw new Error(`typeKey: ${type}, in formData for key: ${key}, has value of a function that does not return type: Array!`);
@@ -294,7 +297,7 @@ export class FormBuilder {
 					value = value(receiver, i, ...extraArguments);
 				}
 				if (setupFunction instanceof Function) {
-					const extraElementFunction = setupFunction(receiver, this, form, key, value, i, callbackArray, objectClone, ...extraArguments);
+					const extraElementFunction = setupFunction(receiver, this, form, key, value, i, callbackArray, objectClone, formArray, ...extraArguments);
 					if (extraElementFunction instanceof Function || (extraElementFunction instanceof Array && extraElementFunction.every(func => func && func instanceof Function))) objectClone.extraElementFunction = extraElementFunction;
 				}
 				function setup(type: any) {

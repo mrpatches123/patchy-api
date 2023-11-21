@@ -1,4 +1,4 @@
-import { BlockAreaSize, MinecraftBlockTypes, system } from "@minecraft/server";
+import { BlockAreaSize, system } from "@minecraft/server";
 import { andArray, betweenBlockVector3, blockFaceToCoords, content, isDefined, isVector2, isVector3, orArray, overworld, server } from "../../utilities.js";
 import eventBuilder from "../events/export_instance.js";
 import databases from "../database.js";
@@ -9,24 +9,24 @@ import structureBuilder from "../structure/export_instance.js";
 import wait from "../wait.js";
 import scoreboardBuilder from "../scoreboard.js";
 import global from "../global.js";
-import propertyBuilder from "../property/export_instance.js";
+import { MinecraftBlockTypes } from "patchy_api/vanilla-data.js";
 const gamemodes = [0, 1, 2];
 const opens = [
-    MinecraftBlockTypes.chest.id,
+    MinecraftBlockTypes.Chest,
 ];
 const buttons = [
-    MinecraftBlockTypes.stoneButton.id,
-    MinecraftBlockTypes.birchButton.id,
-    MinecraftBlockTypes.acaciaButton.id,
-    MinecraftBlockTypes.cherryButton.id,
-    MinecraftBlockTypes.jungleButton.id,
-    MinecraftBlockTypes.spruceButton.id,
-    MinecraftBlockTypes.warpedButton.id,
-    MinecraftBlockTypes.woodenButton.id,
-    MinecraftBlockTypes.bambooButton.id,
-    MinecraftBlockTypes.crimsonButton.id,
-    MinecraftBlockTypes.darkOakButton.id,
-    MinecraftBlockTypes.mangroveButton.id
+    MinecraftBlockTypes.StoneButton,
+    MinecraftBlockTypes.BirchButton,
+    MinecraftBlockTypes.AcaciaButton,
+    MinecraftBlockTypes.CherryButton,
+    MinecraftBlockTypes.JungleButton,
+    MinecraftBlockTypes.SpruceButton,
+    MinecraftBlockTypes.WarpedButton,
+    MinecraftBlockTypes.WoodenButton,
+    MinecraftBlockTypes.BambooButton,
+    MinecraftBlockTypes.CrimsonButton,
+    MinecraftBlockTypes.DarkOakButton,
+    MinecraftBlockTypes.MangroveButton
 ];
 export class PlotsVector3 {
     constructor(x, y, z) {
@@ -152,35 +152,6 @@ export class PlotBuilder {
             this.subscribedQueue = true;
         }
     }
-    registerOverides() {
-        propertyBuilder.register({
-            player: {
-                currentPlot: {
-                    type: 'string',
-                    maxLength: 32
-                },
-                gamemodeOveride: {
-                    type: 'number'
-                },
-                permisionOveride: {
-                    type: 'string',
-                    maxLength: 5
-                },
-                plotNumberOveride: {
-                    type: 'number'
-                },
-                blockPlaceMarginOverideX: {
-                    type: 'number'
-                },
-                blockPlaceMarginOverideY: {
-                    type: 'number'
-                },
-                blockPlaceMarginOverideZ: {
-                    type: 'number'
-                }
-            }
-        });
-    }
     create(key, rules) {
         // content.warn('created plot 4983485734290483094853042-9-0-=00-=');
         if (typeof key !== 'string')
@@ -287,11 +258,8 @@ export class PlotBuilder {
                 throw new Error(`blockPlaceMargin, at ruleSets[${i}] in rules at params[1] is not of type: {x: number, y: number, z: number})}`);
         });
         this.creates[key] = rules;
-        if (!this.registeredProperties)
-            this.registeredProperties = true, this.registerOverides();
-        if (!exclusive) {
-            (property) ? players.registerProperty(plotNumberIdentifier, { type: 'number' })
-                : server.objectiveAdd(plotNumberIdentifier);
+        if (!exclusive && property) {
+            server.objectiveAdd(plotNumberIdentifier);
         }
         // content.warn(key, rules);
         this.runCreateQueue();
@@ -304,7 +272,7 @@ export class PlotBuilder {
             throw new Error(`Cannot get list for key: ${key}, as exclusive is true`);
         const { scores, properties } = player;
         const { plotNumberIdentifier, property } = this.plots[key].rules;
-        return ((property) ? properties : scores)[plotNumberIdentifier];
+        return ((property) ? properties?.numbers : scores)?.[plotNumberIdentifier];
     }
     list(key) {
         if (this.plots[key].rules.exclusive)
@@ -321,7 +289,7 @@ export class PlotBuilder {
     setCurrent(player, key) {
         if (!player)
             throw new Error('player is not defined at setCurrent');
-        player.properties.currentPlot = key;
+        player.properties.strings.currentPlot = key;
         player.memory.lastLocation = undefined;
         if (!key)
             return;
@@ -335,7 +303,7 @@ export class PlotBuilder {
     setOveride(player, type, value) {
         content.warn({ player: player.name, type, value });
         const { properties } = player;
-        properties[type] = value;
+        properties.setAny(type, value);
     }
     getRuleSet(key, number) {
         // content.warn({ t: 'getRuleSet', key, number });
@@ -389,21 +357,21 @@ export class PlotBuilder {
                     const { scores, properties, location, memory, rotation } = player;
                     let { lastLocation = location, } = memory;
                     const { ingorePlotSystem } = scores;
-                    const { currentPlot } = properties;
+                    const { currentPlot } = properties.strings;
                     // content.warn({ ingorePlotSystem, currentPlot });
                     if (!currentPlot)
                         return;
                     if (ingorePlotSystem)
                         return;
                     const { plotNumberIdentifier, property, teleport, defaultGamemode, exclusive, size: sizePlot, start: startPlot } = this.plots[currentPlot].rules;
-                    const { plotNumberOveride, gamemodeOveride = defaultGamemode } = properties;
+                    const { plotNumberOveride, gamemodeOveride = defaultGamemode } = properties.numbers;
                     let plotNumber;
                     if (exclusive)
                         plotNumber = 0;
                     else if (isDefined(plotNumberOveride))
                         plotNumber = plotNumberOveride;
                     else if (property)
-                        plotNumber = properties[plotNumberIdentifier];
+                        plotNumber = properties.numbers[plotNumberIdentifier];
                     else
                         plotNumber = scores[plotNumberIdentifier];
                     // content.warn({ currentPlot, player: player.name, plotNumberOveride: plotNumberOveride ?? 'undefined', plotNumber: plotNumber ?? 'undefined' });
@@ -452,18 +420,18 @@ export class PlotBuilder {
             blockBreak: ({ player, block, brokenBlockPermutation }) => {
                 const { scores, properties, location, memory, rotation } = player;
                 const { ingorePlotSystem } = scores;
-                const { currentPlot } = properties;
+                const { currentPlot } = properties.strings;
                 if (!currentPlot || ingorePlotSystem)
                     return;
                 const { plotNumberIdentifier, property, ruleSets, defaultPermision, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot].rules;
-                const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
+                const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties.numbers;
                 let plotNumber;
                 if (exclusive)
                     plotNumber = 0;
                 else if (isDefined(plotNumberOveride))
                     plotNumber = plotNumberOveride;
                 else if (property)
-                    plotNumber = properties[plotNumberIdentifier];
+                    plotNumber = properties.numbers[plotNumberIdentifier];
                 else
                     plotNumber = scores[plotNumberIdentifier];
                 if (!isDefined(plotNumber))
@@ -475,7 +443,7 @@ export class PlotBuilder {
                         const ruleSet = this.getRuleSet(currentPlot, plotNumber);
                         const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet;
                         const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault ?? {};
-                        const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties;
+                        const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties.numbers;
                         const start = { x: sx + mx, y: sy + my, z: sz + mz };
                         const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
                         if (betweenBlockVector3(block.location, start, end))
@@ -495,18 +463,19 @@ export class PlotBuilder {
                     return;
                 const { scores, properties, location, memory, rotation, dimension, isSneaking } = player;
                 const { ingorePlotSystem } = scores;
-                const { currentPlot } = properties;
+                const { currentPlot } = properties.strings;
                 if (!currentPlot || ingorePlotSystem)
                     return;
                 const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot].rules;
-                const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties;
+                const { plotNumberOveride } = properties.numbers;
+                const { permisionOveride: permision = defaultPermision } = properties.strings;
                 let plotNumber;
                 if (exclusive)
                     plotNumber = 0;
                 else if (isDefined(plotNumberOveride))
                     plotNumber = plotNumberOveride;
                 else if (property)
-                    plotNumber = properties[plotNumberIdentifier];
+                    plotNumber = properties.numbers[plotNumberIdentifier];
                 else
                     plotNumber = scores[plotNumberIdentifier];
                 if (!isDefined(plotNumber))
@@ -529,7 +498,7 @@ export class PlotBuilder {
                         const ruleSet = this.getRuleSet(currentPlot, plotNumber);
                         const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet;
                         const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault;
-                        const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties;
+                        const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties.numbers;
                         const start = { x: sx + mx, y: sy + my, z: sz + mz };
                         const end = { x: size.x + sx - mx, y: size.y + sy - my, z: size.z + sz - mz };
                         // content.warn({ t: 'beforeItemUseOn', start, end });
@@ -616,7 +585,7 @@ export class PlotBuilder {
         else
             return { wasAdded: false, full: false };
         if (property)
-            properties[plotNumberIdentifier] = plotNumber;
+            properties.numbers[plotNumberIdentifier] = plotNumber;
         else
             scores[plotNumberIdentifier] = plotNumber;
         // content.warn({ plotNumber, property, score: scores[plotNumberIdentifier] });
@@ -672,7 +641,7 @@ export class PlotBuilder {
         const { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key);
         const { scores, properties } = player;
         const { plotNumberIdentifier, property } = this.plots[key].rules;
-        const plotNumber = ((property) ? properties : scores)[plotNumberIdentifier];
+        const plotNumber = ((property) ? properties.numbers : scores)[plotNumberIdentifier];
         if (!isDefined(plotNumber))
             return false;
         if (!availablePlots.includes(plotNumber))
@@ -680,7 +649,7 @@ export class PlotBuilder {
         availablePlots.sort();
         this.setCurrent(player, undefined);
         if (property)
-            properties[plotNumberIdentifier] = undefined;
+            properties.numbers[plotNumberIdentifier] = undefined;
         else
             scores[plotNumberIdentifier] = undefined;
         plots.set(key, { availablePlots, currentIndex, hasBeenSubscribed });

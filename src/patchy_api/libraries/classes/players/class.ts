@@ -1,8 +1,9 @@
-import { DynamicPropertiesDefinition, world, ItemStack, Container, system, Dimension, ContainerSlot, EntityQueryOptions } from "@minecraft/server";
+import { world, ItemStack, Container, system, Dimension, ContainerSlot, EntityQueryOptions } from "@minecraft/server";
 import { content, native } from "../../utilities.js";
+
 import global from "../global.js";
 import loads from "../load.js";
-import propertyBuilder from "../property/export_instance.js";
+import propertyManager from "../property.js";
 import { Player } from "../player/class.js";
 function isDefined(input: any) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
@@ -21,15 +22,14 @@ export class Inventory {
 		 */
 		this.container = inventory;
 	}
-	iterate(callback: (item: ContainerSlot | undefined, i: number) => (ContainerSlot | undefined)) {
+	iterate(callback: (item: ContainerSlot, i: number) => (ItemStack | void)) {
 		if (!(callback instanceof Function)) throw new Error('Not a function at args[0]');
 		const thisInv = this;
 		this.array.forEach((item, i) => {
-			const newItem = callback((item) ? this.container.getSlot(i) : item, i);
+			const newItem = callback(this.container.getSlot(i), i);
 			this.array[i] = item;
 			if (newItem === undefined) return;
-			this.array[i] = newItem;
-			this.container.setItem(i, newItem.getItem());
+			this.container.setItem(i, newItem);
 		});
 	};
 }
@@ -165,8 +165,8 @@ export class Players {
 		const { id } = player;
 		if (this.inventorys.hasOwnProperty(id)) return this.inventorys[id]!.container;
 		this.inventorys[id] = {} as typeof this.inventorys[string];
-		const inventory = player.getComponent('inventory').container;
-		const container = [];
+		const inventory = player.getComponent('inventory')!.container;
+		const container: ContainerSlot[] = [];
 		const { size } = inventory;
 		for (let i = 0; i < size; i++) {
 			const item = inventory.getSlot(i);
@@ -184,23 +184,5 @@ export class Players {
 		const id = ids[Math.floor(Math.random() * ids.length)]!;
 		return ({ id: foundPlayers[id] });
 	}
-	getProperty(player: Player, identifier: string) {
-		return propertyBuilder.get(player)[identifier];
-	};
-	setProperty(player: Player, identifier: string, value: string | number | boolean) {
-		const properties = propertyBuilder.get(player);
-		properties[identifier] = value;
-	};
-	resetProperty(player: Player, identifier: string) {
-		const properties = propertyBuilder.get(player);
-		properties[identifier] = undefined;
-	}
-	registerProperty(identifier: string, options: { type: 'string' | 'number' | 'boolean', maxLength?: number; }) {
-		propertyBuilder.register({
-			player: {
-				[identifier]: options
-			}
-		});
-	};
 }
 

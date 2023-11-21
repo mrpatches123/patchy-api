@@ -12,7 +12,7 @@ declare class RequestBuilder {
      * @param {Array<string>} keys
      * @param {boolean} isArray
      */
-    getMemoryTarget(id: string, target: string, keys: string[], type: string, isArray?: boolean): Record<string, Record<string, Record<string, any>>> | undefined;
+    getMemoryTarget<T>(id: string, target: string, keys: string[], type: string, isArray?: boolean): Record<string, Record<string, Record<string, T>>> | undefined;
     removeMemory(id: string, key: string, target: string, type: string): void;
     /**
      * @method add addes a request to a Centralised Entity Database

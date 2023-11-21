@@ -561,11 +561,11 @@ const texturePathObject = {
 	"wooden_door": "textures/items/door_wood"
 };
 
-export const texturePaths = new Proxy({}, {
+export const texturePaths: typeof texturePathObject = new Proxy({}, {
 	get(target, id, value) {
 		id = (id as keyof typeof texturePathObject).replace('minecraft:', '');
 		const texture = texturePathObject[id as keyof typeof texturePathObject] as unknown as string | string[] | undefined;
 		if (!texture) return;
 		return texture;
 	}
-});
+}) as typeof texturePathObject;

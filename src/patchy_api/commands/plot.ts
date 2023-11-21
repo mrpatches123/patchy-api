@@ -36,7 +36,7 @@ commandBuilder.register('plot', {
 				if (!bool) return sender.sendMessage(`${playerName} is not on ${plotKey}`);
 				return sender.sendMessage(`${playerName} was removed from ${plotKey}`);
 			} case 'query': {
-				return sender.sendMessage(`${playerName} on ${plotKey} has a plotNumber of ${plotBuilder.query(player, plotKey)} and currentPlot: ${player.properties.currentPlot}`);
+				return sender.sendMessage(`${playerName} on ${plotKey} has a plotNumber of ${plotBuilder.query(player, plotKey)} and currentPlot: ${player.properties.strings.currentPlot}`);
 			} case 'set': {
 				const plotNumberToSet = Number(plotNumberToSetString);
 				if (Number.isNaN(plotNumberToSet)) return sender.sendMessage(`plotNumber: ${plotNumberToSet}, is not of type: Number!`);

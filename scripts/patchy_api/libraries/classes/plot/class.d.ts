@@ -55,7 +55,7 @@ interface PlotRules {
     ruleSets?: PlotRuleSet[];
     property?: boolean;
     plotNumberIdentifier?: string;
-    defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break';
+    defaultPermision?: 'read' | 'write' | 'break' | 'place' | 'open' | 'open-break' | 'press';
     defaultGamemode?: 0 | 1 | 2;
     /**
      * default?= false
@@ -79,9 +79,8 @@ export declare class PlotBuilder {
     subscribed: boolean;
     constructor();
     runCreateQueue(): void;
-    registerOverides(): void;
     create(key: string, rules: PlotRules): void;
-    query(player: Player, key: string): string | number | boolean | undefined;
+    query(player: Player, key: string): number | undefined;
     list(key: string): {
         availablePlots: number[];
         currentIndex: number;
@@ -91,7 +90,7 @@ export declare class PlotBuilder {
      * @param {string} key
      */
     setCurrent(player: Player, key?: string): void;
-    setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride', value: number | string): void;
+    setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride' | 'blockPlaceMarginOverideX' | 'blockPlaceMarginOverideY' | 'blockPlaceMarginOverideZ', value?: number | string): void;
     getRuleSet(key: string, number: number): PlotRuleSet | undefined;
     subscribe(): void;
     /**
@@ -100,7 +99,7 @@ export declare class PlotBuilder {
      * @param {number | undefined} plotNumber
      * @returns {{ wasAdded: boolean, plotNumber: Number | undefined, full: boolean}}
      */
-    add(player: import('../player/class').Player, key: string, plotNumber: number | undefined): {
+    add(player: import('../player/class').Player, key: string, plotNumber?: number): {
         wasAdded: boolean;
         plotNumber?: number | undefined;
         full: boolean;

@@ -1,4 +1,4 @@
-import { world, ItemTypes } from '@minecraft/server';
+import { world, ItemTypes, system } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function getXZVectorRY(ry) {
     const rads = (ry + 180) * Math.PI / 180;
@@ -12,6 +12,9 @@ export const content = {
         chunkString(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value, 4)).join(' '), 500).forEach(message => world.sendMessage(message));
     }
 };
+export function vector3Equals(vector1, vector2) {
+    return vector1.x === vector2.x && vector1.y === vector2.y && vector1.z === vector2.z;
+}
 export function isVector3(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
@@ -19,6 +22,26 @@ export function isVector3(target) {
 export function isVector2(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
+}
+export async function getBlockAsync(dimension, blockLocation) {
+    let block = dimension.getBlock(blockLocation);
+    block = ((block && block.isValid()) ? block : await new Promise((resolve) => {
+        const runId = system.runInterval(() => {
+            try {
+                block = dimension.getBlock(blockLocation);
+                if (!block)
+                    return;
+                if (!block.isValid())
+                    return;
+                system.clearRun(runId);
+                resolve(block);
+            }
+            catch (error) {
+                console.warn('ingore', error, error.stack);
+            }
+        });
+    }));
+    return block;
 }
 export function rotationToDirection(rotation) {
     let { x, y } = rotation;
@@ -547,11 +570,11 @@ export const server = {
     async setPlayerScoreboard(objective, player, value, updateId) {
         try {
             await player.runCommandAsync('scoreboard players set @s scoreIdentityInit 0');
-            world.scoreboard.getObjective(objective).setScore(player, value);
+            world.scoreboard.getObjective(objective)?.setScore(player, value);
             if (!updateId)
                 return;
             const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
-            if (scoreboardObjectiveDisplayOptions.objective.id !== objective)
+            if (scoreboardObjectiveDisplayOptions?.objective?.id !== objective)
                 return;
             world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
             world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
@@ -614,7 +637,7 @@ export const server = {
     scoreResetPlayer(objective, target) {
         try {
             world.scoreboard.getObjective(objective)
-                .removeParticipant(target);
+                ?.removeParticipant(target);
             return true;
         }
         catch (error) {
@@ -624,11 +647,11 @@ export const server = {
     },
     scoreSetPlayer(objective, target, value = 0, updateId) {
         // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
-        world.scoreboard.getObjective(objective).setScore(target, value);
+        world.scoreboard.getObjective(objective)?.setScore(target, value);
         if (!updateId)
             return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);
-        if (scoreboardObjectiveDisplayOptions.objective.id !== objective)
+        if (scoreboardObjectiveDisplayOptions?.objective.id !== objective)
             return;
         world.scoreboard.clearObjectiveAtDisplaySlot(updateId);
         world.scoreboard.setObjectiveAtDisplaySlot(updateId, scoreboardObjectiveDisplayOptions);
@@ -681,6 +704,33 @@ export function combine(target, source) {
         }
     });
     return { ...target, ...source };
+}
+const object = {
+    mining: {
+        coal: 5,
+        iron: 10,
+        diamond: 15,
+    },
+    lumber: {
+        oak: 5,
+        birch: 10,
+        spruce: 15,
+    },
+    farming: {
+        wheat: 5,
+        carrots: 10,
+        potatoes: 15,
+    },
+};
+export function shallowUnestObject(object) {
+    const shallowUnestedObject = {};
+    Object.entries(object).forEach(([key, value]) => {
+        Object.assign(shallowUnestedObject, value);
+    });
+    return shallowUnestedObject;
+}
+export function ObjectEntries(obj) {
+    return Object.entries(obj);
 }
 export function ItemsGet(id, log = false) {
     const item = ItemTypes.get(id);
@@ -1014,6 +1064,16 @@ export function formatDecimal(number) {
 }
 export function randomValue(array) {
     return array[Math.floor(Math.random() * array.length)];
+}
+export function romanize(num) {
+    if (isNaN(num))
+        return NaN;
+    let digits = String(+num).split(""), key = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM",
+        "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC",
+        "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"], roman = "", i = 3;
+    while (i--)
+        roman = (key[+digits.pop() + (i * 10)] || "") + roman;
+    return Array(+digits.join("") + 1).join("M") + roman;
 }
 const second = 1000;
 const minute = 60000;

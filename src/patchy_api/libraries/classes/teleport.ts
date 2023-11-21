@@ -74,7 +74,7 @@ class TeleportBuilder {
 				const rotation = (isVector3(face)) ? undefined : face;
 				const facing = (rotation) ? undefined : face;
 				if (isArray) {
-					if (!this.hasOwnProperty(key)) this.teleports[key] = Array((value as TeleportOptions[]).length);
+					this.teleports[key] ??= Array((value as TeleportOptions[]).length);
 					this.teleports[key]![i]! = {
 						location,
 						dimension,
@@ -91,6 +91,7 @@ class TeleportBuilder {
 						} as RandomOptions
 					};
 				} else {
+					this.teleports[key] ??= Array(1);
 					this.teleports[key]![0] = {
 						location,
 						dimension,

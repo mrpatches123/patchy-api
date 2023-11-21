@@ -40,7 +40,7 @@ eventBuilder.register({
 			}
 		}
 	},
-	chatSend: {
+	chat: {
 		subscription: {
 			chatSend: {
 				function: (event) => {

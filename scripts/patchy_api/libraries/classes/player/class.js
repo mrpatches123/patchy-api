@@ -3,13 +3,13 @@ import { Player as PlayerType, Vector, EquipmentSlot, world, ContainerSlot } fro
 import players from "../players/export_instance.js";
 import scoreboardBuilder from "../scoreboard.js";
 import gamemode, { gamemodeIndexMap } from "../gamemode.js";
-import propertyBuilder from "../property/export_instance.js";
+import propertyBuilder from "../property.js";
 const player = world.getAllPlayers()[0];
 const armorSlots = [
-    EquipmentSlot.feet,
-    EquipmentSlot.legs,
-    EquipmentSlot.chest,
-    EquipmentSlot.head
+    EquipmentSlot.Feet,
+    EquipmentSlot.Legs,
+    EquipmentSlot.Chest,
+    EquipmentSlot.Head
 ];
 export class Player {
     constructor(player) {
@@ -17,6 +17,51 @@ export class Player {
          * @type {PlayerType}
          */
         this.root = player;
+    }
+    kick(message) {
+        this.root.runCommand((message) ? `kick "${this.root.name}" ${message}` : `kick "${this.root.name}"`);
+    }
+    matches(...args) {
+        return this.root.matches(...args);
+    }
+    getDynamicPropertyTotalByteCount() {
+        return this.root.getDynamicPropertyTotalByteCount();
+    }
+    getDynamicPropertyIds() {
+        return this.root.getDynamicPropertyIds();
+    }
+    clearDynamicProperties() {
+        this.root.clearDynamicProperties();
+    }
+    stopMusic() {
+        this.root.stopMusic();
+    }
+    queueMusic(...args) {
+        this.root.queueMusic(...args);
+    }
+    playMusic(...args) {
+        this.root.playMusic(...args);
+    }
+    resetProperty(...args) {
+        return this.root.resetProperty(...args);
+    }
+    setProperty(...args) {
+        return this.root.setProperty(...args);
+    }
+    remove() {
+        throw new Error("remove doesn't exist on Players");
+    }
+    getProperty(...args) {
+        return this.root.getProperty(...args);
+    }
+    get isSleeping() {
+        return this.root.isSleeping;
+    }
+    get isEmoting() {
+        return this.root.isEmoting;
+    }
+    get camera() {
+        return this.root.camera;
     }
     addExperience(...args) {
         return this.root.addExperience(...args);
@@ -33,8 +78,8 @@ export class Player {
     }
     get offhand() {
         const { selectedSlot } = this.root;
-        const equipmentInventory = this.getComponent('equipment_inventory');
-        return equipmentInventory.getEquipmentSlot(EquipmentSlot.offhand);
+        const equipmentInventory = this.getComponent('equippable');
+        return equipmentInventory.getEquipmentSlot(EquipmentSlot.Offhand);
     }
     get mainHand() {
         const { selectedSlot } = this.root;
@@ -299,8 +344,8 @@ export class Player {
     removeAllEffects() {
         return this.root.getEffects().forEach(({ typeId }) => this.root.removeEffect(typeId));
     }
-    removeDynamicProperty(...args) {
-        return this.root.removeDynamicProperty(...args);
+    removeDynamicProperty(identifer) {
+        return this.root.setDynamicProperty(identifer);
     }
     removeTag(...args) {
         return this.root.removeTag(...args);

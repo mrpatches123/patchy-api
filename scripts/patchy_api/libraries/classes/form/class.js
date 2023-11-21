@@ -47,7 +47,8 @@ const content = {
 const responses = {
     action: 'selection',
     modal: 'formValues',
-    message: 'selection'
+    message: 'selection',
+    chest: 'selection'
 };
 function isDefined(input) {
     return (input !== null && input !== undefined && !Number.isNaN(input));
@@ -135,7 +136,8 @@ export class FormBuilder {
     async showConformation(receiver, body, callbackIfYes, callbackIfNo) {
         try {
             const form = new message();
-            form.body(body);
+            if (body)
+                form.body(body);
             form.button2('Yes');
             form.button1('No');
             const { selection, canceled, cancelationReason } = await form.show(receiver.player);
@@ -165,7 +167,8 @@ export class FormBuilder {
     async showConformationAwait(receiver, body, callbackIfYes, callbackIfNo) {
         try {
             const form = new message();
-            form.body(body);
+            if (body)
+                form.body(body);
             form.button2('Yes');
             form.button1('No');
             let response;
@@ -305,7 +308,7 @@ export class FormBuilder {
                     value = value(receiver, i, ...extraArguments);
                 }
                 if (setupFunction instanceof Function) {
-                    const extraElementFunction = setupFunction(receiver, this, form, key, value, i, callbackArray, objectClone, ...extraArguments);
+                    const extraElementFunction = setupFunction(receiver, this, form, key, value, i, callbackArray, objectClone, formArray, ...extraArguments);
                     if (extraElementFunction instanceof Function || (extraElementFunction instanceof Array && extraElementFunction.every(func => func && func instanceof Function)))
                         objectClone.extraElementFunction = extraElementFunction;
                 }

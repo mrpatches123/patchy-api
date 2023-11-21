@@ -1,4 +1,4 @@
-import { commandBuilder, propertyBuilder } from '../modules.js';
+import { commandBuilder, propertyManager } from '../modules.js';
 import config from '../config.js';
 const { commandPrefix: prefix } = config;
 commandBuilder.register('properties', {
@@ -14,7 +14,7 @@ commandBuilder.register('properties', {
     prefix,
     aliases: ['props'],
     callback: (sender, args) => {
-        sender.sendMessage(JSON.stringify(propertyBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
+        sender.sendMessage(JSON.stringify(propertyManager, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
         // sender.sendMessage(JSON.stringify(eventBuilder));
     }
 });
