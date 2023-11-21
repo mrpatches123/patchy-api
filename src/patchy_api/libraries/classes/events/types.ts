@@ -1,5 +1,5 @@
 import { Player } from "../player/class.js";
-import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent } from '@minecraft/server';
+import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent, SystemAfterEvents } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
 
 
@@ -88,6 +88,9 @@ type Mutable<T> = {
 type AfterEventTypes = Mutable<{
 	[K in keyof WorldAfterEvents]: Parameters<Parameters<WorldAfterEvents[K]["subscribe"]>[0]>[0]
 }>;
+type SystemAfterEventTypes = Mutable<{
+	[K in keyof SystemAfterEvents]: Parameters<Parameters<SystemAfterEvents[K]["subscribe"]>[0]>[0]
+}>;
 export interface CustomEventKeyTypes {
 	beforeChat: ChatSendBeforeEvent;
 	beforeChatSend: ChatSendBeforeEvent;
@@ -117,7 +120,7 @@ export interface CustomEventKeyTypes {
 	blockBreak: PlayerBreakBlockAfterEvent;
 	custom: undefined;
 };
-type EventKeyTypes = AfterEventTypes & CustomEventKeyTypes;
+type EventKeyTypes = AfterEventTypes & SystemAfterEventTypes & CustomEventKeyTypes;
 
 type ToCustom<T extends any> = {
 	[K in keyof T]: T[K] extends PlayerType ? Player : T[K] extends EntityType ? Entity | Player : T[K] extends EntityDamageSourceType ? EntityDamageSource : T[K]

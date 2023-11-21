@@ -172,10 +172,6 @@ export class EventBuilder {
 	private removeBeforeInKey(eventKey: string = ""): string {
 		return firstLower(eventKey.replace('before', ''));;
 	}
-	/**
-	 * @param {String} eventKey 
-	 * @returns {'beforeEvents' | 'afterEvents' | 'systemEvents'}
-	 */
 	private getNativeEventSignalKey(eventKey: string = ""): 'beforeEvents' | 'afterEvents' | 'systemAfterEvents' | 'systemBeforeEvents' {
 		const fixedEventKey = this.removeBeforeInKey(eventKey);
 		return (eventKey.includes('before') && fixedEventKey in world.beforeEvents) ? 'beforeEvents' : (eventKey in world.afterEvents) ? 'afterEvents' : (eventKey in system.afterEvents) ? 'systemAfterEvents' : (eventKey in system.beforeEvents) ? 'systemBeforeEvents' : 'afterEvents';

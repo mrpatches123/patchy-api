@@ -21,6 +21,7 @@
       "baseUrl": "patchy-api/",
       "listFiles": false,
       "noEmitHelpers": true,
+      "allowJs": true,
       "noUncheckedIndexedAccess": true,
       "noEmit": false
    },

@@ -2,7 +2,6 @@
 
 
 import './libraries/prototypes/permission_fix.js';
-import './libraries/prototypes/native_imports.js';
 
 import './events/events_zero.js';
 import './events/events_first.js';
@@ -28,10 +27,8 @@ import './plugins/player_joined.js';
 import './plugins/world_load.js';
 import './plugins/update_test.js';
 //commands;
-import './commands/fill.js';
 import './commands/form.js';
 import './commands/plot.js';
-import './commands/error.js';
 import './commands/global.js';
 import './commands/databases.js';
 import './commands/events.js';
