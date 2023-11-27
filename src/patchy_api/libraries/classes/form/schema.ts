@@ -124,7 +124,7 @@ export type MessageData = {
 } | ((receiver: Player, ...extraArguments: any[]) => (MessageData[] | MessageData)) | undefined;
 type ChestToggleOptions = {
 	itemStack: ItemStack | ItemData | ((receiver: Player, i: number, ...extraArguments: any[]) => ItemStack | ItemData);
-	callback: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 };
 type ChestButton = {
@@ -153,7 +153,7 @@ export type ChestData = {
 	closeCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
-	size: sizesUnion;
+	size?: sizesUnion;
 	slot?: number;
 };
 export class ArrayType<T> {
@@ -311,12 +311,13 @@ const formSchemaObject = {
 				},
 				customProperties: ['reopen', 'itemStack'],
 				hasCallback: true,
-				setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: ChestButton, elementIndex: number, callbackArray: any[], objectClone: Object, ...extraArgs: any[]) => {
+				setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: ChestButton, elementIndex: number, callbackArray: any[], objectClone: any, ...extraArgs: any[]) => {
 					let { slot, itemStack } = elementValue;
 					if (itemStack instanceof Function) return;
 					if (itemStack instanceof ItemStack) {
 						itemStack = itemStackToItemData(itemStack);
 					}
+					objectClone.itemStack = itemStack;
 					const { typeId, nameTag, lore, enchantments, amount } = itemStack;
 					const description: string[] = [];
 					if (enchantments) description.push(...Object.entries(enchantments).map(([id, level]) => `${toProperCase(id.replace(/\w+:/, ''))} ${romanize(level)}`));

@@ -588,7 +588,7 @@ export const server = {
         if (!scoreboardObjective) throw new Error(`scoreboardObjective: ${objective} must exist`);
 
         try {
-            return scoreboardObjective.getScore(target);
+            return scoreboardObjective.getScore((target as any)?.root ?? target);
         } catch (error) {
 
         }

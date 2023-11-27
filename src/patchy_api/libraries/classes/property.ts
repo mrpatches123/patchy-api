@@ -4,6 +4,7 @@ import { content } from "../utilities";
 export function isDefined(input: any) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
 }
+
 function chunkStringBytes(str: string, length: number) {
 	const chunks: string[] = [];
 	let chunk = '';
@@ -86,44 +87,70 @@ export class DynamicPropertiesForInstance {
 	instance: Player | Entity | World;
 	id: string;
 	cache?: PropertiesCache = {};
+	typeCache: Record<string, "string" | 'number' | 'boolean' | 'vector3' | 'json'> = {};
 	constructor(instance: Player | Entity | World = world) {
 		this.instance = instance;
 		this.id = (instance instanceof World) ? 'world' : instance.id;
 	}
+	private checkType(identifer: string, value: any): boolean {
+		const cachedType = this.typeCache[identifer];
+		if (!cachedType) return true;
+		if (!isDefined(value)) return true;
+		if (cachedType === 'json') return true;
+		if (cachedType === 'vector3' && isVector3(value)) return true;
+		if (typeof value === cachedType) return true;
+		return false;
+	}
 	/**
-	 * cannot set JSON. It is for old things
+	 * This cannot be undone and will wipe all properties for this instance
+	 */
+	clearAll() {
+		this.cache = {};
+		this.instance.clearDynamicProperties();
+	}
+	/**
+	 * cannot set json used for old things
+	 * use class for setting of undefined. ex String, Number, Boolean, Vector (for vector3 as Vector3 is an interface)
 	 */
 	setAny<T>(identifer: string, value: T) {
+		const cachedType = this.typeCache[identifer];
+		if (cachedType === 'json') throw new Error(`cannot set a json value with setAny`);
+		if (isDefined(value) && value?.constructor?.name === 'Function') {
+			switch ((value as any)?.name) {
+				case 'String': return this.setString(identifer, undefined);
+				case 'Number': return this.setNumber(identifer, undefined);
+				case 'Boolean': return this.setBoolean(identifer, undefined);
+				case 'Vector': return this.setVector3(identifer, undefined);
+			}
+		}
+		if (cachedType) {
+			switch (cachedType) {
+				case 'string': return this.setString(identifer, value as string);
+				case 'number': return this.setNumber(identifer, value as number);
+				case 'boolean': return this.setBoolean(identifer, value as boolean);
+				case 'vector3': return this.setVector3(identifer, value as Vector3);
+			}
+		}
 		if (typeof value === 'string') return this.setString(identifer, value);
 		if (typeof value === 'number') return this.setNumber(identifer, value);
 		if (typeof value === 'boolean') return this.setBoolean(identifer, value);
 		if (isVector3(value)) return this.setVector3(identifer, value as Vector3);
+		throw new Error(`value being set to a type not of undefined, string, number, boolean, or vector3`);
 	}
 	/**
 	 * cannot get JSON. It is for old things
 	 */
 	getAny<T extends string | number | Vector3 | boolean>(identifer: string): T | undefined {
-		if (identifer in (this.cache?.boolean ?? {})) return this.cache?.boolean![identifer] as T;
-		if (identifer in (this.cache?.number ?? {})) return this.cache?.number![identifer] as T;
-		if (identifer in (this.cache?.string ?? {})) return this.cache?.string![identifer] as T;
-		if (identifer in (this.cache?.vector3 ?? {})) return this.cache?.vector3![identifer] as T;
-		const value = this.instance.getDynamicProperty(identifer);
-		if (value !== false && !value) return;
-		this.cache ??= {};
-		if (typeof value === 'boolean') {
-			this.cache.boolean ??= {};
-			this.cache.boolean[identifer] = value;
-		} else if (typeof value === 'number') {
-			this.cache.number ??= {};
-			this.cache.number[identifer] = value;
-		} else if (typeof value === 'string') {
-			this.cache.string ??= {};
-			this.cache.string[identifer] = value;
-		} else if (isVector3(value)) {
-			this.cache.vector3 ??= {};
-			this.cache.vector3[identifer] = value as Vector3;
+		const cachedType = this.typeCache[identifer];
+		if (cachedType) {
+			switch (cachedType) {
+				case 'string': return this.getString(identifer) as T;
+				case 'number': return this.getNumber(identifer) as T;
+				case 'boolean': return this.getBoolean(identifer) as T;
+				case 'vector3': return this.getVector3(identifer) as T;
+				case 'json': return this.getJSON(identifer) as T;
+			}
 		}
-		return value as T;
 
 	}
 	getJSON<T>(identifer: string): T | undefined {
@@ -141,6 +168,8 @@ export class DynamicPropertiesForInstance {
 		return ouput;
 	}
 	setJSON(identifer: string, value?: any): this {
+		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: JSON, undefined, or null`);
+		this.typeCache[identifer] ??= 'json';
 		if (!isDefined(value)) {
 			this.cache!.json ??= {};
 			this.cache!.json[identifer] = value;
@@ -167,22 +196,29 @@ export class DynamicPropertiesForInstance {
 		const thisProperty = this;
 		return new Proxy(this.cache!.json!, {
 			get(target, identifer) {
-				if (typeof identifer !== 'string') return;
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
 				return thisProperty.getJSON(identifer);
+			},
+			set(target, identifer, value) {
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
+				thisProperty.setJSON(identifer, value);
+				return Reflect.set(...(arguments as unknown as [any, any, any]));
 			}
 		});
 	}
 	getString(identifer: string): string | undefined {
+		const cachedType = this.typeCache[identifer];
+		if (cachedType && cachedType !== 'string') throw new Error(`identifer: ${identifer} is of type: ${cachedType} and not of type: string`);
 		this.cache!.string ??= {};
 		if (identifer in this.cache?.string!) return this.cache?.string[identifer];
-
-
 		const value = this.instance.getDynamicProperty(identifer);
 		if (typeof value !== 'string') return;
 		this.cache!.string![identifer] ??= value;
 		return value;
 	}
 	setString(identifer: string, value?: string): this {
+		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: string, undefined, or null`);
+		this.typeCache[identifer] ??= 'string';
 		this.instance.setDynamicProperty(identifer, value);
 		this.cache!.string ??= {};
 		this.cache!.string[identifer] = value;
@@ -195,10 +231,18 @@ export class DynamicPropertiesForInstance {
 			get(target, identifer) {
 				if (typeof identifer !== 'string') return;
 				return thisProperty.getString(identifer);
+			},
+			set(target, identifer, value) {
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
+				if (isDefined(value) && typeof value !== 'string') throw new Error(`value being set to ${identifer} is not a string`);
+				thisProperty.setString(identifer, value);
+				return Reflect.set(...(arguments as unknown as [any, any, any]));
 			}
 		});
 	}
 	getNumber(identifer: string): number | undefined {
+		const cachedType = this.typeCache[identifer];
+		if (cachedType && cachedType !== 'number') throw new Error(`identifer: ${identifer} is of type: ${cachedType} and not of type: number`);
 		this.cache!.number ??= {};
 		if (identifer in this.cache?.number!) return this.cache?.number[identifer];
 		const value = this.instance.getDynamicProperty(identifer);
@@ -207,6 +251,9 @@ export class DynamicPropertiesForInstance {
 		return value;
 	}
 	setNumber(identifer: string, value?: number): this {
+		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: Number, undefined, or null`);
+		this.typeCache[identifer] ??= 'number';
+
 		this.instance.setDynamicProperty(identifer, value);
 		this.cache!.number ??= {};
 		this.cache!.number[identifer] = value;
@@ -217,13 +264,21 @@ export class DynamicPropertiesForInstance {
 		const thisProperty = this;
 		return new Proxy(this.cache!.number!, {
 			get(target, identifer) {
-				if (typeof identifer !== 'string') return;
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
 				return thisProperty.getNumber(identifer);
+			},
+			set(target, identifer, value) {
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
+				if (isDefined(value) && typeof value !== 'number') throw new Error(`value being set to ${identifer} is not a number`);
+				thisProperty.setNumber(identifer, value);
+				return Reflect.set(...(arguments as unknown as [any, any, any]));
 			}
 		});
 	}
 
 	getBoolean(identifer: string): boolean | undefined {
+		const cachedType = this.typeCache[identifer];
+		if (cachedType && cachedType !== 'boolean') throw new Error(`identifer: ${identifer} is of type: ${cachedType} and not of type: boolean`);
 		this.cache!.boolean ??= {};
 		if (identifer in this.cache?.boolean!) return this.cache?.boolean[identifer];
 		const value = this.instance.getDynamicProperty(identifer);
@@ -232,6 +287,8 @@ export class DynamicPropertiesForInstance {
 		return value;
 	}
 	setBoolean(identifer: string, value?: boolean): this {
+		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: Boolean, undefined, or null`);
+		this.typeCache[identifer] ??= 'boolean';
 		this.instance.setDynamicProperty(identifer, value);
 		this.cache!.boolean ??= {};
 		this.cache!.boolean[identifer] = value;
@@ -242,12 +299,20 @@ export class DynamicPropertiesForInstance {
 		const thisProperty = this;
 		return new Proxy(this.cache!.boolean!, {
 			get(target, identifer) {
-				if (typeof identifer !== 'string') return;
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
 				return thisProperty.getBoolean(identifer);
+			},
+			set(target, identifer, value) {
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
+				if (isDefined(value) && typeof value !== 'boolean') throw new Error(`value being set to ${identifer} is not a boolean`);
+				thisProperty.setBoolean(identifer, value);
+				return Reflect.set(...(arguments as unknown as [any, any, any]));
 			}
 		});
 	}
 	getVector3(identifer: string): Vector3 | undefined {
+		const cachedType = this.typeCache[identifer];
+		if (cachedType && cachedType !== 'vector3') throw new Error(`identifer: ${identifer} is of type: ${cachedType} and not of type: vector3`);
 		this.cache!.vector3 ??= {};
 		if (identifer in this.cache?.vector3!) return this.cache?.vector3[identifer];
 		const value = this.instance.getDynamicProperty(identifer);
@@ -256,6 +321,7 @@ export class DynamicPropertiesForInstance {
 		return value as Vector3;
 	}
 	setVector3(identifer: string, value?: Vector3): this {
+		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: Vector3, undefined, or null`);
 		this.instance.setDynamicProperty(identifer, value);
 		this.cache!.vector3 ??= {};
 		this.cache!.vector3[identifer] = value;
@@ -266,8 +332,14 @@ export class DynamicPropertiesForInstance {
 		const thisProperty = this;
 		return new Proxy(this.cache!.vector3!, {
 			get(target, identifer) {
-				if (typeof identifer !== 'string') return;
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
 				return thisProperty.getVector3(identifer);
+			},
+			set(target, identifer, value) {
+				if (typeof identifer !== 'string') throw new Error(`identifer is not a string`);
+				if (isDefined(value) && !isVector3(value)) throw new Error(`value being set to ${identifer} is not a vector3`);
+				thisProperty.setVector3(identifer, value);
+				return Reflect.set(...(arguments as unknown as [any, any, any]));
 			}
 		});
 	}

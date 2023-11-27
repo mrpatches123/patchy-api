@@ -9,7 +9,7 @@ import { Player, setProptotype } from '../libraries/classes/player/class.js';
 import loads from '../libraries/classes/load.js';
 
 global.requestAddEvent = [];
-const numberOfStepOns = 3;
+const numberOfStepOns = 2;
 const items: Record<string, { location: Vector3, itemStack: ItemStack; }> = {};
 /**
  * @param {{x: number, y: number,z: number}} vector1 
@@ -38,7 +38,7 @@ eventBuilder.register({
 							const lastBlocksStepedOn = memory.lastBlocksStepedOn as Block[];
 							if (memory.lastBlocksStepedOn.length > numberOfStepOns) memory.lastBlocksStepedOn.shift();
 							memory.lastBlocksStepedOn.push(block);
-							// content.warn({ LastBlockStepedOn: LastBlockStepedOn?.typeId ?? 'null', currentId: block?.typeId ?? 'null' });
+							// content.warn({ LastBlockStepedOn: lastBlocksStepedOn.map((block) => block?.typeId) ?? 'null', currentId: block?.typeId ?? 'null' });
 							const slice = lastBlocksStepedOn.slice(1);
 							if (lastBlocksStepedOn.length === numberOfStepOns && (slice.some(lastBlock => vector3Equals(lastBlocksStepedOn[0]!.location, lastBlock) || slice.some(block => slice.some(block1 => !vector3Equals(block1.location, block.location)))))) return;
 							eventBuilder.getEvent('stepOnBlock').iterate({ block, player });
@@ -86,7 +86,7 @@ eventBuilder.register({
 			entityDie: {
 				function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: player }) => {
 					if (!(player instanceof Player)) return;
-					eventBuilder.getEvent('playerDeath').iterate({ damageSource: { killer: damagingEntity, projectile: damagingProjectile, cause }, player });
+					eventBuilder.getEvent('playerDeath').iterate({ damageSource: { damagingEntity, projectile: damagingProjectile, cause }, player });
 				}
 			}
 		}

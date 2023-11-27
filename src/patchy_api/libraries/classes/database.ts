@@ -125,7 +125,7 @@ export class ProperyDatabases {
 	}
 	queueSave(key: string | number, entity?: Player | Entity) {
 		if (typeof key !== 'number' && typeof key !== 'string') throw new Error('argument zero must be a key');
-		if (this.queueSaves.findIndex(([k, e]) => k === key && (entity && e?.id === entity.id)) !== -1) return;
+		if (this.queueSaves.findIndex(([k, e]) => k === key && (!entity || (entity && e?.id === entity.id))) !== -1) return;
 		this.subsribeQueueSave();
 		this.queueSaves.push([key, entity!]);
 	}

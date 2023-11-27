@@ -10,7 +10,7 @@ export interface EntityDamageSource {
 }
 export interface EntityDeathSource {
 	cause: EntityDamageCause;
-	killer?: Entity | Player;
+	damagingEntity?: Entity | Player;
 	projectile?: Entity;
 }
 

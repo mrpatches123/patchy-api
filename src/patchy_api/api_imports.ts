@@ -2,7 +2,7 @@
 
 
 import './libraries/prototypes/permission_fix.js';
-
+import './libraries/prototypes/itemstack.js';
 import './events/events_zero.js';
 import './events/events_first.js';
 
@@ -54,3 +54,4 @@ import './commands/clear_objective.js';
 import './commands/key.js';
 import './commands/properties.js';
 import './commands/test_form.js';
+import './commands/transfer.js';

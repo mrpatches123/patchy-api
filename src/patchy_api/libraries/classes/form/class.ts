@@ -1,6 +1,6 @@
 import { world, Player as PlayerType } from '@minecraft/server';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message, FormResponse, FormCancelationReason, MessageFormResponse, ActionFormResponse, ModalFormResponse } from '@minecraft/server-ui';
-import schema, { ActionData, ArrayType, Form, MessageData, ModalData, ChestData } from './schema.js';
+import schema, { ActionData, ArrayType, Form, MessageData, ModalData, ChestData, RecordType } from './schema.js';
 import errorLogger from '../error.js';
 import { Player } from '../player/class.js';
 import { ChestFormData as chest } from '../chest_ui/class.js';
@@ -22,7 +22,7 @@ Object.entries(schema).forEach(([type, { schema }]) => {
 		if (schema.hasOwnProperty('reopen')) elementKeysWithReopen.push(elementKey);
 	});
 });
-const forms = { action, modal, message };
+const forms = { action, modal, message, chest };
 function typeOf(value: any) {
 	if (typeof value === 'function') {
 		try {
@@ -156,7 +156,7 @@ export class FormBuilder {
 			if (body) form.body(body);
 			form.button2('Yes');
 			form.button1('No');
-			const { selection, canceled, cancelationReason } = await form.show((receiver as any).player);
+			const { selection, canceled, cancelationReason } = await form.show((receiver as any)?.root ?? receiver);
 			if (canceled) return cancelationReason;
 			if (selection) {
 				if (callbackIfYes instanceof Function) callbackIfYes(receiver);
@@ -183,7 +183,7 @@ export class FormBuilder {
 			form.button1('No');
 			let response;
 			while (true) {
-				response = await form.show(receiver);
+				response = await form.show((receiver as any)?.root ?? receiver);
 				// content.warn({ response: native.stringify(response) });
 				const { cancelationReason } = response;
 				if (cancelationReason !== 'UserBusy') break;
@@ -227,7 +227,13 @@ export class FormBuilder {
 		this.showForm(receiver, key, generatedForm, false, ...extraArguments)
 			.catch(error => console.warn(generatedForm.type, key, 'callback', error, error.stack));
 	}
+	// checkSchema(schema: any, target: any, root: boolean, stack: string) {
+	// 	Object.entries(schema).forEach(([elementKey, value]) => {
+	// 		if (root && elementKey === 'global') this.checkSchema(value, target, root, stack);
+	// 		else if (elementKey === 'schema') this.checkSchema(value, target[elementKey], root, stack);
 
+	// 	});
+	// };
 	/**
 	 * @param {Player} receiver 
 	 * @param {String} key 
@@ -237,7 +243,7 @@ export class FormBuilder {
 	 */
 	generateForm(receiver: Player, key: string, ...extraArguments: any[]): GeneratedForm {
 		// content.warn(this.forms);
-		if (!(((receiver as any)?.player ?? receiver) instanceof Player)) throw new Error(`receiver at params[0] is not of type: Player!`);
+		if (!(((receiver as any)?.root ?? receiver) instanceof PlayerType)) throw new Error(`receiver at params[0] is not of type: Player!`);
 		if (typeof key !== 'string') throw new Error(`key at params[1] is not of type: String!`);
 		if (!this.forms.hasOwnProperty(key)) throw new Error(`key: ${key}, at params[1] has not been created!`);
 		const type = Object.keys(this.forms[key] ?? {})[0] as keyof typeof forms;
@@ -318,8 +324,18 @@ export class FormBuilder {
 								if (!(innerValue instanceof Array)) throw new Error(`key: ${key}, in elementKey, at index: ${i}, in ${type} in formData for ${key} per schema is not of type: Array!`);
 								innerValue.forEach((bottemValue, a) => {
 									Object.entries(typeValue.type).forEach(([innerKey, bottomType]) => {
-										if (!typeEquals(bottomType, bottemValue)) throw new Error(`innerKey: ${innerKey}, index: ${a}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(bottomType)}!`);
+										if (bottomType instanceof Array) {
+											if (!bottomType.some(innerType => {
+												if (typeEquals(innerType, bottemValue[innerKey]))
+													return true;
+											})) throw new Error(`innerKey: ${innerKey}, index: ${a}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${orArray(bottomType.map(innerType => typeOf(innerType)))}!`);
+										} else if (!typeEquals(bottomType, bottemValue[innerKey])) throw new Error(`innerKey: ${innerKey}, index: ${a}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(bottomType)}!`);
 									});
+								});
+							} else if (typeValue instanceof RecordType) {
+								if (!(innerValue instanceof Object)) throw new Error(`key: ${key}, in elementKey: ${elementKey}, at index: ${i}, in ${type} in formData for ${key} per schema is not of type: Object!`);
+								Object.entries(innerValue).forEach(([innerKey, bottomValue]) => {
+									if (!typeEquals(typeValue.type, bottomValue)) throw new Error(`innerKey: ${innerKey}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(typeValue.type)}!`);
 								});
 							} else {
 								if (!typeEquals(typeValue, innerValue)) throw new Error(`key: ${typeKey}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(innerValue)}!`);
@@ -382,7 +398,7 @@ export class FormBuilder {
 			 */
 			let response: FormResponse;
 			while (true) {
-				response = await form.show((receiver as any)?.player ?? receiver);
+				response = await form.show((receiver as any)?.root ?? receiver);
 				const { cancelationReason } = response;
 				// content.warn({ awaitShow, cancelationReason, key });
 				if (!awaitShow || cancelationReason !== FormCancelationReason.UserBusy) {
@@ -407,15 +423,15 @@ export class FormBuilder {
 			switch (valuesKey) {
 				case 'selection': {
 					const { selection } = response as MessageFormResponse | ActionFormResponse;
-					if (!selection) return;
+					if (!isDefined(selection)) return;
 					const element = (formArray as ActionData[] | MessageData[])?.[selection ?? -1] as unknown as { extraElementFunction: Function, callback: Function, reopen: boolean; };
 
 					content.warn({ callbackArray, selection });
 
 					let { extraElementFunction, callback, reopen } = element;
 					let callbackArrayFunction;
-					if (extraElementFunction instanceof Array) extraElementFunction = extraElementFunction[selection];
-					if (callbackArray instanceof Array) callbackArrayFunction = callbackArray[selection];
+					if (extraElementFunction instanceof Array) extraElementFunction = extraElementFunction[selection!];
+					if (callbackArray instanceof Array) callbackArrayFunction = callbackArray[selection!];
 					if (callbackArrayFunction instanceof Function) callbackArrayFunction(receiver, selection, ...extraArguments);
 					if (extraElementFunction instanceof Function) extraElementFunction(receiver, selection, ...extraArguments);
 					if (callback instanceof Function) callback(receiver, selection, ...extraArguments);

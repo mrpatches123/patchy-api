@@ -187,9 +187,11 @@ export class PlotBuilder {
 							const plots = databases.get('plots*API') ?? databases.add('plots*API');
 							// content.warn({ t: '11111111111111111', plots, databases: databases.getFromEntity('plots*API') });
 							let { availablePlots = [0], currentIndex = 0, hasBeenSubscribed = false } = plots.get(key) ?? {};
-							if (hasBeenSubscribed) plotThis.subscribe();
-							plots.set(key, (exclusive) ? { hasBeenSubscribed } : { availablePlots, currentIndex, hasBeenSubscribed });
-							databases.queueSave('plots*API');
+							if (hasBeenSubscribed || rules?.exclusive) plotThis.subscribe();
+							if (!rules?.exclusive) {
+								plots.set(key, (exclusive) ? { hasBeenSubscribed } : { availablePlots, currentIndex, hasBeenSubscribed });
+								databases.queueSave('plots*API');
+							}
 						});
 					});
 				}
@@ -298,7 +300,7 @@ export class PlotBuilder {
 		if (!teleportKey) return;
 		teleportBuilder.teleport(player, teleportKey);
 	}
-	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride' | 'blockPlaceMarginOverideX' | 'blockPlaceMarginOverideY' | 'blockPlaceMarginOverideZ', value?: number | string) {
+	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride' | 'blockPlaceMarginOverideX' | 'blockPlaceMarginOverideY' | 'blockPlaceMarginOverideZ', value?: any) {
 		content.warn({ player: player.name, type, value });
 		const { properties } = player;
 		properties.setAny(type, value);
@@ -401,7 +403,8 @@ export class PlotBuilder {
 				});
 
 			},
-			blockBreak: ({ player, block, brokenBlockPermutation }) => {
+			beforePlayerBreakBlock: (event) => {
+				const { player, block } = event;
 				const { scores, properties, location, memory, rotation } = player;
 				const { ingorePlotSystem } = scores;
 				const { currentPlot } = properties.strings;
@@ -418,9 +421,9 @@ export class PlotBuilder {
 					case 'break':
 					case 'open-break':
 					case 'write': {
-						const ruleSet = this.getRuleSet(currentPlot as string, plotNumber as number)!;
+						const ruleSet = this.getRuleSet(currentPlot as string, plotNumber as number);
 
-						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet;
+						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet ?? {};
 						const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault ?? {};
 						const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties.numbers;
 
@@ -431,8 +434,7 @@ export class PlotBuilder {
 					case 'open':
 					case 'place':
 					case 'read': {
-						block.setPermutation(brokenBlockPermutation);
-						break;
+						event.cancel = true;
 					}
 				}
 
@@ -470,8 +472,8 @@ export class PlotBuilder {
 					case 'place':
 					case 'write': {
 						const ruleSet = this.getRuleSet(currentPlot as string, plotNumber as number);
-						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet!;
-						const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault!;
+						const { size = defaultSize, start: { x: sx, y: sy, z: sz } = defaultStart, blockPlaceMargin: blockPlaceMarginDefault } = ruleSet ?? {};
+						const { x: mxD = 0, y: myD = 0, z: mzD = 0 } = blockPlaceMarginDefault ?? {};
 						const { blockPlaceMarginOverideX: mx = mxD, blockPlaceMarginOverideY: my = myD, blockPlaceMarginOverideZ: mz = mzD } = properties.numbers;
 						const start = { x: sx + (mx as number), y: sy + (my as number), z: sz + (mz as number) };
 						const end = { x: size.x + sx - (mx as number), y: size.y + sy - (my as number), z: size.z + sz - (mz as number) };

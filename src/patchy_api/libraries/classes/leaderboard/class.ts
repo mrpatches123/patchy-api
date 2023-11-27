@@ -161,7 +161,7 @@ export class LeaderboardBuilder {
 		});
 	}
 	create(data: LeaderboardData): void {
-		const { type = 'online', reversed = false, modification, location, objective, maxLength = 5, title = objective, formating = '${#} ${name} ${score*f}', dimension } = data;
+		const { type = 'online', reversed = false, modification, location, objective, maxLength = 5, title = objective, formating = '${#} ${name} ${score*f}', dimension = overworld } = data;
 
 
 		// if (!(dimension instanceof Dimension)) throw new Error('dimension at params[0] is not of type: Dimension!');
