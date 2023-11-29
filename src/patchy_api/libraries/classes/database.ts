@@ -1,5 +1,6 @@
 import { Entity, Player, system, world } from "@minecraft/server";
 import propertyManager from "./property";
+import { content } from "../utilities";
 export function isDefined<T>(input: T) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
 }
@@ -71,7 +72,7 @@ export class ProperyDatabases {
 		if (this.subscribedQueueSave) return;
 		this.subscribedQueueSave = true;
 		const runId = system.runInterval(() => {
-			if (!this.queueSaves.length) return (system.clearRun(runId), this.subscribedQueueSave = true);
+			if (!this.queueSaves.length) return (system.clearRun(runId), this.subscribedQueueSave = false);
 			const [key, entity] = this.queueSaves.shift()!;
 			this.save(key, entity);
 		});
