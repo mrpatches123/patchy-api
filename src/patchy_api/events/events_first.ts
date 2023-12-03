@@ -154,6 +154,18 @@ eventBuilder.register({
 
 	scoreboardChange: {
 		subscription: {}
+	},
+	numberPropertyChange: {
+		subscription: {}
+	},
+	stringPropertyChange: {
+		subscription: {}
+	},
+	booleanPropertyChange: {
+		subscription: {}
+	},
+	vector3PropertyChange: {
+		subscription: {}
 	}
 });
 // world.sendMessage(`123 - ${JSON.stringify(eventBuilder, null, 4)}`);
