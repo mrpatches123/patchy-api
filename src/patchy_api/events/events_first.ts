@@ -54,7 +54,7 @@ eventBuilder.register({
 						const loaded = loads.loads.hasOwnProperty(id);
 						if (!loaded) return;
 						if (!global.hasOwnProperty('loading')) global.loading = true;
-						if (!global.finishedInitialPlotCreate) return;
+						// if (!global.finishedInitialPlotCreate) return;
 						if (!global.loaded) return;
 						if (global.playerJoined.hasOwnProperty(id)) return;
 						content.warn({ t: 'iterate:"playerJoined"', name });

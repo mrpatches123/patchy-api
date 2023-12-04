@@ -22,6 +22,7 @@ function parsePlayer(sender: Player, playerName?: string): false | Player | unde
         player = players.find({ name: playerName });
         if (!player) { sender.sendMessage(`player: ${playerName}, at params[2] does not exist!`); return false; }
     }
+    return player;
 }
 const identifierless = ['print', 'clearAll', 'wipe'];
 commandBuilder.register('properties', {
