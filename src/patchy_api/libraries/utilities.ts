@@ -15,14 +15,19 @@ export const content = {
 export function vector3Equals(vector1: Vector3, vector2: Vector3) {
     return vector1.x === vector2.x && vector1.y === vector2.y && vector1.z === vector2.z;
 }
-export function isVector3(target: any) {
+export function isVector3(target: any): target is Vector3 {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
 }
-export function isVector2(target: any) {
+export function isVector2(target: any): target is Vector2 {
+    // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
+    return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && !('z' in target);
+}
+export function isVector2Or3(target: any): target is Vector2 | Vector3 {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
+
 export async function getBlockAsync(dimension: Dimension, blockLocation: Vector3): Promise<Block> {
     let block = dimension.getBlock(blockLocation);
     block = ((block && block.isValid()) ? block : await new Promise((resolve) => {

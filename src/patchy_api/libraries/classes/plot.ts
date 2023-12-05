@@ -61,11 +61,11 @@ export class BlockVector3 {
 	}
 }
 interface PlotRuleSet {
-	count?: number;
+	count?: number | Vector3;
 	size?: BlockAreaSize;
 	start: { x: number, y: number, z: number; } | PlotsVector3;
 	offset?: { x: number, y: number, z: number; };
-	direction: 'x' | '-x' | 'z' | '-z' | 'y' | '-y';
+	direction: 'x' | '-x' | 'z' | '-z' | 'y' | '-y' | Vector3;
 	blockPlaceMargin?: { x: number, y: number, z: number; };
 }
 interface Teleport {
@@ -168,8 +168,9 @@ export class PlotBuilder {
 
 		ruleSets.forEach(({ count, start, direction, offset, blockPlaceMargin }, i) => {
 			if (!(start instanceof PlotsVector3) && !(start instanceof BlockVector3)) throw new Error(`start at ruleSets[${i}] in rules at params[1] is not of type: BlockVector3 or PlotVector3  `);
-			if (count && typeof count !== 'number') throw new Error(`count at ruleSets[${i}] in rules at params[1] is not of type: number`);
-			if (!directions.includes(direction)) throw new Error(`direction, ${direction} at ruleSets[${i}] in rules at params[1] is not one of the following: ${orArray(directions)}`);
+			if (count && typeof count !== 'number' && !isVector3(count)) throw new Error(`count at ruleSets[${i}] in rules at params[1] is not of type: number or Vector3`);
+			if (!isVector3(direction) && !directions.includes(direction as string)) throw new Error(`direction, ${direction} at ruleSets[${i}] in rules at params[1] is not one of the following: Vector3, ${orArray(directions)}`);
+			if (isVector3(direction) && !isVector3(count) || !isVector3(direction) && isVector3(count)) throw new Error(`direction and count, ${direction} at ruleSets[${i}] in rules at params[1] must be of type: Vector3, if one of them is!`);
 			if (offset && !isVector3(offset)) throw new Error(`offset, at ruleSets[${i}] in rules at params[1] is not of type: {x: number, y: number, z: number})}`);
 			if (blockPlaceMargin && !isVector3(blockPlaceMargin)) throw new Error(`blockPlaceMargin, at ruleSets[${i}] in rules at params[1] is not of type: {x: number, y: number, z: number})}`);
 		});
@@ -182,6 +183,28 @@ export class PlotBuilder {
 		rules?.ruleSets?.forEach((ruleSet, i) => {
 			const { count, start: startRuleSet, direction, offset, blockPlaceMargin, size: sizeRuleSet } = ruleSet;
 			let offsetVectorForDirection: Vector3 | Vector;
+			if (isVector3(direction) && isVector3(count)) {
+				const newCount = { x: (count.x <= 0) ? 1 : count.x, y: (count.z <= 0) ? 1 : count.z, z: (count.z <= 0) ? 1 : count.z };
+				for (let z = 0; z < newCount.z; z++) {
+					for (let y = 0; y < count.y; y++) {
+						for (let x = 0; x < count.x; x++) {
+							const clone = { ...ruleSet };
+							const plotRelitive = { x, y, z };
+							if (startRuleSet instanceof PlotsVector3) clone.start = Vector.add(startRuleSet, start);
+							clone.start = vectorToVector3(Vector.add(Vector.multiply(Vector.add(offset ?? Vector.zero, direction), plotRelitive), clone.start));
+							if (clone.start.x < absoluteStart.x) absoluteStart.x = clone.start.x;
+							if (clone.start.y < absoluteStart.y) absoluteStart.y = clone.start.y;
+							if (clone.start.z < absoluteStart.z) absoluteStart.z = clone.start.z;
+							const end = Vector.add(clone.start, sizeRuleSet ?? size);
+							if (end.x > absoluteEnd.x) absoluteEnd.x = end.x;
+							if (end.y > absoluteEnd.y) absoluteEnd.y = end.y;
+							if (end.z > absoluteEnd.z) absoluteEnd.z = end.z;
+							newRuleSets?.push?.(clone);
+						}
+					}
+				}
+				return;
+			} else if (isVector3(direction) || isVector3(count)) return;
 			switch (direction) {
 				case 'x': {
 					offsetVectorForDirection = { x: 1, y: 0, z: 0 };
@@ -319,6 +342,7 @@ export class PlotBuilder {
 					// content.warn({ ingorePlotSystem, currentPlot });
 
 					if (!currentPlot) return;
+					if (!(currentPlot in this.plots)) return;
 					if (ingorePlotSystem) return;
 					const { plotNumberIdentifier, property, teleport, defaultGamemode, exclusive, size: sizePlot, start: startPlot } = this.plots[currentPlot as string]!.rules ?? {};
 					const { plotNumberOveride, gamemodeOveride = defaultGamemode } = properties.numbers;
@@ -353,7 +377,7 @@ export class PlotBuilder {
 							if (key) teleportBuilder.teleport(player, key);
 							else {
 								teleportLocation = { location: start as Vector3, offset: teleportLocation as Vector3 };
-								if (!isVector2(face)) face = { location: start, offset: face as Vector3 };
+								if (!isVector2(face)) face = { location: start, offset: face as any };
 								const object = { location: teleportLocation, face, dimension: overworld };
 								// content.warn({ teleportLocation: objectVector3(teleportLocation), start: objectVector3(start) });
 								teleportBuilder.teleportOnce(player, object as TeleportObjectOnce);
@@ -371,7 +395,9 @@ export class PlotBuilder {
 				const { scores, properties, location, memory, rotation } = player;
 				const { ingorePlotSystem } = scores;
 				const { currentPlot } = properties.strings;
+
 				if (!currentPlot || ingorePlotSystem) return;
+				if (!(currentPlot in this.plots)) return;
 				const { plotNumberIdentifier, property, ruleSets, defaultPermision, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot as string]!.rules ?? {};
 				const { plotNumberOveride, permisionOveride: permision = defaultPermision } = properties.numbers;
 				let plotNumber;
@@ -410,6 +436,7 @@ export class PlotBuilder {
 				const { ingorePlotSystem } = scores;
 				const { currentPlot } = properties.strings;
 				if (!currentPlot || ingorePlotSystem) return;
+				if (!(currentPlot in this.plots)) return;
 				const { plotNumberIdentifier, property, ruleSets, defaultPermision, defaultGamemode, exclusive, size: defaultSize, start: defaultStart } = this.plots[currentPlot as string]!.rules ?? {};
 				const { plotNumberOveride } = properties.numbers;
 				const { permisionOveride: permision = defaultPermision } = properties.strings;
