@@ -29,13 +29,13 @@ commandBuilder.register('structure', {
 	callback: (sender, args) => {
 		let [action, name, x1S, y1S, z1S, x2S, y2S, z2S] = args;
 		const { dimension } = sender;
-		const x1 = Math.floor(relativeParse(sender, x1S!, 'x'));
-		const y1 = Math.floor(relativeParse(sender, y1S!, 'y'));
-		const z1 = Math.floor(relativeParse(sender, z1S!, 'z'));
-		const location1 = { x: x1, y: y1, z: z1 };
 
 		switch (action) {
 			case 'save': {
+				const x1 = Math.floor(relativeParse(sender, x1S!, 'x'));
+				const y1 = Math.floor(relativeParse(sender, y1S!, 'y'));
+				const z1 = Math.floor(relativeParse(sender, z1S!, 'z'));
+				const location1 = { x: x1, y: y1, z: z1 };
 				const x2 = Math.floor(relativeParse(sender, x2S!, 'x'));
 				const y2 = Math.floor(relativeParse(sender, y2S!, 'y'));
 				const z2 = Math.floor(relativeParse(sender, z2S!, 'z'));
@@ -48,12 +48,20 @@ commandBuilder.register('structure', {
 					saveMode: 'disk'
 				});
 				break;
-			} case 'load': {
+			}
+			case 'load': {
+				const x1 = Math.floor(relativeParse(sender, x1S!, 'x'));
+				const y1 = Math.floor(relativeParse(sender, y1S!, 'y'));
+				const z1 = Math.floor(relativeParse(sender, z1S!, 'z'));
+				const location1 = { x: x1, y: y1, z: z1 };
 				structureBuilder.load({
 					dimension,
 					name: name!,
 					location: location1
 				});
+				break;
+			} case 'print': {
+				sender.sendMessage(JSON.stringify(structureBuilder, (key, value) => (value instanceof Function) ? '<f>' : value, 4));
 				break;
 			}
 		}

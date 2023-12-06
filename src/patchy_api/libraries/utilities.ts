@@ -87,7 +87,7 @@ export function rotationToHorizontalDirection(rotation: Vector2) {
             return 'West';
     }
 };
-export function isDefined(input: any) {
+export function isDefined<T>(input: T | undefined | null): input is T {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }
 export function permutationClone(permutation: BlockPermutation) {
