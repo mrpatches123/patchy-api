@@ -345,6 +345,3 @@ export class DynamicPropertiesForInstance {
 	}
 
 }
-world.afterEvents.chatSend.subscribe((event) => {
-	if (event.message === 'prop') content.chatFormat(propertyManager);
-});
