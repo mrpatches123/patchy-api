@@ -390,7 +390,7 @@ export class PlotBuilder {
 							if (key) teleportBuilder.teleport(player, key);
 							else {
 								teleportLocation = { location: start as Vector3, offset: teleportLocation as Vector3 };
-								if (!isVector2(face)) face = { location: start, offset: face as Vector3 };
+								if (!isVector2(face)) face = { location: start, offset: face as unknown as Vector3 };
 								const object = { location: teleportLocation, face, dimension: overworld };
 								// content.warn({ teleportLocation: objectVector3(teleportLocation), start: objectVector3(start) });
 								teleportBuilder.teleportOnce(player, object as TeleportObjectOnce);
