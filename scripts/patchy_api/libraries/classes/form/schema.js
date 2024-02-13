@@ -182,6 +182,7 @@ const formSchemaObject = {
                     if (itemStack instanceof ItemStack) {
                         itemStack = itemStackToItemData(itemStack);
                     }
+                    objectClone.itemStack = itemStack;
                     const { typeId, nameTag, lore, enchantments, amount } = itemStack;
                     const description = [];
                     if (enchantments)

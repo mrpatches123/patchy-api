@@ -171,14 +171,14 @@ class TeleportBuilder {
 			let { offset, location: relitiveLocation } = location as RelitiveOffset;
 			content.warn({ offset: objectVector3(offset), relitiveLocation: objectVector3(relitiveLocation) });
 			const { x, y, z } = relitiveLocation;
-			const { x: ox, y: oy, z: oz } = offset;
+			const { x: ox = 0, y: oy = 0, z: oz = 0 } = offset ?? {};
 			location = { x: x + ox, y: y + oy, z: z + oz };
 		}
 
 		if (face && !isVector2(face) && face instanceof Object) {
 			let { offset, location: relitiveLocation } = face as RelitiveOffset;
 			const { x, y, z } = relitiveLocation;
-			const { x: ox, y: oy, z: oz } = offset;
+			const { x: ox = 0, y: oy = 0, z: oz = 0 } = offset ?? {};
 			face = { x: x + ox, y: y + oy, z: z + oz };
 		}
 		let rotation = (isVector3(face)) ? undefined : face;

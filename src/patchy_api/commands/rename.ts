@@ -24,7 +24,7 @@ commandBuilder.register('rename', {
         if (args[0] === undefined) {
             sender.sendMessage('§cYou must input a itemName!');
         } else {
-            let inventory = sender.getComponent('minecraft:inventory')!.container;
+            let inventory = sender.getComponent('inventory')!.container!;
             let item = inventory.getItem(selectedSlot);
             if (!item) {
                 sender.sendMessage('§cYou must hold a item to rename!');

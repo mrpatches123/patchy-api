@@ -35,7 +35,7 @@ class TagDatabases {
 				});
 			},
 			playerJoined: ({ player }) => {
-				thisTag.initalize(player);
+				thisTag.initalize(player as Player);
 			},
 			playerLeave: ({ playerId }) => {
 				delete thisTag.initalized[playerId];

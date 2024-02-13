@@ -1,5 +1,6 @@
-import { world, system, Player as PlayerType } from '@minecraft/server';
-import { content } from '../../utilities';
+import { world, system, Player as PlayerType, Entity } from '@minecraft/server';
+import * as Server from '@minecraft/server';
+import { content, typeOf } from '../../utilities';
 import time from '../time';
 import { setProptotype } from '../player/class';
 import { CustomEvent } from '../custom_event/class';
@@ -149,7 +150,7 @@ export class EventBuilder {
                 if (entityOptions) {
                     const { entityTypes = [], entities = [] } = entityOptions;
                     // content.warn({ entityTypes, entities });
-                    properties.subscription[eventKey] = `${eventKey}*${[
+                    properties.subscription[eventKey].entityOptionsKey = `${eventKey}*${[
                         ...arrayClone(entityTypes),
                         ...arrayClone(entities).map(({ id }) => id)
                     ].join('*')}`;
@@ -172,7 +173,7 @@ export class EventBuilder {
      */
     getNativeEventSignalKey(eventKey = "") {
         const fixedEventKey = this.removeBeforeInKey(eventKey);
-        return (eventKey.includes('before') && fixedEventKey in world.beforeEvents) ? 'beforeEvents' : (eventKey in world.afterEvents) ? 'afterEvents' : (eventKey in system.afterEvents) ? 'systemAfterEvents' : (eventKey in system.beforeEvents) ? 'systemBeforeEvents' : 'afterEvents';
+        return (eventKey.includes('before') && fixedEventKey in world.beforeEvents) ? 'beforeEvents' : (eventKey in world.afterEvents) ? 'afterEvents' : (eventKey in system.afterEvents) ? 'systemAfterEvents' : (eventKey in system.beforeEvents) ? 'systemBeforeEvents' : undefined;
     }
     subscribe(key, subscribeObject) {
         if (typeof key !== "string")
@@ -181,12 +182,11 @@ export class EventBuilder {
             throw new Error(`subscribeObject at params[0] is not of type: Object!`);
         //Object.entries(subscribeObject).forEach(([eventKey, callback])
         // content.warn({ ObjectQ: subscribeObject instanceof Object, proto: Object.getPrototypeOf(subscribeObject) });
-        Object.entries(subscribeObject).forEach((a) => {
-            const eventKey = a[0];
-            const callback = a[1];
+        Object.entries(subscribeObject).forEach(([eventKey, callback]) => {
             // content.warn({ key, eventKey, call: callback instanceof Function });
             if (typeof eventKey !== "string")
                 throw new Error(`key: ${eventKey}, in params[1] is not of type: String!`);
+            // content.warn({ eventKey, typeof: typeof callback, key });
             if (!(callback instanceof Function))
                 throw new Error(`key: ${eventKey}, in params[1] does not have value of type: Function!`);
             const fixedEventKey = this.removeBeforeInKey(eventKey);
@@ -195,17 +195,20 @@ export class EventBuilder {
             if (!this.subscriptions.hasOwnProperty(eventKey)) {
                 const worldSystem = this.getNativeEventSignalKey(eventKey);
                 if (worldSystem) {
+                    // content.warn("wklwjdhwdklwdwkdllwdk");
                     this.worldSubscribe(key, eventKey, undefined, worldSystem, undefined, callback);
                 }
                 else {
                     this.initSubscribe(eventKey);
+                    this.subscriptions[eventKey].subscriptions++;
                     const { subscription = {} } = this.registry[eventKey] ?? {};
                     const nativeSubscribeObject = {};
                     //Object.entries(subscription).forEach(([oldEventKey, { function: subscriptionFunction, entityOptions, forceNative, entityOptionsKey }]) => {
                     const subscriptionEntries = Object.entries(subscription);
                     subscriptionEntries.forEach(([oldEventKey, eventProperties]) => {
+                        content.warn({ oldEventKey, eventProperties, key, eventKey });
                         const { function: subscriptionFunction, options, forceNative, entityOptionsKey } = eventProperties;
-                        content.warn({ key, oldEventKey, eventKey, fixedEventKey });
+                        // content.warn({ key, oldEventKey, eventKey, fixedEventKey });
                         if (oldEventKey === 'custom')
                             subscriptionFunction(undefined);
                         else {
@@ -221,7 +224,8 @@ export class EventBuilder {
                     this.subscribe(eventKey, nativeSubscribeObject);
                 }
             }
-            this.subscriptions[eventKey].subscriptions++;
+            else
+                this.subscriptions[eventKey].subscriptions++;
             this.subscriptions[eventKey].keys[key] = { suppressed: false, callback, time: undefined };
             this.subscriptions[eventKey].keys = sortKeysObject(this.subscriptions[eventKey].keys);
         });
@@ -309,7 +313,7 @@ export class EventBuilder {
                     unsubscription();
                 if (worldSubscribed) {
                     const worldSystem = this.getNativeEventSignalKey(oldEventKey);
-                    if (!worldSystemEvents[worldSystem])
+                    if (!worldSystem)
                         return;
                     worldSystemEvents[worldSystem][oldEventKey].unsubscribe(subscriptionFunction);
                 }
@@ -336,23 +340,74 @@ export class EventBuilder {
         this.subscriptions[eventKey].worldSubscribed = true;
     }
     ;
+    testPlayerKey(object) {
+        const ObjectPrototype = Object.getPrototypeOf({});
+        const playerKey = [];
+        for (const key in object) {
+            if ((key in ObjectPrototype))
+                continue;
+            if (!(object[key] instanceof PlayerType) && !(object[key] instanceof Entity))
+                continue;
+            playerKey.push(key);
+        }
+        return { playerKey: (!playerKey.length) ? undefined : playerKey };
+    }
     getEventProperties(eventInstance) {
-        const properties = Object.getOwnPropertyDescriptors(eventInstance?.prototype);
-        let playerKey, modifiables;
+        const { prototype } = eventInstance?.constructor;
+        const className = eventInstance?.constructor?.name;
+        if (className === 'Function')
+            return {};
+        if (!prototype)
+            return {};
+        const properties = Object.getOwnPropertyDescriptors(prototype);
+        let playerKey = new Set(), modifiables = new Set();
+        const afterEventPrototype = Server[className.replace('Before', 'After')]?.prototype;
+        if (className.toLowerCase().includes('before') && afterEventPrototype) {
+            const properties = Object.getOwnPropertyDescriptors(afterEventPrototype);
+            for (const key in properties) {
+                if (key === 'constructor')
+                    continue;
+                if (!(key in eventInstance))
+                    continue;
+                const { set } = properties[key];
+                const value = eventInstance[key];
+                if (Boolean(set)) {
+                    modifiables.add(key);
+                }
+                if (value instanceof PlayerType || eventInstance[key] instanceof Entity) {
+                    playerKey.add(key);
+                    continue;
+                }
+                if (value instanceof Object) {
+                    const { playerKey: playerKeyValue } = this.testPlayerKey(value);
+                    if (playerKeyValue) {
+                        playerKey.add({ [key]: playerKeyValue });
+                    }
+                    continue;
+                }
+            }
+        }
         for (const key in properties) {
             if (key === 'constructor')
                 continue;
-            const { set, get, value, configurable, enumerable } = properties[key];
-            if (configurable) {
-                modifiables ??= [];
-                modifiables.push(key);
+            const { set } = properties[key];
+            const value = eventInstance[key];
+            if (Boolean(set)) {
+                modifiables.add(key);
             }
-            if (value instanceof PlayerType) {
-                playerKey ??= [];
-                playerKey.push(key);
+            if (value instanceof PlayerType || eventInstance[key] instanceof Entity) {
+                playerKey.add(key);
+                continue;
+            }
+            if (value instanceof Object) {
+                const { playerKey: playerKeyValue } = this.testPlayerKey(value);
+                if (playerKeyValue) {
+                    playerKey.add({ [key]: playerKeyValue });
+                }
+                continue;
             }
         }
-        return { playerKey, modifiables };
+        return { playerKey: (!playerKey.size) ? undefined : [...playerKey.values()], modifiables: (!modifiables.size) ? undefined : [...modifiables.values()] };
     }
     worldSubscribe(key, oldEventKey, entityOptionsKey, worldSystem, entityOptions, callback) {
         // content.warn(entityOptionsKey);
@@ -368,13 +423,14 @@ export class EventBuilder {
         subscribedEventFunction = (event) => {
             const { playerKey, modifiables } = this.getEventProperties(event);
             time.start(`Events*API*${entityOptionsKey ?? oldEventKey}`);
-            // if (!oldEventKey.includes('start')) content.warn({ oldEventKey, playerKey, modifiables });
+            // if (oldEventKey.toLowerCase().includes('chat')) content.warn({ oldEventKey, playerKey, modifiables });
             let eventClone = (playerKey) ? {} : event;
             if (playerKey) {
                 const prototype = Object.getPrototypeOf({});
                 for (const key in event) {
                     if (prototype.hasOwnProperty(key))
                         continue;
+                    // if (oldEventKey.toLowerCase().includes('chat')) content.warn({ key, playerKey });
                     if (playerKey instanceof Array) {
                         playerKey.forEach(playerKey => {
                             if (playerKey instanceof Object) {
@@ -386,30 +442,43 @@ export class EventBuilder {
                                                 continue;
                                             if (innerKeys.includes(innerKey))
                                                 innerClone[innerKey] = setProptotype(event[key][innerKey]);
+                                            else if (event[key][innerKey] instanceof Function) {
+                                                innerClone[innerKey] = (...args) => { return event[key][innerKey](...args); };
+                                            }
                                             else
-                                                innerClone = event[key][innerKey];
+                                                innerClone[innerKey] = event[key][innerKey];
                                         }
                                         eventClone[key] = innerClone;
                                     }
                                 });
                             }
+                            else if (playerKey.includes(key)) {
+                                eventClone[key] = setProptotype(event[key]);
+                            }
+                            else if (event[key] instanceof Function) {
+                                eventClone[key] = (...args) => { return event[key](...args); };
+                            }
                             else {
-                                if (playerKey.includes(key))
-                                    eventClone[key] = setProptotype(event[key]);
+                                eventClone[key] = event[key];
                             }
                         });
                     }
                     else if (key === playerKey) {
                         eventClone[key] = setProptotype(event[playerKey]);
                         // content.warn({ playerTest: eventClone[key] instanceof Player });
-                        continue;
                     }
-                    if (event[key] instanceof Function) {
+                    else if (event[key] instanceof Function) {
                         eventClone[key] = (...args) => { return event[key](...args); };
-                        continue;
                     }
-                    eventClone[key] = event[key];
+                    else {
+                        eventClone[key] = event[key];
+                    }
                 }
+            }
+            if (oldEventKey.toLowerCase().includes('chat')) {
+                const test = {};
+                Object.entries(eventClone).forEach(([key, value]) => test[key] = typeOf(value));
+                content.warn({ eventClone: test });
             }
             Object.entries(this.subscriptions[entityOptionsKey ?? oldEventKey].keys).forEach(([key, { suppressed, callback }]) => {
                 if (!suppressed) {
@@ -427,8 +496,8 @@ export class EventBuilder {
             });
             this.subscriptions[oldEventKey].time = time.end(`Events*API*${entityOptionsKey ?? oldEventKey}`);
             // content.warn({ eventClone });
-            if (modifiables)
-                modifiables.forEach(key => event[key] = eventClone[key]);
+            if (playerKey && modifiables)
+                modifiables.forEach(key => event[key] = eventClone[key].root ?? eventClone[key]);
             // content.warn({ cancel: event.cancel, oldEventKey });
         };
         this.subscriptions[entityOptionsKey ?? oldEventKey].function = subscribedEventFunction;
@@ -440,6 +509,7 @@ export class EventBuilder {
         else
             worldSystemEvents[worldSystem][this.removeBeforeInKey(oldEventKey)].subscribe(subscribedEventFunction);
     }
+    ;
     getEvent(eventKey) {
         if (!this.registry.hasOwnProperty(eventKey))
             throw new Error(`eventKey: ${eventKey}, in params[0] is not a custom, system, or world event!`);

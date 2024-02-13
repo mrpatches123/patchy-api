@@ -1,4 +1,4 @@
-import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction, Vector2, Vector3, DisplaySlotId, Dimension, system, ItemType, Block } from '@minecraft/server';
+import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction, Vector2, Vector3, DisplaySlotId, Dimension, system, ItemType, Block, EntityLifetimeState } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function getXZVectorRY(ry: number) {
     const rads = (ry + 180) * Math.PI / 180;
@@ -23,6 +23,32 @@ export function isVector2(target: any) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
+<<<<<<< Updated upstream
+=======
+export async function spawnEntityAsync(dimension: Dimension, blockLocation: Vector3, type: string) {
+    let entity: Entity | undefined;
+    try {
+        entity = overworld.spawnEntity(type, blockLocation);
+    } catch (error: any) {
+        console.warn('ingore', error, error.stack);
+    }
+    entity = ((entity && entity.isValid() && entity.lifetimeState === EntityLifetimeState.Loaded) ? entity : await new Promise((resolve) => {
+        const runId = system.runInterval(() => {
+            try {
+                entity = overworld.spawnEntity(type, blockLocation);
+                if (!entity) return;
+                if (!entity.isValid()) return;
+                if (entity.lifetimeState === EntityLifetimeState.Unloaded) return;
+                system.clearRun(runId);
+                resolve(entity);
+            } catch (error: any) {
+                console.warn('ingore', error, error.stack);
+            }
+        });
+    }))!;
+    return entity;
+}
+>>>>>>> Stashed changes
 export async function getBlockAsync(dimension: Dimension, blockLocation: Vector3): Promise<Block> {
     let block = dimension.getBlock(blockLocation);
     block = ((block && block.isValid()) ? block : await new Promise((resolve) => {
@@ -59,13 +85,31 @@ export function rotationToDirection(rotation: Vector2) {
             return 'West';
     }
 };
+export function shuffle<T>(array: T[]): T[] {
+    const shuffledArray: T = [] as unknown as T;
+
+    let currentIndex = array.length, randomIndex;
+
+    while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        //@ts-ignore
+        [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex], array[currentIndex]
+        ];
+        //@ts-ignore
+        shuffledArray.push(array[currentIndex]);
+    }
+    //@ts-ignore
+    return shuffledArray;
+}
 export const reverseDirection = {
-    "Down": "Up",
-    "East": "West",
-    "North": "South",
-    "South": "North",
-    "Up": "Down",
-    "West": "East"
+    "Down": "Up" as Direction,
+    "East": "West" as Direction,
+    "North": "South" as Direction,
+    "South": "North" as Direction,
+    "Up": "Down" as Direction,
+    "West": "East" as Direction
 };
 export function rotationToHorizontalDirection(rotation: Vector2) {
     let { x, y } = rotation;

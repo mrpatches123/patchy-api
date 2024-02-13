@@ -143,7 +143,7 @@ export class LeaderboardBuilder {
         });
     }
     create(data) {
-        const { type = 'online', reversed = false, modification, location, objective, maxLength = 5, title = objective, formating = '${#} ${name} ${score*f}', dimension } = data;
+        const { type = 'online', reversed = false, modification, location, objective, maxLength = 5, title = objective, formating = '${#} ${name} ${score*f}', dimension = overworld } = data;
         // if (!(dimension instanceof Dimension)) throw new Error('dimension at params[0] is not of type: Dimension!');
         if (!isVector3(location))
             throw new Error('postion in params[] is not of type: Vector3!');

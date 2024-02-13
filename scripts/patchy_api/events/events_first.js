@@ -52,8 +52,7 @@ eventBuilder.register({
                             return;
                         if (!global.hasOwnProperty('loading'))
                             global.loading = true;
-                        if (!global.finishedInitialPlotCreate)
-                            return;
+                        // if (!global.finishedInitialPlotCreate) return;
                         if (!global.loaded)
                             return;
                         if (global.playerJoined.hasOwnProperty(id))
@@ -151,6 +150,18 @@ eventBuilder.register({
         }
     },
     scoreboardChange: {
+        subscription: {}
+    },
+    numberPropertyChange: {
+        subscription: {}
+    },
+    stringPropertyChange: {
+        subscription: {}
+    },
+    booleanPropertyChange: {
+        subscription: {}
+    },
+    vector3PropertyChange: {
         subscription: {}
     }
 });

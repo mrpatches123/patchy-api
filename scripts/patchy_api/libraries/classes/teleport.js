@@ -47,8 +47,7 @@ class TeleportBuilder {
                 const rotation = (isVector3(face)) ? undefined : face;
                 const facing = (rotation) ? undefined : face;
                 if (isArray) {
-                    if (!this.hasOwnProperty(key))
-                        this.teleports[key] = Array(value.length);
+                    this.teleports[key] ??= Array(value.length);
                     this.teleports[key][i] = {
                         location,
                         dimension,
@@ -66,6 +65,7 @@ class TeleportBuilder {
                     };
                 }
                 else {
+                    this.teleports[key] ??= Array(1);
                     this.teleports[key][0] = {
                         location,
                         dimension,
@@ -141,13 +141,13 @@ class TeleportBuilder {
             let { offset, location: relitiveLocation } = location;
             content.warn({ offset: objectVector3(offset), relitiveLocation: objectVector3(relitiveLocation) });
             const { x, y, z } = relitiveLocation;
-            const { x: ox, y: oy, z: oz } = offset;
+            const { x: ox = 0, y: oy = 0, z: oz = 0 } = offset ?? {};
             location = { x: x + ox, y: y + oy, z: z + oz };
         }
         if (face && !isVector2(face) && face instanceof Object) {
             let { offset, location: relitiveLocation } = face;
             const { x, y, z } = relitiveLocation;
-            const { x: ox, y: oy, z: oz } = offset;
+            const { x: ox = 0, y: oy = 0, z: oz = 0 } = offset ?? {};
             face = { x: x + ox, y: y + oy, z: z + oz };
         }
         let rotation = (isVector3(face)) ? undefined : face;

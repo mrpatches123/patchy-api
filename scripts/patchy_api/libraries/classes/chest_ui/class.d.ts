@@ -1,8 +1,9 @@
 import { Player } from '../player/class.js';
 export type sizesUnion = 'single' | 'double' | 'small' | 'large';
 declare class ChestFormData {
-    #private;
-    availableButtons: number[];
+    private titleText;
+    private buttonArray;
+    private availableButtons;
     constructor(size?: string);
     title(text: string): this;
     button(slot?: number, itemName?: string, itemDesc?: string[], iconPath?: string, stackSize?: number, enchanted?: boolean): this;

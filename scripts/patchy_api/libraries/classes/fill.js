@@ -86,8 +86,6 @@ class Fill {
             throw new Error(`y, ${y1} in location1 in fillOptions at params[0] is less than -64 or greater than 319 which cannot be filled!`);
         if (y2 > 319 || y2 < -64)
             throw new Error(`y, ${y2} in location2 in fillOptions at params[0] is less than -64 or greater than 319 which cannot be filled!`);
-        if (!(blocks instanceof BlockType) && !(blocks instanceof Array) && !(blocks instanceof Object))
-            throw new Error('blocks at params[0] is not of type: Object, Array, or BlockType!');
         if (blocks instanceof Array)
             blocks.forEach((block, i) => {
                 if (!(block instanceof BlockType) && !(block instanceof BlockPermutation) && typeof block !== 'string')

@@ -11,7 +11,7 @@ class PositionBuilder {
             tickAfterLoad: () => {
                 players.get().iterate((player) => {
                     // content.warn(PositionThis);
-                    Object.entries(positionThis).forEach(([key, { noLoop = false }]) => {
+                    Object.entries(positionThis.positions).forEach(([key, { noLoop = false }]) => {
                         if (noLoop)
                             return;
                         positionThis.check(player, key);

@@ -1,6 +1,6 @@
 import loads from "../load.js";
 
-import { EntityComponentTypeMap, Player as PlayerType, Container, system, Vector, EquipmentSlot, world, ItemStack, ContainerSlot, EntityType, Camera, EntityEquippableComponent, MusicOptions, EntityQueryOptions, DimensionLocation, EntityComponent } from "@minecraft/server";
+import { EntityComponentTypeMap, Player as PlayerType, Container, system, Vector, EquipmentSlot, world, ItemStack, ContainerSlot, EntityType, Camera, EntityEquippableComponent, MusicOptions, EntityQueryOptions, DimensionLocation, EntityComponent, MolangVariableMap, Vector3 } from "@minecraft/server";
 import players from "../players/export_instance.js";
 import errorLogger from "../error.js";
 import { content, native } from "../../utilities.js";
@@ -24,6 +24,12 @@ export class Player implements PlayerType {
 		 * @type {PlayerType}
 		 */
 		this.root = player;
+	}
+	spawnParticle(...args: Parameters<PlayerType['spawnParticle']>): void {
+		this.root.spawnParticle(...args);
+	}
+	eatItem(...args: Parameters<PlayerType['eatItem']>): void {
+		this.root.eatItem(...args);
 	}
 	kick(message?: string) {
 		this.root.runCommand((message) ? `kick "${this.root.name}" ${message}` : `kick "${this.root.name}"`);
@@ -92,14 +98,14 @@ export class Player implements PlayerType {
 	}
 	get mainHand(): ContainerSlot {
 		const { selectedSlot } = this.root;
-		const container = this.getComponent('minecraft:inventory')!.container;
+		const container = this.getComponent('minecraft:inventory')!.container!;
 		return container.getSlot(selectedSlot);
 	}
 
 	set mainHand(value: ItemStack | ContainerSlot | undefined) {
 		const { selectedSlot } = this.root;
 
-		const container = this.getComponent('inventory')!.container;
+		const container = this.getComponent('inventory')!.container!;
 		container.setItem(selectedSlot, (value instanceof ContainerSlot) ? value.getItem() : value);
 	}
 	get container() {

@@ -3,17 +3,22 @@ import { ActionFormData, MessageFormData, ModalFormData, ModalFormResponse, Acti
 import { content, romanize, toProperCase } from "../../utilities.js";
 import { FormBuilder } from "./class.js";
 import { Player } from "../player/class.js";
-import { ItemStack } from "@minecraft/server";
+import { EnchantmentType, ItemStack } from "@minecraft/server";
 import { MinecraftEnchantmentTypes } from "patchy_api/vanilla-data.js";
 import { ChestFormData, sizesUnion } from "../chest_ui/class.js";
 function itemStackToItemData(itemStack: ItemStack) {
 	const { typeId, nameTag, amount } = itemStack;
 	let itemData: ItemData = { typeId };
 	const lore = itemStack.getLore();
-	let enchantmentList = itemStack.getComponent('enchantments')?.enchantments;
+	let enchantmentList = itemStack.getComponent('minecraft:enchantable')?.getEnchantments();
 	let enchantments: Record<MinecraftEnchantmentTypes, number> = {} as Record<MinecraftEnchantmentTypes, number>;
-	[...(enchantmentList ?? [])].forEach(({ level, type: { id } }) => {
-		enchantments[id as MinecraftEnchantmentTypes] = level;
+	[...(enchantmentList ?? [])].forEach(({ level, type }) => {
+		if (type instanceof EnchantmentType) {
+			enchantments[type.id as MinecraftEnchantmentTypes] = level;
+		} else {
+			enchantments[type as MinecraftEnchantmentTypes] = level;
+		}
+
 	});
 
 	if (lore) itemData.lore = lore;
@@ -81,7 +86,7 @@ export type ModalData = {
 	toggle?: ModalToggle | ((receiver: Player, i: number, ...extraArguments: any[]) => ModalToggle);
 	closeCallback?: (receiver: Player, formResponse: ModalFormResponse, ...extraArguments: any[]) => any;
 	submitcallback?: (receiver: Player, formResponse: ModalFormResponse, ...extraArguments: any[]) => any;
-	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	callback?: (receiver: Player, value: number | string | boolean, i: number, ...extraArguments: any[]) => any;
 	returnOnSubmit?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 	returnOnClose?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 } | ((receiver: Player, ...extraArguments: any[]) => (ModalData[] | ModalData)) | undefined;

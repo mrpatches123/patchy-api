@@ -2,7 +2,7 @@ import config from '../config.js';
 import { Database, commandBuilder, databases, global, overworld } from '../modules.js';
 global.deltaTimes = [];
 const { commandPrefix: prefix, tpsPrecision } = config;
-commandBuilder.register('tps', {
+commandBuilder.register('transfer', {
     description: "Used to Transfer DataBases To Property Database",
     usages: [
         `${prefix}transfer`,
@@ -43,7 +43,11 @@ commandBuilder.register('tps', {
             Object.entries(databasesEntityObject).forEach(([name, database]) => {
                 const databaseProperties = databases.get(name) ?? databases.add(name);
                 Object.entries(database).forEach(([key, value]) => {
+                    if (key === '__db_properties')
+                        return;
+                    databaseProperties.set(key, value);
                 });
+                databases.save(name);
             });
         });
     }

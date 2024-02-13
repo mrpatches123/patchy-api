@@ -5,6 +5,7 @@
       "module": "ES2020",
       "declaration": true,
       "noLib": false,
+      "skipLibCheck": true,
       "emitDecoratorMetadata": true,
       "experimentalDecorators": true,
       "sourceMap": true,
@@ -23,10 +24,13 @@
       "noEmitHelpers": true,
       "allowJs": true,
       "noUncheckedIndexedAccess": true,
-      "noEmit": false
+      "noEmit": false,
    },
    "include": [
       "src/**/*"
+   ],
+   "exclude": [
+      "node_modules/**/*"
    ],
    "compileOnSave": true
 }

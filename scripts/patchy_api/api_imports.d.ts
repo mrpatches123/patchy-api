@@ -1,4 +1,5 @@
 import './libraries/prototypes/permission_fix.js';
+import './libraries/prototypes/itemstack.js';
 import './events/events_zero.js';
 import './events/events_first.js';
 import './libraries/classes/load.js';
@@ -12,6 +13,7 @@ import './plugins/chat.js';
 import './plugins/player_joined.js';
 import './plugins/world_load.js';
 import './plugins/update_test.js';
+import './plugins/script_event.js';
 import './commands/form.js';
 import './commands/plot.js';
 import './commands/global.js';
@@ -41,3 +43,4 @@ import './commands/clear_objective.js';
 import './commands/key.js';
 import './commands/properties.js';
 import './commands/test_form.js';
+import './commands/transfer.js';

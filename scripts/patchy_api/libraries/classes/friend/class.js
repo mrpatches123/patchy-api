@@ -30,11 +30,6 @@ export class FriendSystem {
         ;
         return player;
     }
-    /**
-     * @param {Player} receiver
-     * @param {Player} target
-     * @returns { }
-     */
     getFriendData(receiver) {
         const { type } = this.data;
         const playerStorage = (type === 'remote') ? databases.get('playerStorage', receiver) ?? databases.add('playerStorage', receiver) : databases.get(this.systemKey) ?? databases.add(this.systemKey);

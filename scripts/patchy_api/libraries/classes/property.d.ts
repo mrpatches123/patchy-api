@@ -20,11 +20,18 @@ export declare class DynamicPropertiesForInstance {
     instance: Player | Entity | World;
     id: string;
     cache?: PropertiesCache;
+    typeCache: Record<string, "string" | 'number' | 'boolean' | 'vector3' | 'json'>;
     constructor(instance?: Player | Entity | World);
+    private checkType;
     /**
-     * cannot set JSON. It is for old things
+     * This cannot be undone and will wipe all properties for this instance
      */
-    setAny<T>(identifer: string, value: T): this | undefined;
+    clearAll(): void;
+    /**
+     * cannot set json used for old things
+     * use class for setting of undefined. ex String, Number, Boolean, Vector (for vector3 as Vector3 is an interface)
+     */
+    setAny<T>(identifer: string, value: T): this;
     /**
      * cannot get JSON. It is for old things
      */

@@ -1,10 +1,11 @@
 import { ItemStack, Container, Dimension, ContainerSlot, EntityQueryOptions } from "@minecraft/server";
 import { Player } from "../player/class.js";
+import { Iterate } from "../iterate.js";
 export declare class Inventory {
     array: (ContainerSlot | undefined)[];
     container: Container;
     constructor(array: (ContainerSlot | undefined)[], inventory: Container);
-    iterate(callback: (item: ContainerSlot, i: number) => (ItemStack | void)): void;
+    iterate(callback: (item: ContainerSlot, i: number) => (ItemStack | void | null)): void;
 }
 declare class PlayerIterator {
     players: {
@@ -40,7 +41,10 @@ export declare class Players {
     basePlayerIterator: PlayerIterator;
     ranGarbage: boolean;
     playerQueryIterators: Record<string, PlayerIterator>;
+    baseIterate: Iterate<Player>;
     constructor();
+    next(): Player;
+    getIterator(entityQueryOptions?: EntityQueryOptions, cache?: boolean, dimension?: Dimension): Iterate<Player>;
     refreshBasePlayerIterator(): void; /**
      * @param {import('@minecraft/server').EntityQueryOptions} entityQueryOptions
      * @param {boolean} cache

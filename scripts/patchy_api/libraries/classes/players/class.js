@@ -2,6 +2,7 @@ import { world, system } from "@minecraft/server";
 import { content } from "../../utilities.js";
 import global from "../global.js";
 import loads from "../load.js";
+import { Iterate } from "../iterate.js";
 function isDefined(input) {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }
@@ -25,7 +26,7 @@ export class Inventory {
             this.array[i] = item;
             if (newItem === undefined)
                 return;
-            this.container.setItem(i, newItem);
+            this.container.setItem(i, (newItem === null) ? undefined : newItem);
         });
     }
     ;
@@ -67,6 +68,7 @@ class PlayerIterator {
 }
 export class Players {
     constructor() {
+        this.baseIterate = new Iterate(() => this.basePlayerIterator.array());
         this.objectProperties = {};
         // world.afterEvents.dataDrivenEntityTriggerEvent.subscribe(({ entity, id }) => {
         // 	if (!(entity instanceof Player)) return;
@@ -105,6 +107,12 @@ export class Players {
         world.afterEvents.playerLeave.subscribe(() => {
             playersObject.refreshBasePlayerIterator();
         });
+    }
+    next() {
+        return this.baseIterate.next();
+    }
+    getIterator(entityQueryOptions, cache = true, dimension) {
+        return new Iterate(() => this.get(entityQueryOptions, cache, dimension).array());
     }
     refreshBasePlayerIterator() {
         this.basePlayerIterator = new PlayerIterator(loads.players);

@@ -59,7 +59,7 @@ commandBuilder.register('plot', {
                 return sender.sendMessage(`${playerName} on ${plotKey} now has a plotNumber of ${plotNumber}`);
             }
             case 'list': {
-                const { currentIndex, availablePlots } = plotBuilder.list(plotKey);
+                const { currentIndex, availablePlots } = plotBuilder.list(plotKey) ?? {};
                 return sender.sendMessage(`${plotKey} at currentIndex: ${currentIndex}, has the following available plotNumbers: ${andArray(availablePlots)}`);
             }
             case 'reset': {

@@ -74,7 +74,7 @@ export class ProperyDatabases {
         this.subscribedQueueSave = true;
         const runId = system.runInterval(() => {
             if (!this.queueSaves.length)
-                return (system.clearRun(runId), this.subscribedQueueSave = true);
+                return (system.clearRun(runId), this.subscribedQueueSave = false);
             const [key, entity] = this.queueSaves.shift();
             this.save(key, entity);
         });
@@ -135,7 +135,7 @@ export class ProperyDatabases {
     queueSave(key, entity) {
         if (typeof key !== 'number' && typeof key !== 'string')
             throw new Error('argument zero must be a key');
-        if (this.queueSaves.findIndex(([k, e]) => k === key && (entity && e?.id === entity.id)) !== -1)
+        if (this.queueSaves.findIndex(([k, e]) => k === key && (!entity || (entity && e?.id === entity.id))) !== -1)
             return;
         this.subsribeQueueSave();
         this.queueSaves.push([key, entity]);

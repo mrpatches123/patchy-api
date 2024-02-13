@@ -1,14 +1,12 @@
-// import * as Server from '@minecraft/server';
 //@ts-nocheck
+import * as Server from '@minecraft/server';
 import * as ServerUI from '@minecraft/server-ui';
 export const content = {
     warn(...messages) {
         console.warn(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value)).join(' '));
-    },
-    chatFormat(...messages) {
-        chunkString(messages.map(message => JSON.stringify(message, (key, value) => (value instanceof Function) ? '<f>' : value, 4)).join(' '), 500).forEach(message => world.sendMessage(message));
     }
 };
+content.warn('Permission fix loaded');
 const promiseFunctions = ['show', 'runCommandAsync'];
 function fix(object) {
     if (!object?.prototype)
@@ -82,10 +80,10 @@ function fix(object) {
             });
     }
 }
-// for (const classKey in Server) {
-// 	const object = Server[classKey];
-// 	fix(object);
-// }
+for (const classKey in Server) {
+    const object = Server[classKey];
+    fix(object);
+}
 for (const classKey in ServerUI) {
     const object = ServerUI[classKey];
     fix(object);

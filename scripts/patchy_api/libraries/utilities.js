@@ -21,6 +21,10 @@ export function isVector3(target) {
 }
 export function isVector2(target) {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
+    return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && !('z' in target);
+}
+export function isVector2Or3(target) {
+    // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
 export async function getBlockAsync(dimension, blockLocation) {
@@ -606,7 +610,11 @@ export const server = {
         const scoreboardObjective = world.scoreboard.getObjective(objective);
         if (!scoreboardObjective)
             throw new Error(`scoreboardObjective: ${objective} must exist`);
-        return scoreboardObjective.getScore(target);
+        try {
+            return scoreboardObjective.getScore(target?.root ?? target);
+        }
+        catch (error) {
+        }
     },
     objectiveAdd(objective, displayName = objective) {
         try {
@@ -637,7 +645,7 @@ export const server = {
     scoreResetPlayer(objective, target) {
         try {
             world.scoreboard.getObjective(objective)
-                ?.removeParticipant(target);
+                ?.removeParticipant(target?.root ?? target);
             return true;
         }
         catch (error) {
@@ -647,7 +655,7 @@ export const server = {
     },
     scoreSetPlayer(objective, target, value = 0, updateId) {
         // content.warn({ objective: objective.constructor.name, player: player.constructor.name, value: value });
-        world.scoreboard.getObjective(objective)?.setScore(target, value);
+        world.scoreboard.getObjective(objective)?.setScore((target?.root ?? target), value);
         if (!updateId)
             return value;
         const scoreboardObjectiveDisplayOptions = world.scoreboard.getObjectiveAtDisplaySlot(updateId);

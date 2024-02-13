@@ -1,5 +1,9 @@
 import { Player } from "../player/class.js";
+<<<<<<< Updated upstream
 import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent, world, PistonActivateBeforeEvent, PlayerInteractWithBlockBeforeEvent, PlayerInteractWithEntityBeforeEvent, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, PlayerLeaveBeforeEvent, EntityRemoveBeforeEvent, EffectAddBeforeEvent, SystemAfterEvents, system, WatchdogTerminateBeforeEvent } from '@minecraft/server';
+=======
+import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent, world, PlayerInteractWithBlockBeforeEvent, PlayerInteractWithEntityBeforeEvent, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, PlayerLeaveBeforeEvent, EntityRemoveBeforeEvent, EffectAddBeforeEvent, SystemAfterEvents, system, WatchdogTerminateBeforeEvent, World, DataDrivenEntityTriggerAfterEvent } from '@minecraft/server';
+>>>>>>> Stashed changes
 import { CustomEvent } from '../custom_event/class.js';
 import { content } from '../../utilities.js';
 
@@ -94,13 +98,14 @@ export interface CustomEventKeyTypes {
 	beforeChat: ChatSendBeforeEvent;
 	beforeChatSend: ChatSendBeforeEvent;
 	beforeDataDrivenEntityTriggerEvent: DataDrivenEntityTriggerBeforeEvent;
+	dataDrivenEntityTriggerEvent: DataDrivenEntityTriggerAfterEvent;
 	beforeDataDrivenPlayerTriggerEvent: BeforeDataDrivenPlayerTriggerEvent;
+	beforeDataDrivenEntityTrigger: DataDrivenEntityTriggerBeforeEvent;
 	beforeExplosion: ExplosionBeforeEvent;
 	beforeItemDefinitionEvent: ItemDefinitionTriggeredBeforeEvent;
 	beforeItemUse: ItemUseBeforeEvent;
 	beforeItemUseOn: ItemUseOnBeforeEvent;
 	beforeItemUseOnStart: ItemUseOnBeforeEvent;
-	beforePistonActivate: PistonActivateBeforeEvent;
 	beforePlayerInteractWithBlock: PlayerInteractWithBlockBeforeEvent;
 	beforePlayerInteractWithEntity: PlayerInteractWithEntityBeforeEvent;
 	beforePlayerBreakBlock: PlayerBreakBlockBeforeEvent;
@@ -130,7 +135,7 @@ export interface CustomEventKeyTypes {
 type EventKeyTypes = AfterEventTypes & CustomEventKeyTypes;
 
 type ToCustom<T extends any> = {
-	[K in keyof T]: T[K] extends PlayerType ? Player : T[K] extends EntityType ? Entity | Player : T[K] extends EntityDamageSourceType ? EntityDamageSource : T[K]
+	[K in keyof T]: T[K] extends Player ? Player : T[K] extends PlayerType ? Player : T[K] extends EntityType ? Entity | Player : T[K] extends EntityDamageSourceType ? EntityDamageSource : T[K]
 };
 
 export type EventTypes = {

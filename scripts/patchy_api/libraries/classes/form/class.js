@@ -1,8 +1,8 @@
-import { world } from '@minecraft/server';
+import { world, Player as PlayerType } from '@minecraft/server';
 import { ActionFormData as action, ModalFormData as modal, MessageFormData as message, FormCancelationReason } from '@minecraft/server-ui';
-import schema, { ArrayType } from './schema.js';
+import schema, { ArrayType, RecordType } from './schema.js';
 import errorLogger from '../error.js';
-import { Player } from '../player/class.js';
+import { ChestFormData as chest } from '../chest_ui/class.js';
 /**
  * @type {{[typeKey: String]: {[elementKey: String]: Boolean}}}
  */
@@ -21,7 +21,7 @@ Object.entries(schema).forEach(([type, { schema }]) => {
             elementKeysWithReopen.push(elementKey);
     });
 });
-const forms = { action, modal, message };
+const forms = { action, modal, message, chest };
 function typeOf(value) {
     if (typeof value === 'function') {
         try {
@@ -140,7 +140,7 @@ export class FormBuilder {
                 form.body(body);
             form.button2('Yes');
             form.button1('No');
-            const { selection, canceled, cancelationReason } = await form.show(receiver.player);
+            const { selection, canceled, cancelationReason } = await form.show(receiver?.root ?? receiver);
             if (canceled)
                 return cancelationReason;
             if (selection) {
@@ -173,7 +173,7 @@ export class FormBuilder {
             form.button1('No');
             let response;
             while (true) {
-                response = await form.show(receiver);
+                response = await form.show(receiver?.root ?? receiver);
                 // content.warn({ response: native.stringify(response) });
                 const { cancelationReason } = response;
                 if (cancelationReason !== 'UserBusy')
@@ -223,6 +223,12 @@ export class FormBuilder {
         this.showForm(receiver, key, generatedForm, false, ...extraArguments)
             .catch(error => console.warn(generatedForm.type, key, 'callback', error, error.stack));
     }
+    // checkSchema(schema: any, target: any, root: boolean, stack: string) {
+    // 	Object.entries(schema).forEach(([elementKey, value]) => {
+    // 		if (root && elementKey === 'global') this.checkSchema(value, target, root, stack);
+    // 		else if (elementKey === 'schema') this.checkSchema(value, target[elementKey], root, stack);
+    // 	});
+    // };
     /**
      * @param {Player} receiver
      * @param {String} key
@@ -232,7 +238,7 @@ export class FormBuilder {
      */
     generateForm(receiver, key, ...extraArguments) {
         // content.warn(this.forms);
-        if (!((receiver?.player ?? receiver) instanceof Player))
+        if (!((receiver?.root ?? receiver) instanceof PlayerType))
             throw new Error(`receiver at params[0] is not of type: Player!`);
         if (typeof key !== 'string')
             throw new Error(`key at params[1] is not of type: String!`);
@@ -333,9 +339,24 @@ export class FormBuilder {
                                     throw new Error(`key: ${key}, in elementKey, at index: ${i}, in ${type} in formData for ${key} per schema is not of type: Array!`);
                                 innerValue.forEach((bottemValue, a) => {
                                     Object.entries(typeValue.type).forEach(([innerKey, bottomType]) => {
-                                        if (!typeEquals(bottomType, bottemValue))
+                                        if (bottomType instanceof Array) {
+                                            if (!bottomType.some(innerType => {
+                                                if (typeEquals(innerType, bottemValue[innerKey]))
+                                                    return true;
+                                            }))
+                                                throw new Error(`innerKey: ${innerKey}, index: ${a}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${orArray(bottomType.map(innerType => typeOf(innerType)))}!`);
+                                        }
+                                        else if (!typeEquals(bottomType, bottemValue[innerKey]))
                                             throw new Error(`innerKey: ${innerKey}, index: ${a}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(bottomType)}!`);
                                     });
+                                });
+                            }
+                            else if (typeValue instanceof RecordType) {
+                                if (!(innerValue instanceof Object))
+                                    throw new Error(`key: ${key}, in elementKey: ${elementKey}, at index: ${i}, in ${type} in formData for ${key} per schema is not of type: Object!`);
+                                Object.entries(innerValue).forEach(([innerKey, bottomValue]) => {
+                                    if (!typeEquals(typeValue.type, bottomValue))
+                                        throw new Error(`innerKey: ${innerKey}, key: ${key}, in elementKey: ${elementKey}, at index: ${i} in formData for ${key} per schema is not of type: ${typeOf(typeValue.type)}!`);
                                 });
                             }
                             else {
@@ -409,7 +430,7 @@ export class FormBuilder {
              */
             let response;
             while (true) {
-                response = await form.show(receiver?.player ?? receiver);
+                response = await form.show(receiver?.root ?? receiver);
                 const { cancelationReason } = response;
                 // content.warn({ awaitShow, cancelationReason, key });
                 if (!awaitShow || cancelationReason !== FormCancelationReason.UserBusy) {
@@ -437,7 +458,7 @@ export class FormBuilder {
             switch (valuesKey) {
                 case 'selection': {
                     const { selection } = response;
-                    if (!selection)
+                    if (!isDefined(selection))
                         return;
                     const element = formArray?.[selection ?? -1];
                     content.warn({ callbackArray, selection });

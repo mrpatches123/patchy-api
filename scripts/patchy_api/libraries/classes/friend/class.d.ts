@@ -13,11 +13,6 @@ export declare class FriendSystem {
     watchSubscribed: boolean;
     constructor(systemKey: string, data: FriendSystemData);
     addRequest(reqestee: Player, targetId: string, type: 'add' | 'remove' | string, payload: any): Player | true;
-    /**
-     * @param {Player} receiver
-     * @param {Player} target
-     * @returns { }
-     */
     getFriendData<T>(receiver: Player): {
         saves?: {
             [property: string]: any;

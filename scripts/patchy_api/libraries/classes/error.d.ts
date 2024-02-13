@@ -1,6 +1,7 @@
 declare class ErrorLogger {
-    [key: string]: any;
+    errors: Record<string, Record<string, Record<string, number>>>;
     constructor();
+    save(error: any, stack: string | undefined, event?: string, key?: string): void;
     log(error: any, stack: string, infoObject: {
         event?: string;
         key?: string;

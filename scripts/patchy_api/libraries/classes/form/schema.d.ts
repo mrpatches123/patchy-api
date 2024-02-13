@@ -39,13 +39,14 @@ type ActionButton = string | {
 type ActionToggleOptions = {
     text: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
     iconPath?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
-    callback: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+    callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
     reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 };
 type ActionToggle = {
     options: ActionToggleOptions[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ActionToggleOptions[]);
     cycleCallback: (receiver: Player, i: number, ...extraArguments: any[]) => number;
     initialisationFunction: (receiver: Player, i: number, ...extraArguments: any[]) => number;
+    reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 };
 type ActionButtonNoReopen = {
     text: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
@@ -104,7 +105,7 @@ export type MessageData = {
 } | ((receiver: Player, ...extraArguments: any[]) => (MessageData[] | MessageData)) | undefined;
 type ChestToggleOptions = {
     itemStack: ItemStack | ItemData | ((receiver: Player, i: number, ...extraArguments: any[]) => ItemStack | ItemData);
-    callback: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+    callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
     reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 };
 type ChestButton = {
@@ -133,7 +134,7 @@ export type ChestData = {
     closeCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
     pressCallback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
     callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
-    size: sizesUnion;
+    size?: sizesUnion;
     slot?: number;
 };
 export declare class ArrayType<T> {
@@ -264,7 +265,7 @@ declare const formSchemaObject: {
                 };
                 customProperties: string[];
                 hasCallback: boolean;
-                setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: ChestButton, elementIndex: number, callbackArray: any[], objectClone: Object, ...extraArgs: any[]) => void;
+                setupFunction: (receiver: Player, formClass: FormBuilder, form: ChestFormData, key: string, elementValue: ChestButton, elementIndex: number, callbackArray: any[], objectClone: any, ...extraArgs: any[]) => void;
             };
             back: {
                 root: string;

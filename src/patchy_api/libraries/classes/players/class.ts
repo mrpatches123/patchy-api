@@ -174,7 +174,7 @@ export class Players {
 		const { id } = player;
 		if (this.inventorys.hasOwnProperty(id)) return this.inventorys[id]!.container;
 		this.inventorys[id] = {} as typeof this.inventorys[string];
-		const inventory = player.getComponent('inventory')!.container;
+		const inventory = player.getComponent('inventory')!.container!;
 		const container: ContainerSlot[] = [];
 		const { size } = inventory;
 		for (let i = 0; i < size; i++) {

@@ -113,7 +113,7 @@ export class Player {
         });
     }
     get properties() {
-        return propertyBuilder.get(this.root);
+        return propertyBuilder.get(this);
     }
     get memory() {
         const player = this.root;

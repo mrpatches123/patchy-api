@@ -126,11 +126,22 @@ eventBuilder.register({
 
 		}
 	},
+	dataDrivenEntityTriggerEvent: {
+		subscription: {
+			dataDrivenEntityTrigger: {
+				function: (event) => {
+					const { entity, eventId: id } = event;
+					const modifiers = event.getModifiers();
+					eventBuilder.getEvent('dataDrivenEntityTriggerEvent').iterate({ player: entity, modifiers, id });
+				}
+			}
+		}
+	},
 	dataDrivenPlayerTriggerEvent: {
 		subscription: {
-			dataDrivenEntityTriggerEvent: {
+			dataDrivenEntityTrigger: {
 				function: (event) => {
-					const { entity, id } = event;
+					const { entity, eventId: id } = event;
 					const modifiers = event.getModifiers();
 					eventBuilder.getEvent('dataDrivenPlayerTriggerEvent').iterate({ player: entity, modifiers, id });
 				},
@@ -140,14 +151,23 @@ eventBuilder.register({
 	},
 	beforeDataDrivenPlayerTriggerEvent: {
 		subscription: {
-			beforeDataDrivenEntityTriggerEvent: {
+			beforeDataDrivenEntityTrigger: {
 				function: (event) => {
 					const { entity, id, cancel } = event;
 
 
 					eventBuilder.getEvent('beforeDataDrivenPlayerTriggerEvent').iterate({ cancel, player: entity, getModifiers() { return event.getModifiers(); }, setModifiers(modifiers: DefinitionModifier[]) { event.setModifiers(modifiers); }, get modifiers() { return event.getModifiers(); }, set modifiers(modifiers) { event.setModifiers(modifiers); }, id });
 				},
-				options: { entityTypes: ["minecraft:player"] }
+			}
+		}
+	},
+	beforeDataDrivenEntityTriggerEvent: {
+		subscription: {
+			beforeDataDrivenEntityTrigger: {
+				function: (event) => {
+					const { entity, id, cancel } = event;
+					eventBuilder.getEvent('beforeDataDrivenPlayerTriggerEvent').iterate({ cancel, player: entity, getModifiers() { return event.getModifiers(); }, setModifiers(modifiers: DefinitionModifier[]) { event.setModifiers(modifiers); }, get modifiers() { return event.getModifiers(); }, set modifiers(modifiers) { event.setModifiers(modifiers); }, id });
+				}
 			}
 		}
 	},

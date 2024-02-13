@@ -10,7 +10,7 @@ import { Form, ActionData, ModalData, MessageData, ChestData } from './libraries
 export { Form, ActionData, ModalData, MessageData, ChestData };
 import global from './libraries/classes/global.js';
 import scoreboardBuilder from './libraries/classes/scoreboard.js';
-import plotBuilder, { PlotsVector3, BlockVector3 } from './libraries/classes/plot/export_instance.js';
+import plotBuilder, { PlotsVector3, BlockVector3 } from './libraries/classes/plot.js';
 import { Player } from './libraries/classes/player/class.js';
 import positionBuilder from './libraries/classes/position.js';
 import promptBuilder from './libraries/classes/prompt.js';
@@ -25,7 +25,8 @@ import fill from './libraries/classes/fill.js';
 import structureBuilder from './libraries/classes/structure/export_instance.js';
 import leaderboardBuilder from './libraries/classes/leaderboard/export_instance.js';
 import friendSystemBuilder from './libraries/classes/friend/export_instance.js';
-export { friendSystemBuilder, leaderboardBuilder, structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyManager, fill, preformance, players, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder, positionBuilder, promptBuilder, teleportBuilder, time, wait };
+import { Iterate } from './libraries/classes/iterate.js';
+export { Iterate, friendSystemBuilder, leaderboardBuilder, structureBuilder, scoreboardBuilder, Player, PlotsVector3, BlockVector3, plotBuilder, propertyManager, fill, preformance, players, requestBuilder, Database, texturePaths, databases, errorLogger, eventBuilder, formBuilder, global, commandBuilder, positionBuilder, promptBuilder, teleportBuilder, time, wait };
 export * from './libraries/vanilla_data/lib/mojang-block.js';
 export * from './libraries/vanilla_data/lib/mojang-cameraPresets.js';
 export * from './libraries/vanilla_data/lib/mojang-dimension.js';

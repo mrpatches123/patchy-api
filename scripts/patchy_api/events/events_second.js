@@ -5,7 +5,7 @@ import global from '../libraries/classes/global.js';
 import { content, overworld, getXZVectorRY } from '../modules.js';
 import { Player, setProptotype } from '../libraries/classes/player/class.js';
 global.requestAddEvent = [];
-const numberOfStepOns = 3;
+const numberOfStepOns = 2;
 const items = {};
 /**
  * @param {{x: number, y: number,z: number}} vector1
@@ -38,7 +38,7 @@ eventBuilder.register({
                             if (memory.lastBlocksStepedOn.length > numberOfStepOns)
                                 memory.lastBlocksStepedOn.shift();
                             memory.lastBlocksStepedOn.push(block);
-                            // content.warn({ LastBlockStepedOn: LastBlockStepedOn?.typeId ?? 'null', currentId: block?.typeId ?? 'null' });
+                            // content.warn({ LastBlockStepedOn: lastBlocksStepedOn.map((block) => block?.typeId) ?? 'null', currentId: block?.typeId ?? 'null' });
                             const slice = lastBlocksStepedOn.slice(1);
                             if (lastBlocksStepedOn.length === numberOfStepOns && (slice.some(lastBlock => vector3Equals(lastBlocksStepedOn[0].location, lastBlock) || slice.some(block => slice.some(block1 => !vector3Equals(block1.location, block.location))))))
                                 return;
@@ -88,7 +88,7 @@ eventBuilder.register({
                 function: ({ damageSource: { damagingEntity, damagingProjectile, cause }, deadEntity: player }) => {
                     if (!(player instanceof Player))
                         return;
-                    eventBuilder.getEvent('playerDeath').iterate({ damageSource: { killer: damagingEntity, projectile: damagingProjectile, cause }, player });
+                    eventBuilder.getEvent('playerDeath').iterate({ damageSource: { damagingEntity, projectile: damagingProjectile, cause }, player });
                 }
             }
         }

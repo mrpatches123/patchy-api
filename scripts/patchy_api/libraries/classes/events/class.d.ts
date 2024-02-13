@@ -38,6 +38,7 @@ export declare class EventBuilder {
     unsuppress(key: string, eventKeys: string[] | string): void;
     unsubscribe(key: string, eventKeys?: string[] | string): void;
     private initSubscribe;
+    private testPlayerKey;
     private getEventProperties;
     private worldSubscribe;
     getEvent(eventKey: string): CustomEvent;
