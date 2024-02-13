@@ -10,7 +10,7 @@ import { Form, ActionData, ModalData, MessageData, ChestData } from './libraries
 export { Form, ActionData, ModalData, MessageData, ChestData };
 import global from './libraries/classes/global.js';
 import scoreboardBuilder from './libraries/classes/scoreboard.js';
-import plotBuilder, { PlotsVector3, BlockVector3 } from './libraries/classes/plot.js';
+import plotBuilder, { PlotsVector3, BlockVector3 } from './libraries/classes/plot/export_instance.js';
 import { Player } from './libraries/classes/player/class.js';
 //import inventoryBuilder from './libraries/classes/inventory.js';
 import positionBuilder from './libraries/classes/position.js';

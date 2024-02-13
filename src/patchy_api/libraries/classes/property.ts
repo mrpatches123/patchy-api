@@ -1,6 +1,5 @@
 import { Entity, Player, Vector3, World, world } from "@minecraft/server";
 import { content } from "../utilities";
-import eventBuilder from "./events/export_instance";
 
 export function isDefined(input: any) {
 	return (input !== null && input !== undefined && !Number.isNaN(input));
@@ -219,12 +218,10 @@ export class DynamicPropertiesForInstance {
 	}
 	setString(identifer: string, value?: string): this {
 		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: string, undefined, or null`);
-		const lastValue = this.getString(identifer);
 		this.typeCache[identifer] ??= 'string';
 		this.instance.setDynamicProperty(identifer, value);
 		this.cache!.string ??= {};
 		this.cache!.string[identifer] = value;
-		eventBuilder.getEvent('stringPropertyChange').iterate({ source: this.instance, identifier: identifer, value: value, lastValue });
 		return this;
 	}
 	get strings() {
@@ -255,13 +252,11 @@ export class DynamicPropertiesForInstance {
 	}
 	setNumber(identifer: string, value?: number): this {
 		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: Number, undefined, or null`);
-		const lastValue = this.getNumber(identifer);
 		this.typeCache[identifer] ??= 'number';
 
 		this.instance.setDynamicProperty(identifer, value);
 		this.cache!.number ??= {};
 		this.cache!.number[identifer] = value;
-		eventBuilder.getEvent('numberPropertyChange').iterate({ source: this.instance, identifier: identifer, value: value, lastValue });
 		return this;
 	}
 	get numbers() {
@@ -293,13 +288,10 @@ export class DynamicPropertiesForInstance {
 	}
 	setBoolean(identifer: string, value?: boolean): this {
 		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: Boolean, undefined, or null`);
-		const lastValue = this.getBoolean(identifer);
 		this.typeCache[identifer] ??= 'boolean';
 		this.instance.setDynamicProperty(identifer, value);
 		this.cache!.boolean ??= {};
 		this.cache!.boolean[identifer] = value;
-		eventBuilder.getEvent('booleanPropertyChange').iterate({ source: this.instance, identifier: identifer, value: value, lastValue });
-
 		return this;
 	}
 	get booleans() {
@@ -330,11 +322,9 @@ export class DynamicPropertiesForInstance {
 	}
 	setVector3(identifer: string, value?: Vector3): this {
 		if (!this.checkType(identifer, value)) throw new Error(`value being set to a identifer: ${identifer}, which is of type: ${this.typeCache[identifer]} and is not of type: Vector3, undefined, or null`);
-		const lastValue = this.getVector3(identifer);
 		this.instance.setDynamicProperty(identifer, value);
 		this.cache!.vector3 ??= {};
 		this.cache!.vector3[identifer] = value;
-		eventBuilder.getEvent('vector3PropertyChange').iterate({ source: this.instance, identifier: identifer, value: value, lastValue });
 		return this;
 	}
 	get vector3s() {

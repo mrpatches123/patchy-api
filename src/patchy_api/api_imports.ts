@@ -23,7 +23,6 @@ import './plugins/chat.js';
 import './plugins/player_joined.js';
 import './plugins/world_load.js';
 import './plugins/update_test.js';
-import './plugins/script_event.js';
 //commands;
 import './commands/form.js';
 import './commands/plot.js';

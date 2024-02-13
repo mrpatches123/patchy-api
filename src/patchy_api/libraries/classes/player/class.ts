@@ -131,7 +131,7 @@ export class Player implements PlayerType {
 		});
 	}
 	get properties() {
-		return propertyBuilder.get(this);
+		return propertyBuilder.get(this.root);
 	}
 	get memory() {
 		const player = this.root;
