@@ -1,4 +1,4 @@
-import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction, Vector2, Vector3, DisplaySlotId, Dimension, system, ItemType, Block, EntityLifetimeState } from '@minecraft/server';
+import { world, ItemTypes, Player, Entity, BlockPermutation, ScoreboardObjective, Direction, Vector2, Vector3, DisplaySlotId, Dimension, system, ItemType, Block } from '@minecraft/server';
 import errorLogger from './classes/error.js';
 export function getXZVectorRY(ry: number) {
     const rads = (ry + 180) * Math.PI / 180;
@@ -19,37 +19,15 @@ export function isVector3(target: any): target is Vector3 {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && 'z' in target;
 }
-export function isVector2(target: any): target is (Vector2 | Vector3) {
+export function isVector2(target: any): target is Vector2 {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target && !('z' in target);
 }
-export function isVector2Or3(target: any): target is (Vector2 | Vector3) {
+export function isVector2Or3(target: any): target is Vector2 | Vector3 {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
-export async function spawnEntityAsync(dimension: Dimension, blockLocation: Vector3, type: string) {
-    let entity: Entity | undefined;
-    try {
-        entity = overworld.spawnEntity(type, blockLocation);
-    } catch (error: any) {
-        console.warn('ingore', error, error.stack);
-    }
-    entity = ((entity && entity.isValid() && entity.lifetimeState === EntityLifetimeState.Loaded) ? entity : await new Promise((resolve) => {
-        const runId = system.runInterval(() => {
-            try {
-                entity = overworld.spawnEntity(type, blockLocation);
-                if (!entity) return;
-                if (!entity.isValid()) return;
-                if (entity.lifetimeState === EntityLifetimeState.Unloaded) return;
-                system.clearRun(runId);
-                resolve(entity);
-            } catch (error: any) {
-                console.warn('ingore', error, error.stack);
-            }
-        });
-    }))!;
-    return entity;
-}
+
 export async function getBlockAsync(dimension: Dimension, blockLocation: Vector3): Promise<Block> {
     let block = dimension.getBlock(blockLocation);
     block = ((block && block.isValid()) ? block : await new Promise((resolve) => {
@@ -127,7 +105,7 @@ export function rotationToHorizontalDirection(rotation: Vector2) {
             return 'West';
     }
 };
-export function isDefined(input: any) {
+export function isDefined<T>(input: T | undefined | null): input is T {
     return (input !== null && input !== undefined && !Number.isNaN(input));
 }
 export function permutationClone(permutation: BlockPermutation) {

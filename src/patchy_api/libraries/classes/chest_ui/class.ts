@@ -2,7 +2,7 @@ import { ActionFormData } from '@minecraft/server-ui';
 import { typeIdToID } from "./type_ids.js";
 import { Player } from '../player/class.js';
 //thanks to Herobrine643928,LeGend07, and Aexx66
-const number_of_1_16_100_items = 0;
+const number_of_1_16_100_items = 365;
 export type sizesUnion = 'single' | 'double' | 'small' | 'large';
 const sizes = new Map([
 	['single', [`§c§h§e§s§t§s§m§a§l§l§r`, 27]], ['double', [`§c§h§e§s§t§l§a§r§g§e§r`, 54]],

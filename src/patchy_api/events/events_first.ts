@@ -54,7 +54,7 @@ eventBuilder.register({
 						const loaded = loads.loads.hasOwnProperty(id);
 						if (!loaded) return;
 						if (!global.hasOwnProperty('loading')) global.loading = true;
-						if (!global.finishedInitialPlotCreate) return;
+						// if (!global.finishedInitialPlotCreate) return;
 						if (!global.loaded) return;
 						if (global.playerJoined.hasOwnProperty(id)) return;
 						content.warn({ t: 'iterate:"playerJoined"', name });
@@ -126,17 +126,6 @@ eventBuilder.register({
 
 		}
 	},
-	dataDrivenEntityTriggerEvent: {
-		subscription: {
-			dataDrivenEntityTrigger: {
-				function: (event) => {
-					const { entity, eventId: id } = event;
-					const modifiers = event.getModifiers();
-					eventBuilder.getEvent('dataDrivenEntityTriggerEvent').iterate({ player: entity, modifiers, id });
-				}
-			}
-		}
-	},
 	dataDrivenPlayerTriggerEvent: {
 		subscription: {
 			dataDrivenEntityTrigger: {
@@ -151,28 +140,31 @@ eventBuilder.register({
 	},
 	beforeDataDrivenPlayerTriggerEvent: {
 		subscription: {
-			beforeDataDrivenEntityTrigger: {
+			beforeDataDrivenEntityTriggerEvent: {
 				function: (event) => {
 					const { entity, id, cancel } = event;
 
 
 					eventBuilder.getEvent('beforeDataDrivenPlayerTriggerEvent').iterate({ cancel, player: entity, getModifiers() { return event.getModifiers(); }, setModifiers(modifiers: DefinitionModifier[]) { event.setModifiers(modifiers); }, get modifiers() { return event.getModifiers(); }, set modifiers(modifiers) { event.setModifiers(modifiers); }, id });
 				},
-			}
-		}
-	},
-	beforeDataDrivenEntityTriggerEvent: {
-		subscription: {
-			beforeDataDrivenEntityTrigger: {
-				function: (event) => {
-					const { entity, id, cancel } = event;
-					eventBuilder.getEvent('beforeDataDrivenPlayerTriggerEvent').iterate({ cancel, player: entity, getModifiers() { return event.getModifiers(); }, setModifiers(modifiers: DefinitionModifier[]) { event.setModifiers(modifiers); }, get modifiers() { return event.getModifiers(); }, set modifiers(modifiers) { event.setModifiers(modifiers); }, id });
-				}
+				options: { entityTypes: ["minecraft:player"] }
 			}
 		}
 	},
 
 	scoreboardChange: {
+		subscription: {}
+	},
+	numberPropertyChange: {
+		subscription: {}
+	},
+	stringPropertyChange: {
+		subscription: {}
+	},
+	booleanPropertyChange: {
+		subscription: {}
+	},
+	vector3PropertyChange: {
 		subscription: {}
 	}
 });

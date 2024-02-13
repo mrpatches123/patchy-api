@@ -1,11 +1,15 @@
 import { Player, commandBuilder, content, formBuilder, isVector3, players, propertyManager } from '../modules.js';
 import config from '../config.js';
-import { Vector3 } from '@minecraft/server';
+import { Vector, Vector3 } from '@minecraft/server';
 const { commandPrefix: prefix } = config;
-function parsePropertyValue(string: string | undefined): string | number | boolean | Vector3 | undefined {
+function parsePropertyValue(string: string | undefined): string | number | boolean | Vector3 | Number['constructor'] | Boolean['constructor'] | String['constructor'] | Vector['constructor'] | undefined {
     const number = Number(string);
     if (!Number.isNaN(number)) return number;
     const booleanString = string?.toLowerCase?.()?.trim?.();
+    if (booleanString === 'Number') return Number;
+    if (booleanString === 'String') return String;
+    if (booleanString === 'Boolean') return Boolean;
+    if (booleanString === 'Vector') return Vector;
     if (booleanString === 'true') return true;
     if (booleanString === 'false') return false;
     try {
@@ -22,6 +26,7 @@ function parsePlayer(sender: Player, playerName?: string): false | Player | unde
         player = players.find({ name: playerName });
         if (!player) { sender.sendMessage(`player: ${playerName}, at params[2] does not exist!`); return false; }
     }
+    return player;
 }
 const identifierless = ['print', 'clearAll', 'wipe'];
 commandBuilder.register('properties', {

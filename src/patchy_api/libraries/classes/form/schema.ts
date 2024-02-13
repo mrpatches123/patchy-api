@@ -3,22 +3,17 @@ import { ActionFormData, MessageFormData, ModalFormData, ModalFormResponse, Acti
 import { content, romanize, toProperCase } from "../../utilities.js";
 import { FormBuilder } from "./class.js";
 import { Player } from "../player/class.js";
-import { EnchantmentType, ItemStack } from "@minecraft/server";
+import { ItemStack } from "@minecraft/server";
 import { MinecraftEnchantmentTypes } from "patchy_api/vanilla-data.js";
 import { ChestFormData, sizesUnion } from "../chest_ui/class.js";
 function itemStackToItemData(itemStack: ItemStack) {
 	const { typeId, nameTag, amount } = itemStack;
 	let itemData: ItemData = { typeId };
 	const lore = itemStack.getLore();
-	let enchantmentList = itemStack.getComponent('minecraft:enchantable')?.getEnchantments();
+	let enchantmentList = itemStack.getComponent('minecraft:enchantable')?.getEnchantments() ?? [];
 	let enchantments: Record<MinecraftEnchantmentTypes, number> = {} as Record<MinecraftEnchantmentTypes, number>;
 	[...(enchantmentList ?? [])].forEach(({ level, type }) => {
-		if (type instanceof EnchantmentType) {
-			enchantments[type.id as MinecraftEnchantmentTypes] = level;
-		} else {
-			enchantments[type as MinecraftEnchantmentTypes] = level;
-		}
-
+		enchantments[type as MinecraftEnchantmentTypes] = level;
 	});
 
 	if (lore) itemData.lore = lore;
@@ -63,7 +58,7 @@ type ActionButton = string | {
 type ActionToggleOptions = {
 	text: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
 	iconPath?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
-	callback: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 
 };
@@ -71,6 +66,8 @@ type ActionToggle = {
 	options: ActionToggleOptions[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ActionToggleOptions[]);
 	cycleCallback: (receiver: Player, i: number, ...extraArguments: any[]) => number;
 	initialisationFunction: (receiver: Player, i: number, ...extraArguments: any[]) => number;
+	reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
+
 };
 type ActionButtonNoReopen = {
 	text: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);

@@ -25,11 +25,11 @@ export class Player implements PlayerType {
 		 */
 		this.root = player;
 	}
-	spawnParticle(...args: Parameters<PlayerType['spawnParticle']>): void {
-		this.root.spawnParticle(...args);
-	}
-	eatItem(...args: Parameters<PlayerType['eatItem']>): void {
+	eatItem(...args: Parameters<PlayerType['eatItem']>) {
 		this.root.eatItem(...args);
+	}
+	spawnParticle(...args: Parameters<PlayerType['spawnParticle']>) {
+		this.root.spawnParticle(...args);
 	}
 	kick(message?: string) {
 		this.root.runCommand((message) ? `kick "${this.root.name}" ${message}` : `kick "${this.root.name}"`);
@@ -109,7 +109,7 @@ export class Player implements PlayerType {
 		container.setItem(selectedSlot, (value instanceof ContainerSlot) ? value.getItem() : value);
 	}
 	get container() {
-		return this.getComponent('inventory')!.container;
+		return this.getComponent('inventory')!.container!;
 	}
 	get inventory() {
 		return players.getInventory(this);
@@ -131,7 +131,7 @@ export class Player implements PlayerType {
 		});
 	}
 	get properties() {
-		return propertyBuilder.get(this.root);
+		return propertyBuilder.get(this);
 	}
 	get memory() {
 		const player = this.root;

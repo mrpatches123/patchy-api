@@ -581,7 +581,7 @@ export class PlotBuilder {
 			hasBeenSubscribed = true;
 		}
 		const ruleSet = this.getRuleSet(key, plotNumber!);
-		let loadId: number;
+		let loadId: number | undefined;
 		if (structure) {
 			const { start: { x, y, z } } = ruleSet!;
 			const { x: sx, y: sy, z: sz } = structure.location;
