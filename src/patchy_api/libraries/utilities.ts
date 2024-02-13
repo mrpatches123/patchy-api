@@ -27,8 +27,6 @@ export function isVector2Or3(target: any): target is Vector2 | Vector3 {
     // content.warn(typeof target === 'object', !(target instanceof Array), 'x' in target, 'y' in target, 'z' in target);
     return typeof target === 'object' && !(target instanceof Array) && 'x' in target && 'y' in target;
 }
-<<<<<<< Updated upstream
-=======
 export async function spawnEntityAsync(dimension: Dimension, blockLocation: Vector3, type: string) {
     let entity: Entity | undefined;
     try {
@@ -52,7 +50,6 @@ export async function spawnEntityAsync(dimension: Dimension, blockLocation: Vect
     }))!;
     return entity;
 }
->>>>>>> Stashed changes
 export async function getBlockAsync(dimension: Dimension, blockLocation: Vector3): Promise<Block> {
     let block = dimension.getBlock(blockLocation);
     block = ((block && block.isValid()) ? block : await new Promise((resolve) => {
