@@ -1,6 +1,6 @@
 import { BlockAreaSize, Vector, world, Dimension, system, Vector2, Vector3 } from "@minecraft/server";
 
-import { andArray, betweenBlockVector3, blockFaceToCoords, content, isDefined, isVector3, native, orArray, overworld, server, sort3DVectors, isVector2Or3, isVector2 } from "./../utilities.js";
+import { andArray, betweenBlockVector3, blockFaceToCoords, content, isDefined, isVector2, isVector3, native, orArray, overworld, server, sort3DVectors } from "./../utilities.js";
 import eventBuilder from "./events/export_instance.js";
 import databases from "./database.js";
 import players from "./players/export_instance.js";
@@ -162,8 +162,8 @@ export class PlotBuilder {
 			if (key && typeof key !== 'string') throw new Error('key, in rules at params[1] is defined and not of type: String!');
 			if (!key) {
 				if (!isVector3(location)) throw new Error(`location, in teleport in rules at params[1] is not of type: Vector3!`);
-				if (face && !isVector2Or3(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: Vector2 or Vector3!`);
-				if (face && !isVector2Or3(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: Vector2 or Vector3!`);
+				if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: Vector2 or Vector3!`);
+				if (face && !isVector2(face)) throw new Error(`face, in teleport in rules at params[1] is defined and not of type: Vector2 or Vector3!`);
 			}
 		}
 
@@ -174,7 +174,6 @@ export class PlotBuilder {
 			if (isVector3(direction) && !isVector3(count) || !isVector3(direction) && isVector3(count)) throw new Error(`direction and count, ${direction} at ruleSets[${i}] in rules at params[1] must be of type: Vector3, if one of them is!`);
 			if (offset && !isVector3(offset)) throw new Error(`offset, at ruleSets[${i}] in rules at params[1] is not of type: {x: number, y: number, z: number})}`);
 			if (blockPlaceMargin && !isVector3(blockPlaceMargin)) throw new Error(`blockPlaceMargin, at ruleSets[${i}] in rules at params[1] is not of type: {x: number, y: number, z: number})}`);
-
 		});
 		this.plots[key]! ??= {};
 		this.plots[key]!.rules = rules;
@@ -299,8 +298,8 @@ export class PlotBuilder {
 			let { location: teleportLocation, face, key: teleportKey } = teleport;
 			if (teleportKey) teleportBuilder.teleport(player, teleportKey);
 			else {
-				teleportLocation = (teleportLocation instanceof PlotsVector3) ? { location: start as Vector3, offset: teleportLocation as Vector3 } : { location: teleportLocation as Vector3, offset: { x: 0, y: 0, z: 0 } };
-				if (!isVector2(face)) face = (face instanceof PlotsVector3) ? { location: start as Vector3, offset: face as unknown as Vector3 } : { location: face as unknown as Vector3, offset: { x: 0, y: 0, z: 0 } };
+				teleportLocation = { location: start as Vector3, offset: teleportLocation as Vector3 };
+				if (!isVector2(face)) face = { location: start, offset: face as any };
 				const object = { location: teleportLocation, face, dimension: overworld };
 				// content.warn({ teleportLocation: objectVector3(teleportLocation), start: objectVector3(start) });
 				teleportBuilder.teleportOnce(player, object as TeleportObjectOnce);
@@ -310,7 +309,7 @@ export class PlotBuilder {
 			player.teleport({ x: (size.x) / 2 + start.x, y: start.y + 1, z: (size.z) / 2 + start.z }, { dimension: overworld, rotation: { x: rx, y: ry } });
 		}
 	}
-	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride' | 'blockPlaceMarginOverideX' | 'blockPlaceMarginOverideY' | 'blockPlaceMarginOverideZ', value?: number | string | boolean | Vector3 | Number['constructor'] | String['constructor'] | Boolean['constructor'] | Vector['constructor']) {
+	setOveride(player: Player, type: 'plotNumberOveride' | 'currentPlot' | 'gamemodeOveride' | 'permisionOveride' | 'blockPlaceMarginOverideX' | 'blockPlaceMarginOverideY' | 'blockPlaceMarginOverideZ', value?: number | string) {
 		content.warn({ player: player.name, type, value });
 		const { properties } = player;
 		properties.setAny(type, value);
@@ -398,17 +397,17 @@ export class PlotBuilder {
 					} else {
 						// content.warn({ bool: Boolean(teleport) });
 						if (teleport) {
-							let { location: teleportLocation, face, key: teleportKey } = teleport;
-							if (teleportKey) teleportBuilder.teleport(player, teleportKey);
+							let { location: teleportLocation, face, key } = teleport;
+							if (key) teleportBuilder.teleport(player, key);
 							else {
-								teleportLocation = (teleportLocation instanceof PlotsVector3) ? { location: start as Vector3, offset: teleportLocation as Vector3 } : { location: teleportLocation as Vector3, offset: { x: 0, y: 0, z: 0 } };
-								if (!isVector2(face)) face = (face instanceof PlotsVector3) ? { location: start as Vector3, offset: face as unknown as Vector3 } : { location: face as unknown as Vector3, offset: { x: 0, y: 0, z: 0 } };
+								teleportLocation = { location: start as Vector3, offset: teleportLocation as Vector3 };
+								if (!isVector2(face)) face = { location: start, offset: face as any };
 								const object = { location: teleportLocation, face, dimension: overworld };
 								// content.warn({ teleportLocation: objectVector3(teleportLocation), start: objectVector3(start) });
 								teleportBuilder.teleportOnce(player, object as TeleportObjectOnce);
 							}
 						} else {
-							const { x: rx, y: ry } = player.rotation;
+							const { x: rx, y: ry } = rotation;
 							player.teleport({ x: (size.x) / 2 + start.x, y: start.y + 1, z: (size.z) / 2 + start.z }, { dimension: overworld, rotation: { x: rx, y: ry } });
 						}
 					}

@@ -1,9 +1,5 @@
 import { Player } from "../player/class.js";
-<<<<<<< Updated upstream
-import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent, world, PistonActivateBeforeEvent, PlayerInteractWithBlockBeforeEvent, PlayerInteractWithEntityBeforeEvent, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, PlayerLeaveBeforeEvent, EntityRemoveBeforeEvent, EffectAddBeforeEvent, SystemAfterEvents, system, WatchdogTerminateBeforeEvent } from '@minecraft/server';
-=======
-import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent, world, PlayerInteractWithBlockBeforeEvent, PlayerInteractWithEntityBeforeEvent, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, PlayerLeaveBeforeEvent, EntityRemoveBeforeEvent, EffectAddBeforeEvent, SystemAfterEvents, system, WatchdogTerminateBeforeEvent, World, DataDrivenEntityTriggerAfterEvent } from '@minecraft/server';
->>>>>>> Stashed changes
+import { Entity, Entity as EntityType, Player as PlayerType, BlockHitInformation, DefinitionModifier, Dimension, ItemStack, Direction, Block, EntityDamageCause, EntityDamageSource as EntityDamageSourceType, EntityEventOptions, Vector3, ChatSendAfterEvent, DataDrivenEntityTriggerBeforeEvent, ExplosionBeforeEvent, ItemDefinitionTriggeredBeforeEvent, ItemUseBeforeEvent, ItemUseOnBeforeEvent, PistonActivateAfterEvent, WorldAfterEvents, ChatSendBeforeEvent, PlayerBreakBlockAfterEvent, world, PistonActivateBeforeEvent, PlayerInteractWithBlockBeforeEvent, PlayerInteractWithEntityBeforeEvent, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, PlayerLeaveBeforeEvent, EntityRemoveBeforeEvent, EffectAddBeforeEvent, SystemAfterEvents, system, WatchdogTerminateBeforeEvent, World } from '@minecraft/server';
 import { CustomEvent } from '../custom_event/class.js';
 import { content } from '../../utilities.js';
 
@@ -81,6 +77,30 @@ export interface ScoreboardChangeEvent {
 	objective: string;
 	value: number;
 }
+export interface NumberPropertyChangeEvent {
+	source: World | Player | Entity;
+	identifier: string;
+	value: number | undefined;
+	lastValue: number | undefined;
+}
+export interface BooleanPropertyChangeEvent {
+	source: World | Player | Entity;
+	identifier: string;
+	value: boolean | undefined;
+	lastValue: boolean | undefined;
+}
+export interface StringPropertyChangeEvent {
+	source: World | Player | Entity;
+	identifier: string;
+	value: string | undefined;
+	lastValue: string | undefined;
+}
+export interface Vector3PropertyChangeEvent {
+	source: World | Player | Entity;
+	identifier: string;
+	value: Vector3 | undefined;
+	lastValue: Vector3 | undefined;
+}
 export interface BeforePlayerScaffoldPlaceEvent {
 	cancel: boolean;
 	player: Player;
@@ -128,6 +148,10 @@ export interface CustomEventKeyTypes {
 	playerJoinAwaitMove: PlayerJoinAwaitMoveEvent;
 	worldLoad: undefined;
 	scoreboardChange: ScoreboardChangeEvent;
+	numberPropertyChange: NumberPropertyChangeEvent;
+	booleanPropertyChange: BooleanPropertyChangeEvent;
+	stringPropertyChange: StringPropertyChangeEvent;
+	vector3PropertyChange: Vector3PropertyChangeEvent;
 	beforePlayerScaffoldPlace: BeforePlayerScaffoldPlaceEvent;
 	blockBreak: PlayerBreakBlockAfterEvent;
 	custom: undefined;

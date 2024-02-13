@@ -63,7 +63,7 @@ type ActionButton = string | {
 type ActionToggleOptions = {
 	text: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
 	iconPath?: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);
-	callback: (receiver: Player, i: number, ...extraArguments: any[]) => any;
+	callback?: (receiver: Player, i: number, ...extraArguments: any[]) => any;
 	reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
 
 };
@@ -71,6 +71,8 @@ type ActionToggle = {
 	options: ActionToggleOptions[] | ((receiver: Player, i: number, ...extraArguments: any[]) => ActionToggleOptions[]);
 	cycleCallback: (receiver: Player, i: number, ...extraArguments: any[]) => number;
 	initialisationFunction: (receiver: Player, i: number, ...extraArguments: any[]) => number;
+	reopen?: boolean | ((receiver: Player, i: number, ...extraArguments: any[]) => boolean);
+
 };
 type ActionButtonNoReopen = {
 	text: string | ((receiver: Player, i: number, ...extraArguments: any[]) => string);

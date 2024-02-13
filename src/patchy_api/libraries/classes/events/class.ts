@@ -441,10 +441,7 @@ export class EventBuilder {
 			// content.warn({ eventClone });
 			if (playerKey && modifiables) modifiables.forEach(key => event[key] = eventClone[key].root ?? eventClone[key]);
 			// content.warn({ cancel: event.cancel, oldEventKey });
-
-
 		};
-
 		this.subscriptions[entityOptionsKey ?? oldEventKey]!.function = subscribedEventFunction;
 		// content.warn({ key, oldEventKey, fix: this.removeBeforeInKey(oldEventKey), worldSystemHas: Boolean(world?.[worldSystem]?.[this.removeBeforeInKey(oldEventKey)]), isFunc: subscribedEventFunction instanceof Function });
 		if (!(this.removeBeforeInKey(oldEventKey) in worldSystemEvents[worldSystem])) throw new Error(`${oldEventKey} is broke`);
