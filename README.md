@@ -1,5 +1,5 @@
 # patchy-api
-
+Outdated Wrapper for the beta version of the Scripting API for the release version Of Minecraft Bedrock Scripting.
 all class prototypes are in scripts/patchy_api/libraries/prototypes/
 
 import api from scripts/patchy_api/modules.js
